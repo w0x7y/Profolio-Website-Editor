@@ -41,6 +41,9 @@ Clicking a layout card renders its `sections` onto the canvas via
 folder's contents on its own — it just tells `script.js` which files to
 fetch.
 
+Preview block tones are semantic: `gradient-accent` = image,
+`gradient-dark` = text, `accent` = links/navbar, and `neutral` = other.
+
 ## Running locally
 
 The layout loader uses `fetch()`, so the project needs to be served over
