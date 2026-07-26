@@ -7,9 +7,10 @@ sites."
 
 This repo currently contains the **editor UI shell only**. It looks like a
 real editor (top bar, left tool rail, center canvas, right panel with
-Layouts/Themes/Assets/Settings tabs) and the Layouts tab loads its cards
-dynamically from the `layout/` folder, but nothing is wired to actually
-edit, save, or publish a site yet.
+Layouts/Themes/Assets/Settings tabs). The Layouts tab loads its cards from
+`layout/manifest.json`, and clicking a layout renders that layout's `sections`
+tree onto the canvas. Selecting/editing content, saving, and publishing are
+not wired yet.
 
 ## Project structure
 
@@ -24,8 +25,6 @@ Profolio Editor/
 └── layout/
     ├── manifest.json      List of layout files to load (see note below)
     ├── minimal.json
-    ├── bold-studio.json
-    ├── grid-works.json
     ├── split-bio.json
     ├── photo-first.json
     ├── blank.json
@@ -51,6 +50,10 @@ The layout loader uses `fetch()`, so the project needs to be served over
 `fetch` requests under `file://`). Any static server works, e.g.:
 
 ```bash
+python3 -m http.server
+# then open http://localhost:8000/
+
+# or, if Node is available:
 npx serve .
 # or, with the VS Code "Live Server" extension: right-click index.html → Open with Live Server
 ```

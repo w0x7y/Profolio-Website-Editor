@@ -1,7 +1,7 @@
 # TODO
 
-Nothing below is implemented yet. Roughly ordered by dependency within each
-section, not by priority.
+Some foundational items are implemented, but most editor behavior is still
+planned. Roughly ordered by dependency within each section, not by priority.
 
 Tags on each item: **difficulty** (`Easy` / `Medium` / `Hard`) and
 **priority** — `P0` (blocking / must-have for a usable editor), `P1` (high,
@@ -43,7 +43,7 @@ can wait a long time).
 ### Right panel — Layouts tab
 - [x] Clicking a layout card actually applies it to the canvas `Hard` `P0` — wired in `script.js` via `renderPageIntoCanvas()`; still needs the confirmation prompt below
 - [ ] Confirmation prompt when applying a layout over existing canvas content ("this will replace your current page") `Easy` `P1`
-- [ ] Fill in the `sections` field for `minimal.json`, `bold-studio.json`, `grid-works.json`, `split-bio.json`, and `photo-first.json` (currently empty arrays — only `example.json` has real content; schema migrated from a raw `html` string to a `sections` node tree, see [docs/DATA_MODEL.md](./docs/DATA_MODEL.md)) `Easy` `P1`
+- [ ] Fill in the `sections` field for `minimal.json`, `split-bio.json`, and `photo-first.json` (currently empty arrays — only `example.json` has real content; schema migrated from a raw `html` string to a `sections` node tree, see [docs/DATA_MODEL.md](./docs/DATA_MODEL.md)) `Easy` `P1`
 - [ ] Decide whether "layout" means a whole starter page, or a single section users can insert (right now it's page-level only) `Medium` `P1`
 - [ ] Support applying a layout to a single section instead of the whole page `Medium` `P2`
 - [ ] More layout options / categories (e.g. filter by style, industry, single-page vs multi-page) `Easy` `P3`
@@ -168,7 +168,7 @@ The minimum interaction loop: select something, change it, remove it.
 ### Phase 3 — Layouts, themes & basic settings
 Makes the existing UI shell actually do something.
 15. ~~Layouts tab: clicking a card applies it to the canvas~~ `Hard` `P0` — done (no confirmation prompt yet, see Phase 9 #38)
-16. Fill in the `sections` field for the remaining layout JSON files (schema migrated from `html` to `sections` — see [docs/DATA_MODEL.md](./docs/DATA_MODEL.md)) `Easy` `P1`
+16. Fill in the `sections` field for `minimal.json`, `split-bio.json`, and `photo-first.json` (schema migrated from `html` to `sections` — see [docs/DATA_MODEL.md](./docs/DATA_MODEL.md)) `Easy` `P1`
 17. Theme cards actually apply colors to the canvas `Medium` `P0`
 18. Font cards actually apply the chosen font `Easy` `P0`
 19. Site title field editable and persisted `Easy` `P0`

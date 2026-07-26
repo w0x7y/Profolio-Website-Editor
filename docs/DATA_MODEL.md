@@ -1,8 +1,9 @@
 # Data Model
 
-Status: **decided, not yet implemented**. This is the answer to TODO Phase 1,
-item 1 ("Decide on a data model for a site/page"). The canvas does not render
-from this yet — that's item 2.
+Status: **decided and partially implemented**. This is the answer to TODO
+Phase 1, item 1 ("Decide on a data model for a site/page"). The canvas now
+renders layout `sections` through `renderer.js`; selection, editing, saving,
+and publishing are still future work.
 
 ## Goals
 
@@ -188,6 +189,19 @@ StyleProps = {
 Extend this list deliberately as editor features need new properties —
 resist letting it become "any CSS property."
 
+### Preview block tones
+
+Layout cards use `preview.blocks[*].tone` to draw small semantic thumbnails in
+the right panel. The current tone meanings are:
+
+- `gradient-accent` = image
+- `gradient-dark` = text
+- `accent` = links/navbar
+- `neutral` = other
+
+These tones are thumbnail-only hints; the actual canvas content is driven by
+the `sections` tree.
+
 ### Placeholders — the actual answer to "templates need fillable slots"
 
 Two rules make this work:
@@ -199,9 +213,9 @@ Two rules make this work:
    (dashed border, "click to add image" affordance) instead of a broken
    `<img>` or an empty rectangle.
 
-Both states can carry a `data-empty="true"` attribute in the rendered DOM
-purely for CSS styling (dashed outline, muted color) — this is not stored
-in the model itself, it's derived at render time from `content`/`src`.
+Both states currently render with an `.is-empty` class for CSS styling
+(dashed outline, muted color). This is not stored in the model itself; it is
+derived at render time from `content`/`src`.
 
 ---
 
@@ -277,8 +291,7 @@ upload" slot. Both are ordinary data, not special-cased markup.
 
 ## Where this goes next
 
-Phase 1, item 2: build the renderer that walks `Node` trees and produces the
-canvas DOM (with `data-node-id` on every rendered element, so click-to-select
-in Phase 2 can map a DOM node back to a `Node` by id). The existing
-`layout/*.json` files' `html` field goes away in favor of a `sections` tree
-in this shape.
+Phase 1, item 2 is implemented: `renderer.js` walks `Node` trees and produces
+the canvas DOM with `data-node-id` on every rendered element. The next major
+step is Phase 2 click-to-select, which should use those ids to map DOM nodes
+back to their `Node` data.
