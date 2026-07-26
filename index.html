@@ -116,12 +116,7 @@
                     </div>
 
                     <div class="canvas-scroll">
-                        <div class="canvas-frame" data-frame="desktop">
-                            <div class="canvas-frame__empty">
-                                <svg viewBox="0 0 24 24" class="icon"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 3v18M3 9h6"/></svg>
-                                <span>Blank canvas</span>
-                            </div>
-                        </div>
+                        <div class="canvas-frame" data-frame="desktop"><!-- populated by renderer.js: renderPageIntoCanvas() --></div>
                     </div>
                 </main>
 
@@ -252,6 +247,7 @@
             </div>
         </div>
 
+        <script src='renderer.js'></script>
         <script src='script.js'></script>
     </body>
 </html>

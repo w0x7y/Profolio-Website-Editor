@@ -9,8 +9,8 @@ needed soon after), `P2` (medium, real but not urgent), `P3` (low / nice-to-have
 can wait a long time).
 
 ### Core canvas & editing engine
-- [ ] Decide on a data model for a "site"/"page" (JSON tree of sections → blocks → elements) that the canvas renders from, instead of static HTML `Hard` `P0`
-- [ ] Render the canvas from that data model instead of hardcoded markup `Hard` `P0`
+- [x] Decide on a data model for a "site"/"page" (JSON tree of sections → blocks → elements) that the canvas renders from, instead of static HTML `Hard` `P0` — see [docs/DATA_MODEL.md](./docs/DATA_MODEL.md)
+- [x] Render the canvas from that data model instead of hardcoded markup `Hard` `P0` — see `renderer.js` (`renderNode`/`renderSections`/`renderPageIntoCanvas`)
 - [ ] Click-to-select an element on the canvas `Medium` `P0`
 - [ ] Show a selection outline + resize/move handles around the selected element `Hard` `P0`
 - [ ] A floating/contextual toolbar for the selected element (font size, color, alignment, spacing, etc.) `Medium` `P1`
@@ -41,9 +41,9 @@ can wait a long time).
 - [ ] Tooltips are static — verify they stay correct as tools gain real behavior `Easy` `P3`
 
 ### Right panel — Layouts tab
-- [ ] Clicking a layout card actually applies it to the canvas (currently only toggles a visual "selected" state) `Hard` `P0`
+- [x] Clicking a layout card actually applies it to the canvas `Hard` `P0` — wired in `script.js` via `renderPageIntoCanvas()`; still needs the confirmation prompt below
 - [ ] Confirmation prompt when applying a layout over existing canvas content ("this will replace your current page") `Easy` `P1`
-- [ ] Fill in the `html` field for `minimal.json`, `bold-studio.json`, `grid-works.json`, `split-bio.json`, and `photo-first.json` (currently empty placeholders — only `example.json` has real content) `Easy` `P1`
+- [ ] Fill in the `sections` field for `minimal.json`, `bold-studio.json`, `grid-works.json`, `split-bio.json`, and `photo-first.json` (currently empty arrays — only `example.json` has real content; schema migrated from a raw `html` string to a `sections` node tree, see [docs/DATA_MODEL.md](./docs/DATA_MODEL.md)) `Easy` `P1`
 - [ ] Decide whether "layout" means a whole starter page, or a single section users can insert (right now it's page-level only) `Medium` `P1`
 - [ ] Support applying a layout to a single section instead of the whole page `Medium` `P2`
 - [ ] More layout options / categories (e.g. filter by style, industry, single-page vs multi-page) `Easy` `P3`
@@ -147,8 +147,8 @@ into phases; work roughly top-to-bottom within each phase.
 
 ### Phase 1 — Data model & project foundation
 Nothing else can be built until there's a data model and a place to store it.
-1. Decide on a data model for a "site"/"page" (sections → blocks → elements) `Hard` `P0`
-2. Render the canvas from that data model instead of hardcoded markup `Hard` `P0`
+1. ~~Decide on a data model for a "site"/"page" (sections → blocks → elements)~~ `Hard` `P0` — done, see [docs/DATA_MODEL.md](./docs/DATA_MODEL.md)
+2. ~~Render the canvas from that data model instead of hardcoded markup~~ `Hard` `P0` — done, see `renderer.js`
 3. Define how a project is stored (local storage for MVP → backend later) `Medium` `P0`
 4. Create new project flow `Easy` `P0`
 5. Load an existing project into the editor on open `Medium` `P0`
@@ -167,8 +167,8 @@ The minimum interaction loop: select something, change it, remove it.
 
 ### Phase 3 — Layouts, themes & basic settings
 Makes the existing UI shell actually do something.
-15. Layouts tab: clicking a card applies it to the canvas `Hard` `P0`
-16. Fill in the `html` field for the remaining layout JSON files `Easy` `P1`
+15. ~~Layouts tab: clicking a card applies it to the canvas~~ `Hard` `P0` — done (no confirmation prompt yet, see Phase 9 #38)
+16. Fill in the `sections` field for the remaining layout JSON files (schema migrated from `html` to `sections` — see [docs/DATA_MODEL.md](./docs/DATA_MODEL.md)) `Easy` `P1`
 17. Theme cards actually apply colors to the canvas `Medium` `P0`
 18. Font cards actually apply the chosen font `Easy` `P0`
 19. Site title field editable and persisted `Easy` `P0`

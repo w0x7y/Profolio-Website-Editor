@@ -67,6 +67,9 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 
+    // ---- Canvas: render the initial (empty) state from the data model ----
+    renderPageIntoCanvas([], document.querySelector('.canvas-frame'));
+
     // ---- Layouts: load automatically from /layout, then wire up selection ----
     loadLayouts();
 
@@ -91,8 +94,10 @@ document.addEventListener('DOMContentLoaded', () => {
 //     "direction": "column" | "row",
 //     "wrap": true | false,
 //     "blocks": [ { "width": "40%", "height": "18%", "tone": "neutral" }, ... ]
-//   }              // or { "blank": true } for the empty-page card
-//   "html": "..."  // markup for the layout (unused for now — look only)
+//   }               // or { "blank": true } for the empty-page card
+//   "sections": []  // node tree (sections -> blocks -> elements) for the layout
+//                   // content — see docs/DATA_MODEL.md. Rendered onto the
+//                   // canvas via renderer.js when this layout's card is clicked.
 // }
 // ============================================================
 
@@ -111,7 +116,7 @@ async function loadLayouts() {
         grid.innerHTML = '';
         layouts.forEach(layout => grid.appendChild(buildLayoutCard(layout)));
 
-        wireLayoutCardSelection(grid);
+        wireLayoutCardSelection(grid, layouts);
     } catch (err) {
         grid.innerHTML = '<p class="panel__hint">Couldn\'t load layouts.</p>';
         console.error('Failed to load layouts from /layout:', err);
@@ -150,11 +155,19 @@ function buildLayoutCard(layout) {
     return card;
 }
 
-function wireLayoutCardSelection(grid) {
+function wireLayoutCardSelection(grid, layouts) {
+    const canvasFrame = document.querySelector('.canvas-frame');
+
     grid.querySelectorAll('.layout-card').forEach(card => {
         card.addEventListener('click', () => {
             grid.querySelectorAll('.layout-card').forEach(c => c.classList.remove('is-active'));
             card.classList.add('is-active');
+
+            // NOTE: this swaps the canvas immediately with no confirmation
+            // prompt yet — that's TODO Phase 9 item 38 ('confirmation
+            // prompt when applying a layout over existing content').
+            const layout = layouts.find(l => l.id === card.dataset.layoutId);
+            if (layout) renderPageIntoCanvas(layout.sections, canvasFrame);
         });
     });
 }

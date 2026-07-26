@@ -16,8 +16,11 @@ edit, save, or publish a site yet.
 ```
 Profolio Editor/
 ├── index.html          Editor shell markup (top bar, toolbar, canvas, right panel)
-├── style.css            All styling (dark editor chrome + light canvas page)
-├── script.js             UI-only interactions (tab/tool switching, layout loader)
+├── style.css            All styling (dark editor chrome + light canvas page + rendered node styles)
+├── script.js             UI interactions (tab/tool switching, layout loader/selection)
+├── renderer.js           Renders a sections node tree onto the canvas (see docs/DATA_MODEL.md)
+├── docs/
+│   └── DATA_MODEL.md      The data model a page/site is built from (sections → blocks → elements)
 └── layout/
     ├── manifest.json      List of layout files to load (see note below)
     ├── minimal.json
@@ -31,10 +34,12 @@ Profolio Editor/
 
 Each `layout/*.json` file describes one starting layout: an `id`, `name`,
 `description`, a `preview` (used to draw the little thumbnail block diagram
-in the panel), and an `html` field reserved for the actual page markup
-(not applied to the canvas yet). `manifest.json` exists because a browser
-can't list a folder's contents on its own — it just tells `script.js` which
-files to fetch.
+in the panel), and a `sections` field holding the actual page content as a
+node tree — see [docs/DATA_MODEL.md](./docs/DATA_MODEL.md) for the shape.
+Clicking a layout card renders its `sections` onto the canvas via
+`renderer.js`. `manifest.json` exists because a browser can't list a
+folder's contents on its own — it just tells `script.js` which files to
+fetch.
 
 ## Running locally
 
@@ -54,6 +59,8 @@ npx serve .
 - [x] Device switcher visually resizes the canvas frame (desktop/tablet/mobile)
 - [x] Canvas is blank by default
 - [x] Layout cards in the right panel load automatically from `layout/*.json` via `manifest.json`
-- [ ] Everything else (see [TODO.md](./TODO.md))
+- [x] Data model for a site/page (sections → blocks → elements) decided — see [docs/DATA_MODEL.md](./docs/DATA_MODEL.md)
+- [x] Canvas renders from that data model (`renderer.js`) — clicking a layout card in the right panel renders its content onto the canvas
+- [ ] Everything else, including selecting/editing what's rendered (see [TODO.md](./TODO.md))
 
 See [TODO.md](./TODO.md) for the full task list and a prioritized, dependency-ordered implementation plan.
