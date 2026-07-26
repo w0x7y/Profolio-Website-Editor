@@ -764,16 +764,17 @@ button {
     border-color: var(--accent);
 }
 
-/* preview blocks are built dynamically in JS from each layout's JSON "preview" field */
+/* preview blocks are built dynamically in JS from each layout's JSON "preview" field:
+   gradient-accent = image, gradient-dark = text, accent = links/navbar, neutral = other */
 .preview-block {
     display: block;
     border-radius: 3px;
 }
 
-.preview-block--neutral { background: var(--border-strong); }
-.preview-block--accent { background: var(--accent); }
-.preview-block--gradient-dark { background: linear-gradient(135deg, #3a3a42, #2a2a30); }
-.preview-block--gradient-accent { background: linear-gradient(135deg, #6366f1, #a855f7); }
+.preview-block--neutral { background: #3f3a52; }
+.preview-block--accent { background: #8b5cf6; }
+.preview-block--gradient-dark { background: #7c3aed; }
+.preview-block--gradient-accent { background: #c084fc; }
 
 .layout-card__preview.is-blank {
     align-items: center;

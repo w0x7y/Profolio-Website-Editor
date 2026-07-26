@@ -1,9 +1,7 @@
 [
   "minimal.json",
-  "bold-studio.json",
-  "grid-works.json",
   "split-bio.json",
   "photo-first.json",
-  "blank.json",
-  "example.json"
+  "example.json",
+  "blank.json"
 ]

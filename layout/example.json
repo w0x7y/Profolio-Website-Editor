@@ -3,11 +3,13 @@
   "name": "Example Portfolio",
   "description": "A fully filled-in reference layout: nav, hero, projects, about and footer.",
   "preview": {
-    "direction": "column",
+    "direction": "row",
+    "wrap": true,
     "blocks": [
-      { "width": "100%", "height": "12%", "tone": "neutral" },
-      { "width": "100%", "height": "55%", "tone": "gradient-accent" },
-      { "width": "100%", "height": "20%", "tone": "gradient-dark" }
+      { "width": "100%", "height": "12%", "tone": "accent" },
+      { "width": "55%", "height": "55%", "tone": "gradient-dark" },
+      { "width": "40%", "height": "55%", "tone": "gradient-accent" },
+      { "width": "100%", "height": "20%", "tone": "neutral" }
     ]
   },
   "sections": [
@@ -18,18 +20,18 @@
       "name": "Nav",
       "layout": { "direction": "row", "align": "center", "justify": "space-between" },
       "children": [
-        { "id": "el_logo", "type": "text", "role": "logo", "content": "Jordan Doe", "placeholder": "Your name" },
+        { "id": "el_logo", "type": "text", "role": "logo", "content": "", "placeholder": "Your name" },
         {
           "id": "row_nav_links",
           "type": "row",
           "layout": { "direction": "row", "gap": "24px" },
           "children": [
-            { "id": "el_nav_1", "type": "text", "role": "nav-link", "content": "Work", "href": "#work" },
-            { "id": "el_nav_2", "type": "text", "role": "nav-link", "content": "About", "href": "#about" },
-            { "id": "el_nav_3", "type": "text", "role": "nav-link", "content": "Contact", "href": "#contact" }
+            { "id": "el_nav_1", "type": "text", "role": "nav-link", "content": "Section-1", "href": "#Section-1" },
+            { "id": "el_nav_2", "type": "text", "role": "nav-link", "content": "Section-2", "href": "#Section-2" },
+            { "id": "el_nav_3", "type": "text", "role": "nav-link", "content": "Section-3", "href": "#Section-3" }
           ]
         },
-        { "id": "btn_resume", "type": "button", "role": "cta-secondary", "content": "Resume", "href": "#" }
+        { "id": "btn_resume", "type": "button", "role": "cta-secondary", "content": "", "placeholder": "Link/Btn", "href": "#" }
       ]
     },
     {
@@ -43,16 +45,16 @@
           "id": "col_hero_text",
           "type": "column",
           "children": [
-            { "id": "el_tag", "type": "text", "role": "eyebrow", "content": "Available for work", "placeholder": "Add a tag" },
-            { "id": "el_h1", "type": "heading", "role": "title", "content": "Product Designer<br>&amp; Frontend Developer", "placeholder": "Add a title" },
-            { "id": "el_sub", "type": "text", "role": "subtitle", "content": "Crafting clean, functional interfaces with a focus on detail, motion and usability.", "placeholder": "Add a short description" },
+            { "id": "el_tag", "type": "text", "role": "eyebrow", "content": "", "placeholder": "Add a tag" },
+            { "id": "el_h1", "type": "heading", "role": "title", "content": "", "placeholder": "Add a title" },
+            { "id": "el_sub", "type": "text", "role": "subtitle", "content": "", "placeholder": "Add a short description" },
             {
               "id": "row_actions",
               "type": "row",
               "layout": { "direction": "row", "gap": "12px" },
               "children": [
-                { "id": "btn_primary", "type": "button", "role": "cta", "content": "View Work", "href": "#work" },
-                { "id": "btn_ghost", "type": "button", "role": "cta-secondary", "content": "Get in Touch", "href": "#contact" }
+                { "id": "btn_primary", "type": "button", "role": "cta", "content": "", "placeholder": "Link/Btn", "href": "#" },
+                { "id": "btn_ghost", "type": "button", "role": "cta-secondary", "content": "", "placeholder": "Link/Btn", "href": "#" }
               ]
             }
           ]
@@ -67,8 +69,8 @@
       "name": "Featured Projects",
       "layout": { "direction": "column" },
       "children": [
-        { "id": "el_kicker_1", "type": "text", "role": "eyebrow", "content": "Selected Work" },
-        { "id": "el_h2_1", "type": "heading", "role": "title", "content": "Featured Projects", "placeholder": "Add a section title" },
+        { "id": "el_kicker_1", "type": "text", "role": "eyebrow", "content": "", "placeholder": "Add a eyebrow" },
+        { "id": "el_h2_1", "type": "heading", "role": "title", "content": "", "placeholder": "Add a section title" },
         {
           "id": "grid_projects",
           "type": "row",
@@ -80,9 +82,9 @@
               "role": "project-card",
               "layout": { "direction": "column", "gap": "10px" },
               "children": [
-                { "id": "img_project_1", "type": "image", "role": "thumbnail", "src": null, "alt": "Nova Dashboard project thumbnail" },
-                { "id": "el_project_1_title", "type": "text", "role": "title", "content": "Nova Dashboard", "placeholder": "Project name" },
-                { "id": "el_project_1_tag", "type": "text", "role": "tag", "content": "Product Design", "placeholder": "Project category" }
+                { "id": "img_project_1", "type": "image", "role": "thumbnail", "src": null, "alt": "Project thumbnail" },
+                { "id": "el_project_1_title", "type": "text", "role": "title", "content": "", "placeholder": "Project name" },
+                { "id": "el_project_1_tag", "type": "text", "role": "tag", "content": "", "placeholder": "Project category" }
               ]
             },
             {
@@ -91,9 +93,9 @@
               "role": "project-card",
               "layout": { "direction": "column", "gap": "10px" },
               "children": [
-                { "id": "img_project_2", "type": "image", "role": "thumbnail", "src": null, "alt": "Aether Mobile App project thumbnail" },
-                { "id": "el_project_2_title", "type": "text", "role": "title", "content": "Aether Mobile App", "placeholder": "Project name" },
-                { "id": "el_project_2_tag", "type": "text", "role": "tag", "content": "UI / UX", "placeholder": "Project category" }
+                { "id": "img_project_1", "type": "image", "role": "thumbnail", "src": null, "alt": "Project thumbnail" },
+                { "id": "el_project_1_title", "type": "text", "role": "title", "content": "", "placeholder": "Project name" },
+                { "id": "el_project_1_tag", "type": "text", "role": "tag", "content": "", "placeholder": "Project category" }
               ]
             },
             {
@@ -102,9 +104,9 @@
               "role": "project-card",
               "layout": { "direction": "column", "gap": "10px" },
               "children": [
-                { "id": "img_project_3", "type": "image", "role": "thumbnail", "src": null, "alt": "Loop Brand System project thumbnail" },
-                { "id": "el_project_3_title", "type": "text", "role": "title", "content": "Loop Brand System", "placeholder": "Project name" },
-                { "id": "el_project_3_tag", "type": "text", "role": "tag", "content": "Branding", "placeholder": "Project category" }
+                { "id": "img_project_1", "type": "image", "role": "thumbnail", "src": null, "alt": "Project thumbnail" },
+                { "id": "el_project_1_title", "type": "text", "role": "title", "content": "", "placeholder": "Project name" },
+                { "id": "el_project_1_tag", "type": "text", "role": "tag", "content": "", "placeholder": "Project category" }
               ]
             }
           ]
@@ -119,8 +121,8 @@
       "layout": { "direction": "column" },
       "style": { "base": { "background": "var(--color-surface)" } },
       "children": [
-        { "id": "el_kicker_2", "type": "text", "role": "eyebrow", "content": "About" },
-        { "id": "el_h2_2", "type": "heading", "role": "title", "content": "A little about me", "placeholder": "Add a section title" },
+        { "id": "el_kicker_2", "type": "text", "role": "eyebrow", "content": "", "placeholder": "Add a eyebrow"  },
+        { "id": "el_h2_2", "type": "heading", "role": "title", "content": "", "placeholder": "Add a section title" },
         {
           "id": "row_about",
           "type": "row",
@@ -131,7 +133,7 @@
               "id": "el_about_body",
               "type": "text",
               "role": "body",
-              "content": "I'm a designer-developer hybrid based in Tel Aviv, focused on building thoughtful digital products from idea to pixel-perfect launch. Previously worked with early-stage startups shaping their first product experience.",
+              "content": "",
               "placeholder": "Write a little about yourself"
             }
           ]
@@ -149,8 +151,8 @@
           "id": "col_footer_1",
           "type": "column",
           "children": [
-            { "id": "el_footer_logo", "type": "text", "role": "logo", "content": "Jordan Doe", "placeholder": "Your name" },
-            { "id": "el_footer_contact", "type": "text", "role": "body", "content": "Say hello — hello@jordandoe.com", "placeholder": "Add a contact email" }
+            { "id": "el_footer_logo", "type": "text", "role": "logo", "content": "", "placeholder": "Your name" },
+            { "id": "el_footer_contact", "type": "text", "role": "body", "content": "", "placeholder": "Add a contact email" }
           ]
         },
         {
@@ -158,9 +160,9 @@
           "type": "row",
           "layout": { "direction": "row", "gap": "16px" },
           "children": [
-            { "id": "el_social_1", "type": "text", "role": "nav-link", "content": "Twitter", "href": "#" },
-            { "id": "el_social_2", "type": "text", "role": "nav-link", "content": "LinkedIn", "href": "#" },
-            { "id": "el_social_3", "type": "text", "role": "nav-link", "content": "Dribbble", "href": "#" }
+            { "id": "el_social_1", "type": "text", "role": "nav-link", "content": "", "placeholder": "Link", "href": "#" },
+            { "id": "el_social_2", "type": "text", "role": "nav-link", "content": "", "placeholder": "Link", "href": "#" },
+            { "id": "el_social_3", "type": "text", "role": "nav-link", "content": "", "placeholder": "Link", "href": "#" }
           ]
         }
       ]

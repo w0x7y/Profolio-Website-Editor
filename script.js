@@ -94,6 +94,8 @@ document.addEventListener('DOMContentLoaded', () => {
 //     "direction": "column" | "row",
 //     "wrap": true | false,
 //     "blocks": [ { "width": "40%", "height": "18%", "tone": "neutral" }, ... ]
+//     // tone meanings: gradient-accent = image, gradient-dark = text,
+//     // accent = links/navbar, neutral = other
 //   }               // or { "blank": true } for the empty-page card
 //   "sections": []  // node tree (sections -> blocks -> elements) for the layout
 //                   // content — see docs/DATA_MODEL.md. Rendered onto the
