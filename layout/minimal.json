@@ -1,0 +1,13 @@
+{
+  "id": "minimal",
+  "name": "Minimal",
+  "description": "A quiet, type-led layout with lots of breathing room.",
+  "preview": {
+    "direction": "column",
+    "blocks": [
+      { "width": "40%", "height": "18%", "tone": "neutral" },
+      { "width": "100%", "height": "72%", "tone": "gradient-dark" }
+    ]
+  },
+  "html": ""
+}

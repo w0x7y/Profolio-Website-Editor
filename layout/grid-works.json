@@ -1,0 +1,14 @@
+{
+  "id": "grid-works",
+  "name": "Grid Works",
+  "description": "An even grid of work samples, good for lots of projects.",
+  "preview": {
+    "direction": "row",
+    "wrap": true,
+    "blocks": [
+      { "width": "46%", "height": "46%", "tone": "neutral" },
+      { "width": "46%", "height": "46%", "tone": "neutral" }
+    ]
+  },
+  "html": ""
+}

@@ -1,0 +1,14 @@
+{
+  "id": "example",
+  "name": "Example Portfolio",
+  "description": "A fully filled-in reference layout: nav, hero, projects, about and footer.",
+  "preview": {
+    "direction": "column",
+    "blocks": [
+      { "width": "100%", "height": "12%", "tone": "neutral" },
+      { "width": "100%", "height": "55%", "tone": "gradient-accent" },
+      { "width": "100%", "height": "20%", "tone": "gradient-dark" }
+    ]
+  },
+  "html": "<section class=\"site-nav editable\"><div class=\"site-nav__logo\">Jordan Doe</div><div class=\"site-nav__links\"><span>Work</span><span>About</span><span>Contact</span></div><div class=\"site-nav__cta\">Resume</div></section><section class=\"site-hero editable\"><div class=\"site-hero__text\"><span class=\"tag-pill\">Available for work</span><h1>Product Designer<br>&amp; Frontend Developer</h1><p>Crafting clean, functional interfaces with a focus on detail, motion and usability.</p><div class=\"site-hero__actions\"><div class=\"btn-mock btn-mock--primary\">View Work</div><div class=\"btn-mock btn-mock--ghost\">Get in Touch</div></div></div><div class=\"site-hero__visual\"><div class=\"avatar-blob\"></div></div></section><section class=\"site-section editable\"><span class=\"section-kicker\">Selected Work</span><h2>Featured Projects</h2><div class=\"project-grid\"><div class=\"project-card\"><div class=\"project-card__thumb\"></div><div class=\"project-card__title\">Nova Dashboard</div><div class=\"project-card__tag\">Product Design</div></div><div class=\"project-card\"><div class=\"project-card__thumb\"></div><div class=\"project-card__title\">Aether Mobile App</div><div class=\"project-card__tag\">UI / UX</div></div><div class=\"project-card\"><div class=\"project-card__thumb\"></div><div class=\"project-card__title\">Loop Brand System</div><div class=\"project-card__tag\">Branding</div></div></div></section><section class=\"site-section site-section--muted editable\"><span class=\"section-kicker\">About</span><h2>A little about me</h2><div class=\"about-grid\"><div class=\"about-portrait\"></div><p>I'm a designer-developer hybrid based in Tel Aviv, focused on building thoughtful digital products from idea to pixel-perfect launch. Previously worked with early-stage startups shaping their first product experience.</p></div></section><section class=\"site-footer editable\"><div class=\"site-footer__col\"><div class=\"site-nav__logo\">Jordan Doe</div><p>Say hello — hello@jordandoe.com</p></div><div class=\"site-footer__col site-footer__socials\"><span>Twitter</span><span>LinkedIn</span><span>Dribbble</span></div></section>"
+}

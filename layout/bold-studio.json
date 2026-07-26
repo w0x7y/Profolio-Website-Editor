@@ -1,0 +1,13 @@
+{
+  "id": "bold-studio",
+  "name": "Bold Studio",
+  "description": "A high-contrast hero band up top with content below.",
+  "preview": {
+    "direction": "column",
+    "blocks": [
+      { "width": "100%", "height": "30%", "tone": "accent" },
+      { "width": "100%", "height": "60%", "tone": "neutral" }
+    ]
+  },
+  "html": ""
+}

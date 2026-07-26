@@ -117,72 +117,10 @@
 
                     <div class="canvas-scroll">
                         <div class="canvas-frame" data-frame="desktop">
-
-                            <!-- ===== MOCK PORTFOLIO CONTENT (placeholder look) ===== -->
-                            <section class="site-nav editable">
-                                <div class="site-nav__logo">Jordan Doe</div>
-                                <div class="site-nav__links">
-                                    <span>Work</span><span>About</span><span>Contact</span>
-                                </div>
-                                <div class="site-nav__cta">Resume</div>
-                            </section>
-
-                            <section class="site-hero editable">
-                                <div class="site-hero__text">
-                                    <span class="tag-pill">Available for work</span>
-                                    <h1>Product Designer<br>&amp; Frontend Developer</h1>
-                                    <p>Crafting clean, functional interfaces with a focus on detail, motion and usability.</p>
-                                    <div class="site-hero__actions">
-                                        <div class="btn-mock btn-mock--primary">View Work</div>
-                                        <div class="btn-mock btn-mock--ghost">Get in Touch</div>
-                                    </div>
-                                </div>
-                                <div class="site-hero__visual">
-                                    <div class="avatar-blob"></div>
-                                </div>
-                            </section>
-
-                            <section class="site-section editable">
-                                <span class="section-kicker">Selected Work</span>
-                                <h2>Featured Projects</h2>
-                                <div class="project-grid">
-                                    <div class="project-card">
-                                        <div class="project-card__thumb"></div>
-                                        <div class="project-card__title">Nova Dashboard</div>
-                                        <div class="project-card__tag">Product Design</div>
-                                    </div>
-                                    <div class="project-card">
-                                        <div class="project-card__thumb"></div>
-                                        <div class="project-card__title">Aether Mobile App</div>
-                                        <div class="project-card__tag">UI / UX</div>
-                                    </div>
-                                    <div class="project-card">
-                                        <div class="project-card__thumb"></div>
-                                        <div class="project-card__title">Loop Brand System</div>
-                                        <div class="project-card__tag">Branding</div>
-                                    </div>
-                                </div>
-                            </section>
-
-                            <section class="site-section site-section--muted editable">
-                                <span class="section-kicker">About</span>
-                                <h2>A little about me</h2>
-                                <div class="about-grid">
-                                    <div class="about-portrait"></div>
-                                    <p>I'm a designer-developer hybrid based in Tel Aviv, focused on building thoughtful digital products from idea to pixel-perfect launch. Previously worked with early-stage startups shaping their first product experience.</p>
-                                </div>
-                            </section>
-
-                            <section class="site-footer editable">
-                                <div class="site-footer__col">
-                                    <div class="site-nav__logo">Jordan Doe</div>
-                                    <p>Say hello — hello@jordandoe.com</p>
-                                </div>
-                                <div class="site-footer__col site-footer__socials">
-                                    <span>Twitter</span><span>LinkedIn</span><span>Dribbble</span>
-                                </div>
-                            </section>
-
+                            <div class="canvas-frame__empty">
+                                <svg viewBox="0 0 24 24" class="icon"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 3v18M3 9h6"/></svg>
+                                <span>Blank canvas</span>
+                            </div>
                         </div>
                     </div>
                 </main>
@@ -213,34 +151,7 @@
                         <!-- LAYOUTS -->
                         <div class="panel__pane is-active" data-pane="layouts">
                             <p class="panel__hint">Start from a layout, or build your own from a blank page.</p>
-                            <div class="layout-grid">
-                                <button class="layout-card">
-                                    <div class="layout-card__preview layout-card__preview--minimal"></div>
-                                    <span>Minimal</span>
-                                </button>
-                                <button class="layout-card">
-                                    <div class="layout-card__preview layout-card__preview--bold"></div>
-                                    <span>Bold Studio</span>
-                                </button>
-                                <button class="layout-card">
-                                    <div class="layout-card__preview layout-card__preview--grid"></div>
-                                    <span>Grid Works</span>
-                                </button>
-                                <button class="layout-card">
-                                    <div class="layout-card__preview layout-card__preview--split"></div>
-                                    <span>Split Bio</span>
-                                </button>
-                                <button class="layout-card">
-                                    <div class="layout-card__preview layout-card__preview--photo"></div>
-                                    <span>Photo First</span>
-                                </button>
-                                <button class="layout-card layout-card--blank">
-                                    <div class="layout-card__preview layout-card__preview--blank">
-                                        <svg viewBox="0 0 24 24" class="icon"><path d="M12 5v14M5 12h14"/></svg>
-                                    </div>
-                                    <span>Blank</span>
-                                </button>
-                            </div>
+                            <div class="layout-grid" id="layoutGrid"><!-- populated automatically from /layout --></div>
                         </div>
 
                         <!-- THEMES -->

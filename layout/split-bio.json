@@ -1,0 +1,13 @@
+{
+  "id": "split-bio",
+  "name": "Split Bio",
+  "description": "A two-column layout, portrait or color block on one side.",
+  "preview": {
+    "direction": "row",
+    "blocks": [
+      { "width": "45%", "height": "100%", "tone": "accent" },
+      { "width": "55%", "height": "100%", "tone": "neutral" }
+    ]
+  },
+  "html": ""
+}

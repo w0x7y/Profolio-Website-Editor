@@ -1,0 +1,9 @@
+{
+  "id": "blank",
+  "name": "Blank",
+  "description": "Start from an empty page and build it up yourself.",
+  "preview": {
+    "blank": true
+  },
+  "html": ""
+}
