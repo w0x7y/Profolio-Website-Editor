@@ -6,10 +6,10 @@
     "direction": "row",
     "wrap": true,
     "blocks": [
-      { "width": "100%", "height": "12%", "tone": "accent" },
+      { "width": "100%", "height": "15%", "tone": " " },
       { "width": "55%", "height": "55%", "tone": "gradient-dark" },
       { "width": "40%", "height": "55%", "tone": "gradient-accent" },
-      { "width": "100%", "height": "20%", "tone": "neutral" }
+      { "width": "100%", "height": "20%", "tone": " " }
     ]
   },
   "sections": [
