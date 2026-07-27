@@ -4,6 +4,19 @@
     box-sizing: border-box;
 }
 
+/* scrollbars are hidden app-wide — every scroll container (canvas, panel)
+   still scrolls by wheel/trackpad/keyboard, it just doesn't draw a track */
+* {
+    scrollbar-width: none;      /* Firefox */
+    -ms-overflow-style: none;   /* legacy Edge/IE */
+}
+
+*::-webkit-scrollbar {          /* Chrome / Safari / Edge */
+    width: 0;
+    height: 0;
+    display: none;
+}
+
 /* any color/parameter that will be repited make a variabol for */
 :root {
     --font-family: 'Maple Mono', monospace;
