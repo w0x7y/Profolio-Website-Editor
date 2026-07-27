@@ -241,6 +241,20 @@ function appendSectionsToCanvas(sections, frameEl) {
     return firstAdded;
 }
 
+/**
+ * Put the blank-canvas placeholder back once the last section is gone (e.g.
+ * every section has been dragged onto the trash), so an emptied canvas reads
+ * as "start here" instead of as a broken, zero-height page.
+ */
+function refreshCanvasEmptyState(frameEl) {
+    if (!frameEl) return;
+    if (frameEl.querySelector('[data-node-id]')) return;
+    if (frameEl.querySelector('.canvas-frame__empty')) return;
+
+    frameEl.innerHTML = '';
+    frameEl.appendChild(buildCanvasEmptyState());
+}
+
 function collectNodeIds(frameEl) {
     const ids = new Set();
     frameEl.querySelectorAll('[data-node-id]').forEach(el => ids.add(el.dataset.nodeId));

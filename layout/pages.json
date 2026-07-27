@@ -1,8 +1,10 @@
 [
+  { "id": "navbar", "name": "Navbar" },
   { "id": "home", "name": "Home" },
   { "id": "about", "name": "About" },
   { "id": "showcase", "name": "Showcase" },
   { "id": "blog", "name": "Blog" },
   { "id": "contact", "name": "Contact" },
-  { "id": "links", "name": "Links" }
+  { "id": "links", "name": "Links" },
+  { "id": "footer", "name": "Footer" }
 ]

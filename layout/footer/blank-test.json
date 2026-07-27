@@ -1,0 +1,32 @@
+{
+  "id": "blank-test",
+  "name": "Blank (test)",
+  "description": "Test fixture: appends one empty Footer section to the canvas.",
+  "preview": {
+    "direction": "column",
+    "blocks": [
+      { "width": "100%", "height": "52%", "tone": "neutral" },
+      { "width": "45%", "height": "14%", "tone": "gradient-dark" }
+    ]
+  },
+  "sections": [
+    {
+      "id": "sec_footer_blank",
+      "type": "section",
+      "role": "footer",
+      "name": "Footer (blank)",
+      "layout": { "direction": "column" },
+      "children": [
+        {
+          "id": "el_footer_blank_title",
+          "type": "heading",
+          "role": "title",
+          "content": "Footer",
+          "placeholder": "Add a section title",
+          "style": { "base": { "color": "#ffffff" } }
+        },
+        { "id": "el_footer_blank_body", "type": "text", "role": "body", "content": "", "placeholder": "Empty Footer section — drop your content here" }
+      ]
+    }
+  ]
+}

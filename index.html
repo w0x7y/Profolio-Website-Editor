@@ -119,125 +119,136 @@
 
                 <!-- ============ RIGHT PANEL ============ -->
                 <aside class="panel">
-                    <div class="panel__tabs">
-                        <button class="panel__tab is-active" type="button" data-panel="layouts">
-                            <svg viewBox="0 0 24 24" class="icon icon--sm"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
-                            Layouts
-                        </button>
-                        <button class="panel__tab" type="button" data-panel="themes">
-                            <svg viewBox="0 0 24 24" class="icon icon--sm"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 0 0 18z"/></svg>
-                            Themes
-                        </button>
-                        <button class="panel__tab" type="button" data-panel="assets">
-                            <svg viewBox="0 0 24 24" class="icon icon--sm"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="9" r="1.7"/><path d="M21 16l-5-5-9 9"/></svg>
-                            Assets
-                        </button>
-                        <button class="panel__tab" type="button" data-panel="settings">
-                            <svg viewBox="0 0 24 24" class="icon icon--sm"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.9l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.9-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1-1.6 1.7 1.7 0 0 0-1.9.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.9 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.6-1 1.7 1.7 0 0 0-.3-1.9l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.9.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.9-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.9V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>
-                            Settings
-                        </button>
-                    </div>
-
-                    <div class="panel__content">
-
-                        <!-- LAYOUTS -->
-                        <div class="panel__pane is-active" data-pane="layouts">
-                            <p class="panel__hint">Expand a page, then start from a layout.</p>
-                            <div class="page-accordion" id="pageAccordion"><!-- populated automatically from /layout --></div>
+                    <!-- top 3/4: the tabbed panel -->
+                    <div class="panel__main">
+                        <div class="panel__tabs">
+                            <button class="panel__tab is-active" type="button" data-panel="layouts">
+                                <svg viewBox="0 0 24 24" class="icon icon--sm"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+                                Layouts
+                            </button>
+                            <button class="panel__tab" type="button" data-panel="themes">
+                                <svg viewBox="0 0 24 24" class="icon icon--sm"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 0 0 18z"/></svg>
+                                Themes
+                            </button>
+                            <button class="panel__tab" type="button" data-panel="assets">
+                                <svg viewBox="0 0 24 24" class="icon icon--sm"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="9" r="1.7"/><path d="M21 16l-5-5-9 9"/></svg>
+                                Assets
+                            </button>
+                            <button class="panel__tab" type="button" data-panel="settings">
+                                <svg viewBox="0 0 24 24" class="icon icon--sm"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.9l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.9-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1-1.6 1.7 1.7 0 0 0-1.9.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.9 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.6-1 1.7 1.7 0 0 0-.3-1.9l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.9.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.9-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.9V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>
+                                Settings
+                            </button>
                         </div>
 
-                        <!-- THEMES -->
-                        <div class="panel__pane" data-pane="themes">
-                            <p class="panel__hint">Pick a color and type theme for your site.</p>
-                            <div class="theme-list">
-                                <button class="theme-card is-active">
-                                    <div class="theme-card__swatches">
-                                        <span style="background:#111114"></span>
-                                        <span style="background:#6366f1"></span>
-                                        <span style="background:#f4f4f5"></span>
-                                    </div>
-                                    <span>Ink &amp; Violet</span>
-                                </button>
-                                <button class="theme-card">
-                                    <div class="theme-card__swatches">
-                                        <span style="background:#1c1917"></span>
-                                        <span style="background:#f97316"></span>
-                                        <span style="background:#fafaf9"></span>
-                                    </div>
-                                    <span>Ember</span>
-                                </button>
-                                <button class="theme-card">
-                                    <div class="theme-card__swatches">
-                                        <span style="background:#0f172a"></span>
-                                        <span style="background:#22d3ee"></span>
-                                        <span style="background:#f8fafc"></span>
-                                    </div>
-                                    <span>Cyan Night</span>
-                                </button>
-                                <button class="theme-card">
-                                    <div class="theme-card__swatches">
-                                        <span style="background:#f5f5f4"></span>
-                                        <span style="background:#16a34a"></span>
-                                        <span style="background:#ffffff"></span>
-                                    </div>
-                                    <span>Sage Light</span>
-                                </button>
+                        <div class="panel__content">
+
+                            <!-- LAYOUTS -->
+                            <div class="panel__pane is-active" data-pane="layouts">
+                                <p class="panel__hint">Expand a page, then start from a layout.</p>
+                                <div class="page-accordion" id="pageAccordion"><!-- populated automatically from /layout --></div>
                             </div>
 
-                            <p class="panel__hint panel__hint--tight">Typography</p>
-                            <div class="font-list">
-                                <button class="font-card is-active">
-                                    <span class="font-card__preview" style="font-family: 'Maple Mono', monospace;">Aa</span>
-                                    <span>Maple Mono</span>
-                                </button>
-                                <button class="font-card">
-                                    <span class="font-card__preview" style="font-family: Georgia, serif;">Aa</span>
-                                    <span>Editorial Serif</span>
-                                </button>
-                                <button class="font-card">
-                                    <span class="font-card__preview" style="font-family: Arial, sans-serif;">Aa</span>
-                                    <span>Neutral Sans</span>
-                                </button>
-                            </div>
-                        </div>
+                            <!-- THEMES -->
+                            <div class="panel__pane" data-pane="themes">
+                                <p class="panel__hint">Pick a color and type theme for your site.</p>
+                                <div class="theme-list">
+                                    <button class="theme-card is-active">
+                                        <div class="theme-card__swatches">
+                                            <span style="background:#111114"></span>
+                                            <span style="background:#6366f1"></span>
+                                            <span style="background:#f4f4f5"></span>
+                                        </div>
+                                        <span>Ink &amp; Violet</span>
+                                    </button>
+                                    <button class="theme-card">
+                                        <div class="theme-card__swatches">
+                                            <span style="background:#1c1917"></span>
+                                            <span style="background:#f97316"></span>
+                                            <span style="background:#fafaf9"></span>
+                                        </div>
+                                        <span>Ember</span>
+                                    </button>
+                                    <button class="theme-card">
+                                        <div class="theme-card__swatches">
+                                            <span style="background:#0f172a"></span>
+                                            <span style="background:#22d3ee"></span>
+                                            <span style="background:#f8fafc"></span>
+                                        </div>
+                                        <span>Cyan Night</span>
+                                    </button>
+                                    <button class="theme-card">
+                                        <div class="theme-card__swatches">
+                                            <span style="background:#f5f5f4"></span>
+                                            <span style="background:#16a34a"></span>
+                                            <span style="background:#ffffff"></span>
+                                        </div>
+                                        <span>Sage Light</span>
+                                    </button>
+                                </div>
 
-                        <!-- ASSETS -->
-                        <div class="panel__pane" data-pane="assets">
-                            <p class="panel__hint">Images, icons and files for your site.</p>
-                            <div class="asset-upload">
-                                <svg viewBox="0 0 24 24" class="icon"><path d="M12 16V4M6 10l6-6 6 6"/><path d="M4 20h16"/></svg>
-                                <span>Drop files or click to upload</span>
-                            </div>
-                            <div class="asset-grid">
-                                <div class="asset-thumb"></div>
-                                <div class="asset-thumb"></div>
-                                <div class="asset-thumb"></div>
-                                <div class="asset-thumb"></div>
-                                <div class="asset-thumb"></div>
-                                <div class="asset-thumb"></div>
-                            </div>
-                        </div>
-
-                        <!-- SETTINGS -->
-                        <div class="panel__pane" data-pane="settings">
-                            <p class="panel__hint">Site-wide settings.</p>
-                            <div class="field">
-                                <label>Site title</label>
-                                <div class="field__input">Jordan Doe — Portfolio</div>
-                            </div>
-                            <div class="field">
-                                <label>Domain</label>
-                                <div class="field__input">jordandoe.profolio.site</div>
-                            </div>
-                            <div class="field">
-                                <label>Favicon</label>
-                                <div class="field__input field__input--row">
-                                    <div class="favicon-preview"></div>
-                                    <span>Upload icon</span>
+                                <p class="panel__hint panel__hint--tight">Typography</p>
+                                <div class="font-list">
+                                    <button class="font-card is-active">
+                                        <span class="font-card__preview" style="font-family: 'Maple Mono', monospace;">Aa</span>
+                                        <span>Maple Mono</span>
+                                    </button>
+                                    <button class="font-card">
+                                        <span class="font-card__preview" style="font-family: Georgia, serif;">Aa</span>
+                                        <span>Editorial Serif</span>
+                                    </button>
+                                    <button class="font-card">
+                                        <span class="font-card__preview" style="font-family: Arial, sans-serif;">Aa</span>
+                                        <span>Neutral Sans</span>
+                                    </button>
                                 </div>
                             </div>
-                        </div>
 
+                            <!-- ASSETS -->
+                            <div class="panel__pane" data-pane="assets">
+                                <p class="panel__hint">Images, icons and files for your site.</p>
+                                <div class="asset-upload">
+                                    <svg viewBox="0 0 24 24" class="icon"><path d="M12 16V4M6 10l6-6 6 6"/><path d="M4 20h16"/></svg>
+                                    <span>Drop files or click to upload</span>
+                                </div>
+                                <div class="asset-grid">
+                                    <div class="asset-thumb"></div>
+                                    <div class="asset-thumb"></div>
+                                    <div class="asset-thumb"></div>
+                                    <div class="asset-thumb"></div>
+                                    <div class="asset-thumb"></div>
+                                    <div class="asset-thumb"></div>
+                                </div>
+                            </div>
+
+                            <!-- SETTINGS -->
+                            <div class="panel__pane" data-pane="settings">
+                                <p class="panel__hint">Site-wide settings.</p>
+                                <div class="field">
+                                    <label>Site title</label>
+                                    <div class="field__input">Jordan Doe — Portfolio</div>
+                                </div>
+                                <div class="field">
+                                    <label>Domain</label>
+                                    <div class="field__input">jordandoe.profolio.site</div>
+                                </div>
+                                <div class="field">
+                                    <label>Favicon</label>
+                                    <div class="field__input field__input--row">
+                                        <div class="favicon-preview"></div>
+                                        <span>Upload icon</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                        </div>
+                    </div>
+
+                    <!-- bottom 1/4: drop a canvas section here to delete it -->
+                    <div class="panel__trash" id="canvasTrash">
+                        <div class="panel__trash-inner">
+                            <svg viewBox="0 0 24 24" class="icon"><path d="M4 7h16M10 7V5a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v2M6 7l1 12a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2l1-12M10 11v6M14 11v6"/></svg>
+                            <span>Drop a section here to delete it</span>
+                        </div>
                     </div>
                 </aside>
 

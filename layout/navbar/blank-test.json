@@ -1,0 +1,28 @@
+{
+  "id": "blank-test",
+  "name": "Blank (test)",
+  "description": "Test fixture: appends one empty Navbar section to the canvas.",
+  "preview": {
+    "direction": "row",
+    "blocks": [
+      { "width": "26%", "height": "14%", "tone": "accent" },
+      { "width": "16%", "height": "14%", "tone": "neutral" },
+      { "width": "16%", "height": "14%", "tone": "neutral" },
+      { "width": "16%", "height": "14%", "tone": "neutral" }
+    ]
+  },
+  "sections": [
+    {
+      "id": "sec_navbar_blank",
+      "type": "section",
+      "role": "nav",
+      "name": "Navbar (blank)",
+      "layout": { "direction": "row", "align": "center", "justify": "space-between" },
+      "style": { "base": { "background": "var(--color-background)" } },
+      "children": [
+        { "id": "el_navbar_blank_logo", "type": "text", "role": "logo", "content": "Logo", "placeholder": "Add a logo" },
+        { "id": "el_navbar_blank_links", "type": "text", "role": "nav-link", "content": "", "placeholder": "Empty Navbar section — drop your links here" }
+      ]
+    }
+  ]
+}
