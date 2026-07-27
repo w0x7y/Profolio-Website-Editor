@@ -1,7 +1,7 @@
 {
   "id": "example",
-  "name": "Example Portfolio",
-  "description": "A fully filled-in reference layout: nav, hero, projects, about and footer.",
+  "name": "Example Home Portfolio",
+  "description": "A fully filled-in home reference layout: nav, hero.",
   "preview": {
     "direction": "row",
     "wrap": true,
@@ -108,33 +108,6 @@
                 { "id": "el_project_1_title", "type": "text", "role": "title", "content": "", "placeholder": "Project name" },
                 { "id": "el_project_1_tag", "type": "text", "role": "tag", "content": "", "placeholder": "Project category" }
               ]
-            }
-          ]
-        }
-      ]
-    },
-    {
-      "id": "sec_about",
-      "type": "section",
-      "role": "about",
-      "name": "About",
-      "layout": { "direction": "column" },
-      "style": { "base": { "background": "var(--color-surface)" } },
-      "children": [
-        { "id": "el_kicker_2", "type": "text", "role": "eyebrow", "content": "", "placeholder": "Add a eyebrow"  },
-        { "id": "el_h2_2", "type": "heading", "role": "title", "content": "", "placeholder": "Add a section title" },
-        {
-          "id": "row_about",
-          "type": "row",
-          "layout": { "direction": "row", "gap": "32px", "align": "center" },
-          "children": [
-            { "id": "img_about", "type": "image", "role": "portrait", "src": null, "alt": "Portrait photo" },
-            {
-              "id": "el_about_body",
-              "type": "text",
-              "role": "body",
-              "content": "",
-              "placeholder": "Write a little about yourself"
             }
           ]
         }

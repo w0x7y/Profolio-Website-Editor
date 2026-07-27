@@ -1,0 +1,44 @@
+{
+  "id": "example",
+  "name": "Example About Portfolio",
+  "description": "A fully filled-in About reference layout: hero, description.",
+  "preview": {
+    "direction": "row",
+    "wrap": true,
+    "blocks": [
+      { "width": "20%", "height": "12%", "tone": "accent" },
+      { "width": "55%", "height": "55%", "tone": "gradient-dark" },
+      { "width": "40%", "height": "55%", "tone": "gradient-accent" },
+      { "width": "100%", "height": "20%", "tone": "neutral" }
+    ]
+  },
+  "sections": [
+    {
+      "id": "sec_about",
+      "type": "section",
+      "role": "about",
+      "name": "About",
+      "layout": { "direction": "column" },
+      "style": { "base": { "background": "var(--color-surface)" } },
+      "children": [
+        { "id": "el_kicker_2", "type": "text", "role": "eyebrow", "content": "", "placeholder": "Add a eyebrow"  },
+        { "id": "el_h2_2", "type": "heading", "role": "title", "content": "", "placeholder": "Add a section title" },
+        {
+          "id": "row_about",
+          "type": "row",
+          "layout": { "direction": "row", "gap": "32px", "align": "center" },
+          "children": [
+            { "id": "img_about", "type": "image", "role": "portrait", "src": null, "alt": "Portrait photo" },
+            {
+              "id": "el_about_body",
+              "type": "text",
+              "role": "body",
+              "content": "",
+              "placeholder": "Write a little about yourself"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

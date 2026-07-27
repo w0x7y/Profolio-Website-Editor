@@ -824,7 +824,7 @@ button {
     display: flex;
     flex-direction: column;
     gap: 5px;
-    transition: border-color 0.15s ease;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
 }
 
 .layout-card:hover .layout-card__preview {
@@ -842,6 +842,18 @@ button {
 .preview-block--accent { background: #8b5cf6; }
 .preview-block--gradient-dark { background: #7c3aed; }
 .preview-block--gradient-accent { background: #c084fc; }
+
+/* brief confirmation that this card's sections were appended to the canvas.
+   Layout cards are actions, not a persistent selection — the canvas can hold
+   several layouts at once, so nothing stays highlighted. */
+.layout-card.is-added .layout-card__preview {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px var(--accent-soft);
+}
+
+.layout-card.is-added {
+    color: var(--text-primary);
+}
 
 .layout-card__preview.is-blank {
     align-items: center;
