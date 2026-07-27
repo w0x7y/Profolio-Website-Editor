@@ -1,0 +1,26 @@
+{
+  "id": "blank-test",
+  "name": "Blank (test)",
+  "description": "Test fixture: appends one empty Showcase section to the canvas.",
+  "preview": {
+    "direction": "column",
+    "blocks": [
+      { "width": "35%", "height": "16%", "tone": "neutral" },
+      { "width": "100%", "height": "60%", "tone": "neutral" }
+    ]
+  },
+  "sections": [
+    {
+      "id": "sec_showcase_blank",
+      "type": "section",
+      "role": "projects",
+      "name": "Showcase (blank)",
+      "layout": { "direction": "column" },
+      "style": { "base": { "background": "var(--color-surface)" } },
+      "children": [
+        { "id": "el_showcase_blank_title", "type": "heading", "role": "title", "content": "Showcase", "placeholder": "Add a section title" },
+        { "id": "el_showcase_blank_body", "type": "text", "role": "body", "content": "", "placeholder": "Empty Showcase section — drop your content here" }
+      ]
+    }
+  ]
+}

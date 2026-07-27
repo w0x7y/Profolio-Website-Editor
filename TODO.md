@@ -41,11 +41,14 @@ can wait a long time).
 - [ ] Tooltips are static — verify they stay correct as tools gain real behavior `Easy` `P3`
 
 ### Right panel — Layouts tab
-- [x] Clicking a layout card actually applies it to the canvas `Hard` `P0` — wired in `script.js` via `renderPageIntoCanvas()`; still needs the confirmation prompt below
-- [ ] Confirmation prompt when applying a layout over existing canvas content ("this will replace your current page") `Easy` `P1`
-- [ ] Fill in the `sections` field for `minimal.json`, `split-bio.json`, and `photo-first.json` (currently empty arrays — only `example.json` has real content; schema migrated from a raw `html` string to a `sections` node tree, see [docs/DATA_MODEL.md](./docs/DATA_MODEL.md)) `Easy` `P1`
-- [ ] Decide whether "layout" means a whole starter page, or a single section users can insert (right now it's page-level only) `Medium` `P1`
-- [ ] Support applying a layout to a single section instead of the whole page `Medium` `P2`
+- [x] Clicking a layout card actually applies it to the canvas `Hard` `P0` — wired in `script.js` via `appendSectionsToCanvas()`
+- [x] Decide whether "layout" means a whole starter page, or a single section users can insert `Medium` `P1` — both, and every card is additive: it appends its sections to the bottom of the canvas rather than replacing it. Home's cards are page shells, the other pages' cards are sections that stack underneath.
+- [x] Each page's folder loads its own layouts (About / Showcase / Blog / Contact / Links, not just Home) `Easy` `P1` — every manifest is populated; only About has real content so far, the rest carry a `blank-test.json` placeholder
+- [ ] Fill in the `sections` field for `minimal.json`, `split-bio.json`, and `photo-first.json` (currently empty arrays — clicking them is a no-op now that cards append instead of replace; same for `home/blank.json`, whose "start from an empty page" meaning no longer applies) `Easy` `P1`
+- [ ] Real Showcase / Blog / Contact / Links layouts to replace the `blank-test.json` placeholders `Medium` `P1`
+- [ ] A "clear canvas" / start-over action — inserting is currently one-way, so a mis-clicked layout can only be undone by reloading the page `Easy` `P0`
+- [ ] Let the user choose where an inserted section lands (drop between existing sections) instead of always appending at the bottom `Medium` `P2`
+- [ ] Support applying a layout to a single existing section (replace in place) `Medium` `P2`
 - [ ] More layout options / categories (e.g. filter by style, industry, single-page vs multi-page) `Easy` `P3`
 - [ ] "Add page" / rename / reorder / delete actions on the Layouts tab's page accordion (pages are fixed by `layout/pages.json` right now) `Medium` `P1`
 - [ ] Search/filter within the Layouts tab if the list grows `Easy` `P3`
@@ -93,7 +96,7 @@ can wait a long time).
 - [ ] "Publish" button actually publishes/deploys the site somewhere `Hard` `P0`
 - [ ] Publish flow: choose subdomain vs custom domain, confirm, show progress/success state `Medium` `P1`
 - [ ] Avatar/account menu (currently a static "JD" circle with no click behavior) `Easy` `P2`
-- [ ] Multi-page support: the Layouts tab now lists the pages (Home/About/Showcase/Blog/Contact/Links) as accordion rows, but the canvas still only ever holds one page — applying a layout from any row replaces the same canvas `Hard` `P1`
+- [ ] Multi-page support: the Layouts tab lists Home/About/Showcase/Blog/Contact/Links as accordion rows, but there's still only one canvas — every row's layouts append to that same canvas, so the rows are really section categories, not separate pages. Decide whether these become real pages (with their own canvas + navigation between them) or stay as section groups `Hard` `P1`
 - [ ] Zoom controls: actually change canvas zoom level (currently static "100%" label, buttons do nothing) `Medium` `P2`
 
 ### Canvas toolbar
@@ -203,8 +206,9 @@ Needed before real publishing/multi-user use is possible.
 37. Layers tool: full layers panel (tree view, reorder/reparent, visibility, lock) `Hard` `P1`
 
 ### Phase 9 — Round out layouts, themes & assets (P1)
-38. Confirmation prompt when applying a layout over existing content `Easy` `P1`
-39. Decide whether "layout" means a whole page or a single insertable section `Medium` `P1`
+38. ~~Confirmation prompt when applying a layout over existing content~~ — moot: layouts append instead of replacing `Easy` `P1`
+39. ~~Decide whether "layout" means a whole page or a single insertable section~~ — done: both, every card appends `Medium` `P1`
+39a. Real Showcase / Blog / Contact / Links layouts, replacing the `blank-test.json` placeholders `Medium` `P1`
 40. Load Google Fonts (or self-hosted fonts) for theme font options `Easy` `P1`
 41. Persist selected theme/font with the project data `Easy` `P1`
 42. Image thumbnails reflect actual uploaded files `Easy` `P1`
@@ -235,7 +239,7 @@ Needed before real publishing/multi-user use is possible.
 61. Manual "Save" state indicator `Easy` `P2`
 62. Shapes tool (rectangle, circle, line, divider) `Easy` `P2`
 63. Embed tool (custom HTML/embed blocks) `Medium` `P2`
-64. Support applying a layout to a single section instead of the whole page `Medium` `P2`
+64. Support applying a layout to a single existing section (replace in place), and choosing where an inserted section lands instead of always appending `Medium` `P2`
 65. Bigger preview / hover-to-preview before applying a layout `Medium` `P2`
 66. Loading and error states in the Layouts tab while fetching `Easy` `P2`
 67. Let users customize a theme's individual colors `Medium` `P2`

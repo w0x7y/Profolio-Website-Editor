@@ -10,10 +10,13 @@ real editor (top bar, left tool rail, center canvas, right panel with
 Layouts/Themes/Assets/Settings tabs). The Layouts tab is an accordion with
 one collapsible row per page of the site (Home, About, Showcase, Blog,
 Contact, Links); each row loads its cards from that page's folder under
-`layout/`, and clicking a layout renders that layout's `sections` tree onto
-the canvas. Only Home ships with layouts so far — the other pages are set up
-and load the same way, they just have nothing in them yet. Selecting/editing
-content, saving, and publishing are not wired yet.
+`layout/`, and clicking a layout appends that layout's `sections` tree to the
+bottom of the canvas. Layouts are additive: Home's cards give you a page shell
+(nav / hero / projects / footer) and the other pages' cards stack their
+sections underneath, so a page is assembled by picking one card after another.
+Home and About ship with real layouts; the other pages currently hold only a
+`blank-test` placeholder. Selecting/editing content, saving, and publishing are
+not wired yet.
 
 ## Project structure
 
@@ -21,7 +24,7 @@ content, saving, and publishing are not wired yet.
 Profolio Editor/
 ├── index.html          Editor shell markup (top bar, toolbar, canvas, right panel)
 ├── style.css            All styling (dark editor chrome + light canvas page + rendered node styles)
-├── script.js             UI interactions (tab/tool switching, page accordion, layout loader/selection)
+├── script.js             UI interactions (tab/tool switching, page accordion, layout loader/insertion)
 ├── renderer.js           Renders a sections node tree onto the canvas (see docs/DATA_MODEL.md)
 ├── docs/
 │   └── DATA_MODEL.md      The data model a page/site is built from (sections → blocks → elements)
@@ -33,17 +36,23 @@ Profolio Editor/
     │   ├── split-bio.json
     │   ├── photo-first.json
     │   ├── blank.json
-    │   └── example.json     Fully filled-in reference layout (nav/hero/projects/about/footer)
+    │   └── example.json     Fully filled-in reference layout (nav/hero/projects/footer)
     ├── about/
-    │   └── manifest.json   Empty for now — drop layout .json files here and list them
+    │   ├── manifest.json
+    │   ├── example.json     Filled-in About section (title + portrait + bio)
+    │   └── blank-test.json  Placeholder section, for checking that inserts work
     ├── showcase/
-    │   └── manifest.json
+    │   ├── manifest.json
+    │   └── blank-test.json
     ├── blog/
-    │   └── manifest.json
+    │   ├── manifest.json
+    │   └── blank-test.json
     ├── contact/
-    │   └── manifest.json
+    │   ├── manifest.json
+    │   └── blank-test.json
     └── links/
-        └── manifest.json
+        ├── manifest.json
+        └── blank-test.json
 ```
 
 `pages.json` lists the site's pages as `{ "id", "name" }` pairs; each `id` is
@@ -53,8 +62,10 @@ Each `layout/<page>/*.json` file describes one starting layout: an `id`,
 `name`, `description`, a `preview` (used to draw the little thumbnail block
 diagram in the panel), and a `sections` field holding the actual page content
 as a node tree — see [docs/DATA_MODEL.md](./docs/DATA_MODEL.md) for the shape.
-Clicking a layout card renders its `sections` onto the canvas via
-`renderer.js`. Each page's `manifest.json` exists because a browser can't list
+Clicking a layout card appends its `sections` to the bottom of the canvas via
+`renderer.js` — nothing already on the canvas is replaced, and the same card
+can be used more than once (node ids are rewritten on insert to stay unique).
+Each page's `manifest.json` exists because a browser can't list
 a folder's contents on its own — it just tells `script.js` which files to
 fetch. A page with an empty manifest (`[]`) still gets its accordion row; the
 row just says it has no layouts yet.
@@ -90,7 +101,7 @@ npx serve .
 - [x] Layouts tab is a per-page accordion (Home / About / Showcase / Blog / Contact / Links) driven by `layout/pages.json`
 - [x] Each page's layout cards load automatically from `layout/<page>/*.json` via that folder's `manifest.json`
 - [x] Data model for a site/page (sections → blocks → elements) decided — see [docs/DATA_MODEL.md](./docs/DATA_MODEL.md)
-- [x] Canvas renders from that data model (`renderer.js`) — clicking a layout card in the right panel renders its content onto the canvas
+- [x] Canvas renders from that data model (`renderer.js`) — clicking a layout card appends its sections to the bottom of the canvas, so layouts stack instead of replacing each other
 - [ ] Everything else, including selecting/editing what's rendered (see [TODO.md](./TODO.md))
 
 See [TODO.md](./TODO.md) for the full task list and a prioritized, dependency-ordered implementation plan.

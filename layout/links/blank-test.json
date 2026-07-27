@@ -1,0 +1,26 @@
+{
+  "id": "blank-test",
+  "name": "Blank (test)",
+  "description": "Test fixture: appends one empty Links section to the canvas.",
+  "preview": {
+    "direction": "column",
+    "blocks": [
+      { "width": "35%", "height": "16%", "tone": "neutral" },
+      { "width": "100%", "height": "60%", "tone": "neutral" }
+    ]
+  },
+  "sections": [
+    {
+      "id": "sec_links_blank",
+      "type": "section",
+      "role": "links",
+      "name": "Links (blank)",
+      "layout": { "direction": "column" },
+      "style": { "base": { "background": "var(--color-surface)" } },
+      "children": [
+        { "id": "el_links_blank_title", "type": "heading", "role": "title", "content": "Links", "placeholder": "Add a section title" },
+        { "id": "el_links_blank_body", "type": "text", "role": "body", "content": "", "placeholder": "Empty Links section — drop your content here" }
+      ]
+    }
+  ]
+}

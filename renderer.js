@@ -6,6 +6,11 @@
 // element on the canvas exists because a node in the data model says it
 // should, not because it was written into index.html.
 //
+// Content reaches the canvas two ways: renderPageIntoCanvas() replaces
+// everything (used for the initial empty state), and
+// appendSectionsToCanvas() adds sections below what's already there (used
+// by every layout card).
+//
 // Every rendered element carries data-node-id (+ data-node-type /
 // data-node-role) so later work (click-to-select, drag-reorder, the
 // layers panel, undo/redo, ...) can map a DOM node back to its place in
@@ -205,6 +210,66 @@ function renderPageIntoCanvas(sections, frameEl) {
     }
 
     frameEl.appendChild(renderSections(sections));
+}
+
+/**
+ * Append a sections tree to the bottom of the canvas, keeping whatever is
+ * already there. This is how layout cards insert content: every layout is
+ * additive, so picking Home then About stacks the About sections under the
+ * Home ones instead of replacing them.
+ *
+ * The incoming tree is cloned and its node ids are rewritten so they stay
+ * unique against what's already on the canvas — the same layout can be
+ * added twice, and some layout files reuse ids internally (repeated project
+ * cards, say). data-node-id is the handle later features will use to map a
+ * DOM node back to the tree, so duplicates can't be allowed to reach it.
+ *
+ * Returns the first appended element, or null when the layout had no
+ * sections to add.
+ */
+function appendSectionsToCanvas(sections, frameEl) {
+    if (!frameEl || !sections || sections.length === 0) return null;
+
+    // The empty state is a placeholder, not content — the first real
+    // section replaces it.
+    const emptyState = frameEl.querySelector('.canvas-frame__empty');
+    if (emptyState) emptyState.remove();
+
+    const fragment = renderSections(withUniqueIds(sections, collectNodeIds(frameEl)));
+    const firstAdded = fragment.firstElementChild;
+    frameEl.appendChild(fragment);
+    return firstAdded;
+}
+
+function collectNodeIds(frameEl) {
+    const ids = new Set();
+    frameEl.querySelectorAll('[data-node-id]').forEach(el => ids.add(el.dataset.nodeId));
+    return ids;
+}
+
+/**
+ * Deep-clone a sections tree, giving every node an id that isn't in
+ * `usedIds` yet. The clone matters: layout JSON is fetched once and kept in
+ * memory, so the source tree has to stay pristine for the next insert.
+ */
+function withUniqueIds(sections, usedIds) {
+    const clone = JSON.parse(JSON.stringify(sections));
+    clone.forEach(node => assignUniqueIds(node, usedIds));
+    return clone;
+}
+
+function assignUniqueIds(node, usedIds) {
+    node.id = nextFreeId(node.id || node.type || 'node', usedIds);
+    usedIds.add(node.id);
+    (node.children || []).forEach(child => assignUniqueIds(child, usedIds));
+}
+
+function nextFreeId(base, usedIds) {
+    if (!usedIds.has(base)) return base;
+
+    let n = 2;
+    while (usedIds.has(`${base}_${n}`)) n++;
+    return `${base}_${n}`;
 }
 
 function buildCanvasEmptyState() {

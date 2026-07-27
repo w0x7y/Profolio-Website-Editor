@@ -105,9 +105,15 @@ document.addEventListener('DOMContentLoaded', () => {
 //     // accent = links/navbar, neutral = other
 //   }               // or { "blank": true } for the empty-page card
 //   "sections": []  // node tree (sections -> blocks -> elements) for the layout
-//                   // content — see docs/DATA_MODEL.md. Rendered onto the
-//                   // canvas via renderer.js when this layout's card is clicked.
+//                   // content — see docs/DATA_MODEL.md. Appended to the
+//                   // bottom of the canvas via renderer.js when this
+//                   // layout's card is clicked.
 // }
+//
+// Every layout is additive. Clicking a card never replaces the canvas: the
+// Home layouts give you a page shell (nav / hero / projects / footer) and
+// the other pages' layouts stack their sections underneath, so a site is
+// assembled by picking one card after another.
 // ============================================================
 
 async function loadPages() {
@@ -122,7 +128,7 @@ async function loadPages() {
         // The first page (Home) starts expanded; the rest start collapsed.
         loaded.forEach((page, i) => accordion.appendChild(buildPageSection(page, i === 0)));
 
-        wireLayoutCardSelection(accordion, loaded);
+        wireLayoutCardInsertion(accordion, loaded);
     } catch (err) {
         accordion.innerHTML = '<p class="panel__hint">Couldn\'t load pages.</p>';
         console.error('Failed to load pages from /layout:', err);
@@ -214,27 +220,58 @@ function buildLayoutCard(layout) {
     return card;
 }
 
-function wireLayoutCardSelection(accordion, pages) {
+function wireLayoutCardInsertion(accordion, pages) {
     const canvasFrame = document.querySelector('.canvas-frame');
 
     accordion.querySelectorAll('.layout-card').forEach(card => {
         card.addEventListener('click', () => {
-            // The canvas holds one page at a time, so selection is global
-            // across the accordion — picking a layout on any page clears
-            // the selection everywhere else.
-            accordion.querySelectorAll('.layout-card').forEach(c => c.classList.remove('is-active'));
-            card.classList.add('is-active');
-
             // Layout ids are only unique within a page (every page can have
             // its own "blank"), so resolve the page first.
             const pageId = card.closest('.page-section').dataset.pageId;
             const page = pages.find(p => p.id === pageId);
             const layout = page && page.layouts.find(l => l.id === card.dataset.layoutId);
+            if (!layout) return;
 
-            // NOTE: this swaps the canvas immediately with no confirmation
-            // prompt yet — that's TODO Phase 9 item 38 ('confirmation
-            // prompt when applying a layout over existing content').
-            if (layout) renderPageIntoCanvas(layout.sections, canvasFrame);
+            // Every card is additive: its sections go at the bottom of the
+            // canvas, under whatever is already there. Nothing is replaced,
+            // so a card isn't a "current layout" that stays selected — it's
+            // an action, and gets a brief confirmation flash instead.
+            const added = appendSectionsToCanvas(layout.sections, canvasFrame);
+            if (added) {
+                flashCard(card);
+                revealOnCanvas(added);
+            }
         });
     });
+}
+
+/**
+ * Scroll the canvas so a freshly appended section is on screen — it lands
+ * at the bottom of the page, which is usually below the fold.
+ *
+ * Done by hand rather than with scrollIntoView(): the canvas scroller is a
+ * centered flex container, and scrollIntoView() is unreliable on it.
+ */
+function revealOnCanvas(el) {
+    const scroller = document.querySelector('.canvas-scroll');
+    if (!scroller) return;
+
+    const target = el.getBoundingClientRect();
+    const view = scroller.getBoundingClientRect();
+
+    // Already fully visible — leave the scroll position alone.
+    if (target.top >= view.top && target.bottom <= view.bottom) return;
+
+    // Otherwise line the section's top edge up with the top of the
+    // viewport, with a little breathing room above it.
+    scroller.scrollTop += target.top - view.top - 24;
+}
+
+function flashCard(card) {
+    card.classList.remove('is-added');
+    // Restart the flash from the top when the same card is clicked twice in
+    // a row: without the reflow the class re-add is coalesced into a no-op.
+    void card.offsetWidth;
+    card.classList.add('is-added');
+    setTimeout(() => card.classList.remove('is-added'), 600);
 }
