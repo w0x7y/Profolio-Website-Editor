@@ -221,7 +221,7 @@ derived at render time from `content`/`src`.
 
 ## Worked example
 
-The hero section from `layout/example.json`, expressed in the new model
+The hero section from `layout/home/example.json`, expressed in the new model
 (trimmed to the interesting parts):
 
 ```json

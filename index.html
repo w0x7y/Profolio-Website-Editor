@@ -101,9 +101,6 @@
                 <!-- ============ CENTER CANVAS ============ -->
                 <main class="canvas-area">
                     <div class="canvas-toolbar">
-                        <div class="canvas-toolbar__group">
-                            <button class="chip" type="button">Page: Home <svg viewBox="0 0 24 24" class="icon icon--sm"><path d="M6 9l6 6 6-6"/></svg></button>
-                        </div>
                         <div class="canvas-toolbar__group canvas-toolbar__zoom">
                             <button class="icon-btn icon-btn--sm" type="button" title="Zoom out">
                                 <svg viewBox="0 0 24 24" class="icon"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3M8 11h6"/></svg>
@@ -145,8 +142,8 @@
 
                         <!-- LAYOUTS -->
                         <div class="panel__pane is-active" data-pane="layouts">
-                            <p class="panel__hint">Start from a layout, or build your own from a blank page.</p>
-                            <div class="layout-grid" id="layoutGrid"><!-- populated automatically from /layout --></div>
+                            <p class="panel__hint">Expand a page, then start from a layout or build your own from a blank page.</p>
+                            <div class="page-accordion" id="pageAccordion"><!-- populated automatically from /layout --></div>
                         </div>
 
                         <!-- THEMES -->
