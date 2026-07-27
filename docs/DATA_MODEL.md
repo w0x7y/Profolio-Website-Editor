@@ -5,6 +5,12 @@ Phase 1, item 1 ("Decide on a data model for a site/page"). The canvas now
 renders layout `sections` through `renderer.js`; selection, editing, saving,
 and publishing are still future work.
 
+One important caveat: there is **no in-memory project object yet**. Layout JSON
+is fetched, rendered to DOM, and then the DOM is the only copy — section
+reordering and trash-deletion in `script.js` move and remove DOM nodes, not
+model nodes. The shapes below describe where the model is going; only `Node`
+(and only the fields `renderer.js` reads) exists in running code today.
+
 ## Goals
 
 - One structure that can represent a whole site: pages, sections, nested
@@ -122,7 +128,10 @@ Node = {
   placeholder?: string,  // shown muted/dashed when content is empty
   src?: string | null,   // image: null = unfilled placeholder slot
   alt?: string,
-  href?: string,         // button/link
+  href?: string,         // button/link. NOTE: renderer.js only reads this on
+                         // `button` nodes today — the `nav-link` text nodes in
+                         // the navbar/footer layouts carry an href that is
+                         // currently ignored at render time
 
   // ---------- style ----------
   style?: {
@@ -159,9 +168,18 @@ pulls its weight in a few places already on the roadmap:
   role (an `avatar` image probably wants a "crop to circle" option a
   `thumbnail` doesn't).
 
-Suggested starting roles (not exhaustive, add as needed):
-`nav`, `hero`, `eyebrow`, `title`, `subtitle`, `body`, `cta`, `cta-secondary`,
-`avatar`, `logo`, `thumbnail`, `portrait`.
+Roles in use across `layout/**/*.json` today (not exhaustive, add as needed):
+
+- Section-level: `nav`, `hero`, `about`, `projects`, `blog`, `contact`,
+  `links`, `footer`
+- Content-level: `eyebrow`, `title`, `subtitle`, `body`, `tag`, `cta`,
+  `cta-secondary`, `nav-link`, `logo`, `portrait`, `thumbnail`,
+  `project-card`
+
+`style.css` already keys off some of these (`.node--section.role--nav`,
+`role--hero`, `role--about`, `role--footer`, `.node--button.role--cta-secondary`,
+and `[data-node-role="nav-link"]` / `[data-node-role="logo"]` inside the
+footer), so adding a role is cheap but renaming one is not.
 
 ### `StyleProps` (whitelist, not free-form CSS)
 
@@ -198,10 +216,12 @@ the right panel. The current tone meanings are:
 - `gradient-dark` = text
 - `accent` = links/navbar
 - `neutral` = other
-- ` ` = blank
+- `" "` (a single space) = blank spacer
 
 These tones are thumbnail-only hints; the actual canvas content is driven by
-the `sections` tree.
+the `sections` tree. `script.js` also still supports a `preview: { "blank":
+true }` card that draws a plus icon instead of blocks; no layout file uses it
+since `home/blank.json` was removed.
 
 ### Placeholders — the actual answer to "templates need fillable slots"
 
@@ -293,6 +313,15 @@ upload" slot. Both are ordinary data, not special-cased markup.
 ## Where this goes next
 
 Phase 1, item 2 is implemented: `renderer.js` walks `Node` trees and produces
-the canvas DOM with `data-node-id` on every rendered element. The next major
-step is Phase 2 click-to-select, which should use those ids to map DOM nodes
-back to their `Node` data.
+the canvas DOM with `data-node-id` (plus `data-node-type` and, when set,
+`data-node-role`) on every rendered element. Ids are rewritten on insert
+(`withUniqueIds()`) so the same layout can be added twice without colliding.
+
+Two things follow from that, in order:
+
+1. **A real project object** (Phase 1, item 3). Section drag-reorder and
+   trash-deletion currently mutate the DOM directly; once the canvas is backed
+   by a `Page.sections` tree they should mutate that tree and re-render, which
+   is also what makes undo/redo and autosave possible.
+2. **Click-to-select** (Phase 2), which should use `data-node-id` to map a
+   clicked DOM element back to its `Node`.
