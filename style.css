@@ -29,6 +29,10 @@
     --accent-hover: #7678f4;
     --accent-soft: rgba(99, 102, 241, 0.14);
 
+    /* destructive actions (trash zone) */
+    --danger: #f87171;
+    --danger-soft: rgba(248, 113, 113, 0.12);
+
     /* misc */
     --radius-sm: 6px;
     --radius-md: 10px;
@@ -391,15 +395,27 @@ button {
     padding: 40px 40px 80px;
 }
 
+/* the frame itself is just a column of section cards — the gap between them
+   lets the canvas background show through, so each section reads as its own
+   draggable object rather than a slice of one continuous page */
 .canvas-frame {
     width: 1200px;
     max-width: 100%;
     height: fit-content;
-    background: var(--bg-page);
-    border-radius: var(--radius-lg);
-    box-shadow: 0 0 0 1px var(--border-subtle), 0 30px 60px -20px rgba(0, 0, 0, 0.6);
-    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
     color: #111114;
+}
+
+/* card treatment, shared by real sections and the blank-canvas placeholder */
+.canvas-frame > .node--section,
+.canvas-frame__empty {
+    position: relative;
+    background: var(--color-background);
+    border-radius: var(--radius-lg);
+    box-shadow: 0 0 0 1px var(--border-subtle), 0 24px 48px -24px rgba(0, 0, 0, 0.55);
+    overflow: hidden;
 }
 
 .canvas-frame__empty {
@@ -442,17 +458,12 @@ button {
     --font-heading: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
     --font-body: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
 
-    background: var(--color-background);
     font-family: var(--font-body);
 }
 
+/* no dividers between sections — the gap in .canvas-frame separates them */
 .node--section {
     padding: 64px 56px;
-    border-top: 1px solid #eceeef;
-}
-
-.node--section:first-child {
-    border-top: none;
 }
 
 .node--heading {
@@ -618,8 +629,6 @@ button {
 
 .node--section.role--nav {
     padding: 22px 56px;
-    border-bottom: 1px solid #eceeef;
-    border-top: none;
 }
 
 .node--section.role--hero {
@@ -633,7 +642,6 @@ button {
 .node--section.role--footer {
     padding: 44px 56px;
     background: var(--color-text);
-    border-top: none;
     color: #fff;
 }
 
@@ -644,6 +652,61 @@ button {
 
 .node--section.role--footer [data-node-role="logo"] {
     color: #fff;
+}
+
+/* ---------- section drag & drop (see script.js) ----------
+   Editor chrome layered over the canvas, not part of the rendered node
+   tree: a grab handle per section, a translucent state while it's being
+   dragged, and an accent line marking where it would land.
+   -------------------------------------------------------- */
+
+.section-handle {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    z-index: 5;
+    width: 26px;
+    height: 26px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: var(--radius-sm);
+    background: rgba(17, 17, 20, 0.72);
+    color: #fff;
+    cursor: grab;
+    opacity: 0;
+    transition: opacity 0.15s ease, background 0.15s ease;
+}
+
+.canvas-frame > .node--section:hover .section-handle,
+.section-handle:focus-visible {
+    opacity: 1;
+}
+
+.section-handle:hover {
+    background: var(--accent);
+}
+
+.section-handle:active {
+    cursor: grabbing;
+}
+
+.section-handle .icon {
+    width: 15px;
+    height: 15px;
+    fill: currentColor;
+    stroke: none;
+}
+
+.canvas-frame > .node--section.is-dragging {
+    opacity: 0.35;
+}
+
+.canvas-drop-line {
+    height: 3px;
+    border-radius: 999px;
+    background: var(--accent);
+    box-shadow: 0 0 0 4px var(--accent-soft);
 }
 
 /* ============================================================
@@ -658,6 +721,58 @@ button {
     display: flex;
     flex-direction: column;
     min-height: 0;
+}
+
+/* the panel is split 3/4 tabs + 1/4 trash zone. Percentage flex-basis rather
+   than `flex: 3` / `flex: 1`: with box-sizing:border-box a percentage basis
+   is the item's border-box height, so the trash zone's own padding and border
+   don't push it past a quarter. */
+.panel__main {
+    flex: 0 0 75%;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+}
+
+.panel__trash {
+    flex: 0 0 25%;
+    min-height: 0;
+    padding: 12px;
+    border-top: 1px solid var(--border-subtle);
+    background: var(--bg-app);
+}
+
+/* the inner box is the visual drop target; pointer-events:none keeps it out
+   of dragleave's relatedTarget, which would otherwise flicker .is-over off
+   every time the pointer crossed from the zone onto its own contents */
+.panel__trash-inner {
+    pointer-events: none;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    text-align: center;
+    padding: 10px;
+    border: 1px dashed var(--border-strong);
+    border-radius: var(--radius-md);
+    color: var(--text-muted);
+    font-size: 11.5px;
+    line-height: 1.45;
+    transition: border-color 0.15s ease, background 0.15s ease, color 0.15s ease;
+}
+
+.panel__trash.is-over .panel__trash-inner {
+    border-color: var(--danger);
+    background: var(--danger-soft);
+    color: var(--danger);
+}
+
+.panel__trash .icon {
+    width: 22px;
+    height: 22px;
 }
 
 .panel__tabs {

@@ -15,11 +15,12 @@ can wait a long time).
 - [ ] Show a selection outline + resize/move handles around the selected element `Hard` `P0`
 - [ ] A floating/contextual toolbar for the selected element (font size, color, alignment, spacing, etc.) `Medium` `P1`
 - [ ] Inline text editing (contenteditable or similar) for text elements `Medium` `P0`
-- [ ] Drag-and-drop reordering of sections/elements within the canvas `Hard` `P0`
+- [x] Drag-and-drop reordering of sections within the canvas `Hard` `P0` — grab handle per section, wired in `script.js` (`initSectionDragAndDrop()`). Reorders the DOM only; it needs to move the node in a real project tree once one exists
+- [ ] Drag-and-drop reordering of *elements* inside a section (the section-level case above is done) `Hard` `P0`
 - [ ] Drag elements from the left toolbar onto the canvas to insert them `Medium` `P1`
 - [ ] Multi-select elements (shift-click / marquee select) `Medium` `P2`
 - [ ] Copy / paste / duplicate elements `Easy` `P1`
-- [ ] Delete elements (with confirmation or undo safety net) `Easy` `P0`
+- [ ] Delete elements (with confirmation or undo safety net) `Easy` `P0` — sections can already be deleted by dragging them onto the right panel's trash zone, but that is immediate and unrecoverable; sub-section elements have no delete at all
 - [ ] Keyboard shortcuts (delete, duplicate, arrow-key nudge, escape to deselect, etc.) `Easy` `P2`
 - [ ] Snapping / alignment guides while dragging or resizing `Hard` `P2`
 - [ ] Spacing/margin/padding visual editor (like Webflow's box model UI) `Hard` `P1`
@@ -43,10 +44,10 @@ can wait a long time).
 ### Right panel — Layouts tab
 - [x] Clicking a layout card actually applies it to the canvas `Hard` `P0` — wired in `script.js` via `appendSectionsToCanvas()`
 - [x] Decide whether "layout" means a whole starter page, or a single section users can insert `Medium` `P1` — both, and every card is additive: it appends its sections to the bottom of the canvas rather than replacing it. Home's cards are page shells, the other pages' cards are sections that stack underneath.
-- [x] Each page's folder loads its own layouts (About / Showcase / Blog / Contact / Links, not just Home) `Easy` `P1` — every manifest is populated; only About has real content so far, the rest carry a `blank-test.json` placeholder
+- [x] Each page's folder loads its own layouts (Navbar / About / Showcase / Blog / Contact / Links / Footer, not just Home) `Easy` `P1` — every manifest is populated; only About has real content so far, the rest carry a `blank-test.json` placeholder
 - [ ] Fill in the `sections` field for `minimal.json`, `split-bio.json`, and `photo-first.json` (currently empty arrays — clicking them is a no-op now that cards append instead of replace; same for `home/blank.json`, whose "start from an empty page" meaning no longer applies) `Easy` `P1`
-- [ ] Real Showcase / Blog / Contact / Links layouts to replace the `blank-test.json` placeholders `Medium` `P1`
-- [ ] A "clear canvas" / start-over action — inserting is currently one-way, so a mis-clicked layout can only be undone by reloading the page `Easy` `P0`
+- [ ] Real Navbar / Showcase / Blog / Contact / Links / Footer layouts to replace the `blank-test.json` placeholders `Medium` `P1`
+- [ ] A "clear canvas" / start-over action — sections can now be removed one at a time via the trash zone, but there's still no single "empty the canvas" action, and no undo for a mis-drop `Easy` `P0`
 - [ ] Let the user choose where an inserted section lands (drop between existing sections) instead of always appending at the bottom `Medium` `P2`
 - [ ] Support applying a layout to a single existing section (replace in place) `Medium` `P2`
 - [ ] More layout options / categories (e.g. filter by style, industry, single-page vs multi-page) `Easy` `P3`
@@ -96,7 +97,7 @@ can wait a long time).
 - [ ] "Publish" button actually publishes/deploys the site somewhere `Hard` `P0`
 - [ ] Publish flow: choose subdomain vs custom domain, confirm, show progress/success state `Medium` `P1`
 - [ ] Avatar/account menu (currently a static "JD" circle with no click behavior) `Easy` `P2`
-- [ ] Multi-page support: the Layouts tab lists Home/About/Showcase/Blog/Contact/Links as accordion rows, but there's still only one canvas — every row's layouts append to that same canvas, so the rows are really section categories, not separate pages. Decide whether these become real pages (with their own canvas + navigation between them) or stay as section groups `Hard` `P1`
+- [ ] Multi-page support: the Layouts tab lists Navbar/Home/About/Showcase/Blog/Contact/Links/Footer as accordion rows, but there's still only one canvas — every row's layouts append to that same canvas, so the rows are really section categories, not separate pages. Decide whether these become real pages (with their own canvas + navigation between them) or stay as section groups `Hard` `P1`
 - [ ] Zoom controls: actually change canvas zoom level (currently static "100%" label, buttons do nothing) `Medium` `P2`
 
 ### Canvas toolbar
@@ -162,11 +163,11 @@ The minimum interaction loop: select something, change it, remove it.
 7. Select tool: real selection behavior `Medium` `P0`
 8. Click-to-select an element on the canvas `Medium` `P0`
 9. Selection outline + resize/move handles around the selected element `Hard` `P0`
-10. Delete elements (with confirmation or undo safety net) `Easy` `P0`
+10. Delete elements (with confirmation or undo safety net) `Easy` `P0` — sections are deletable via the trash zone; elements and the undo safety net are not
 11. Inline text editing (contenteditable) for text elements `Medium` `P0`
 12. Text tool: click-to-place a new text block `Easy` `P0`
 13. Image tool: click-to-place an image placeholder `Medium` `P0`
-14. Drag-and-drop reordering of sections/elements within the canvas `Hard` `P0`
+14. ~~Drag-and-drop reordering of sections within the canvas~~ `Hard` `P0` — done, see `script.js`; reordering elements *inside* a section is still open
 
 ### Phase 3 — Layouts, themes & basic settings
 Makes the existing UI shell actually do something.
