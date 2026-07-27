@@ -5,23 +5,29 @@
   "preview": {
     "direction": "row",
     "blocks": [
-      { "width": "26%", "height": "14%", "tone": "accent" },
-      { "width": "16%", "height": "14%", "tone": "neutral" },
-      { "width": "16%", "height": "14%", "tone": "neutral" },
-      { "width": "16%", "height": "14%", "tone": "neutral" }
+      { "width": "100%", "height": "14%", "tone": "accent" }
     ]
   },
   "sections": [
     {
-      "id": "sec_navbar_blank",
+      "id": "sec_nav",
       "type": "section",
       "role": "nav",
-      "name": "Navbar (blank)",
+      "name": "Nav",
       "layout": { "direction": "row", "align": "center", "justify": "space-between" },
-      "style": { "base": { "background": "var(--color-background)" } },
       "children": [
-        { "id": "el_navbar_blank_logo", "type": "text", "role": "logo", "content": "Logo", "placeholder": "Add a logo" },
-        { "id": "el_navbar_blank_links", "type": "text", "role": "nav-link", "content": "", "placeholder": "Empty Navbar section — drop your links here" }
+        { "id": "el_logo", "type": "text", "role": "logo", "content": "", "placeholder": "Your name" },
+        {
+          "id": "row_nav_links",
+          "type": "row",
+          "layout": { "direction": "row", "gap": "24px" },
+          "children": [
+            { "id": "el_nav_1", "type": "text", "role": "nav-link", "content": "Section-1", "href": "#Section-1" },
+            { "id": "el_nav_2", "type": "text", "role": "nav-link", "content": "Section-2", "href": "#Section-2" },
+            { "id": "el_nav_3", "type": "text", "role": "nav-link", "content": "Section-3", "href": "#Section-3" }
+          ]
+        },
+        { "id": "btn_resume", "type": "button", "role": "cta-secondary", "content": "", "placeholder": "Link/Btn", "href": "#" }
       ]
     }
   ]

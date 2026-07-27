@@ -7,7 +7,7 @@
     "wrap": true,
     "blocks": [
       { "width": "20%", "height": "10%", "tone": "gradient-dark" },
-      { "width": "75%", "height": "10%", "tone": " " },
+      { "width": "70%", "height": "10%", "tone": " " },
       { "width": "30%", "height": "40%", "tone": "gradient-accent" },
       { "width": "65%", "height": "40%", "tone": "gradient-dark" }
     ]

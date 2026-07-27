@@ -5,27 +5,36 @@
   "preview": {
     "direction": "column",
     "blocks": [
-      { "width": "100%", "height": "52%", "tone": "neutral" },
-      { "width": "45%", "height": "14%", "tone": "gradient-dark" }
+      { "width": "100%", "height": "80%", "tone": " " },
+      { "width": "100%", "height": "14%", "tone": "neutral" }
     ]
   },
   "sections": [
     {
-      "id": "sec_footer_blank",
+      "id": "sec_footer",
       "type": "section",
       "role": "footer",
-      "name": "Footer (blank)",
-      "layout": { "direction": "column" },
+      "name": "Footer",
+      "layout": { "direction": "row", "align": "center", "justify": "space-between" },
       "children": [
         {
-          "id": "el_footer_blank_title",
-          "type": "heading",
-          "role": "title",
-          "content": "Footer",
-          "placeholder": "Add a section title",
-          "style": { "base": { "color": "#ffffff" } }
+          "id": "col_footer_1",
+          "type": "column",
+          "children": [
+            { "id": "el_footer_logo", "type": "text", "role": "logo", "content": "", "placeholder": "Your name" },
+            { "id": "el_footer_contact", "type": "text", "role": "body", "content": "", "placeholder": "Add a contact email" }
+          ]
         },
-        { "id": "el_footer_blank_body", "type": "text", "role": "body", "content": "", "placeholder": "Empty Footer section — drop your content here" }
+        {
+          "id": "row_footer_socials",
+          "type": "row",
+          "layout": { "direction": "row", "gap": "16px" },
+          "children": [
+            { "id": "el_social_1", "type": "text", "role": "nav-link", "content": "", "placeholder": "Link", "href": "#" },
+            { "id": "el_social_2", "type": "text", "role": "nav-link", "content": "", "placeholder": "Link", "href": "#" },
+            { "id": "el_social_3", "type": "text", "role": "nav-link", "content": "", "placeholder": "Link", "href": "#" }
+          ]
+        }
       ]
     }
   ]

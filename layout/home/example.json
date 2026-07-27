@@ -14,27 +14,6 @@
   },
   "sections": [
     {
-      "id": "sec_nav",
-      "type": "section",
-      "role": "nav",
-      "name": "Nav",
-      "layout": { "direction": "row", "align": "center", "justify": "space-between" },
-      "children": [
-        { "id": "el_logo", "type": "text", "role": "logo", "content": "", "placeholder": "Your name" },
-        {
-          "id": "row_nav_links",
-          "type": "row",
-          "layout": { "direction": "row", "gap": "24px" },
-          "children": [
-            { "id": "el_nav_1", "type": "text", "role": "nav-link", "content": "Section-1", "href": "#Section-1" },
-            { "id": "el_nav_2", "type": "text", "role": "nav-link", "content": "Section-2", "href": "#Section-2" },
-            { "id": "el_nav_3", "type": "text", "role": "nav-link", "content": "Section-3", "href": "#Section-3" }
-          ]
-        },
-        { "id": "btn_resume", "type": "button", "role": "cta-secondary", "content": "", "placeholder": "Link/Btn", "href": "#" }
-      ]
-    },
-    {
       "id": "sec_hero",
       "type": "section",
       "role": "hero",
@@ -60,84 +39,6 @@
           ]
         },
         { "id": "el_avatar", "type": "image", "role": "portrait", "src": null, "alt": "Portrait photo" }
-      ]
-    },
-    {
-      "id": "sec_projects",
-      "type": "section",
-      "role": "projects",
-      "name": "Featured Projects",
-      "layout": { "direction": "column" },
-      "children": [
-        { "id": "el_kicker_1", "type": "text", "role": "eyebrow", "content": "", "placeholder": "Add a eyebrow" },
-        { "id": "el_h2_1", "type": "heading", "role": "title", "content": "", "placeholder": "Add a section title" },
-        {
-          "id": "grid_projects",
-          "type": "row",
-          "layout": { "direction": "row", "wrap": true, "gap": "24px" },
-          "children": [
-            {
-              "id": "card_project_1",
-              "type": "group",
-              "role": "project-card",
-              "layout": { "direction": "column", "gap": "10px" },
-              "children": [
-                { "id": "img_project_1", "type": "image", "role": "thumbnail", "src": null, "alt": "Project thumbnail" },
-                { "id": "el_project_1_title", "type": "text", "role": "title", "content": "", "placeholder": "Project name" },
-                { "id": "el_project_1_tag", "type": "text", "role": "tag", "content": "", "placeholder": "Project category" }
-              ]
-            },
-            {
-              "id": "card_project_2",
-              "type": "group",
-              "role": "project-card",
-              "layout": { "direction": "column", "gap": "10px" },
-              "children": [
-                { "id": "img_project_1", "type": "image", "role": "thumbnail", "src": null, "alt": "Project thumbnail" },
-                { "id": "el_project_1_title", "type": "text", "role": "title", "content": "", "placeholder": "Project name" },
-                { "id": "el_project_1_tag", "type": "text", "role": "tag", "content": "", "placeholder": "Project category" }
-              ]
-            },
-            {
-              "id": "card_project_3",
-              "type": "group",
-              "role": "project-card",
-              "layout": { "direction": "column", "gap": "10px" },
-              "children": [
-                { "id": "img_project_1", "type": "image", "role": "thumbnail", "src": null, "alt": "Project thumbnail" },
-                { "id": "el_project_1_title", "type": "text", "role": "title", "content": "", "placeholder": "Project name" },
-                { "id": "el_project_1_tag", "type": "text", "role": "tag", "content": "", "placeholder": "Project category" }
-              ]
-            }
-          ]
-        }
-      ]
-    },
-    {
-      "id": "sec_footer",
-      "type": "section",
-      "role": "footer",
-      "name": "Footer",
-      "layout": { "direction": "row", "align": "center", "justify": "space-between" },
-      "children": [
-        {
-          "id": "col_footer_1",
-          "type": "column",
-          "children": [
-            { "id": "el_footer_logo", "type": "text", "role": "logo", "content": "", "placeholder": "Your name" },
-            { "id": "el_footer_contact", "type": "text", "role": "body", "content": "", "placeholder": "Add a contact email" }
-          ]
-        },
-        {
-          "id": "row_footer_socials",
-          "type": "row",
-          "layout": { "direction": "row", "gap": "16px" },
-          "children": [
-            { "id": "el_social_1", "type": "text", "role": "nav-link", "content": "", "placeholder": "Link", "href": "#" },
-            { "id": "el_social_2", "type": "text", "role": "nav-link", "content": "", "placeholder": "Link", "href": "#" },
-            { "id": "el_social_3", "type": "text", "role": "nav-link", "content": "", "placeholder": "Link", "href": "#" }
-          ]
-        }
       ]
     }
   ]

@@ -3,23 +3,66 @@
   "name": "Blank (test)",
   "description": "Test fixture: appends one empty Showcase section to the canvas.",
   "preview": {
-    "direction": "column",
+    "direction": "row",
+    "wrap": true,
     "blocks": [
-      { "width": "35%", "height": "16%", "tone": "neutral" },
-      { "width": "100%", "height": "60%", "tone": "neutral" }
+      { "width": "35%", "height": "16%", "tone": "gradient-dark" },
+      { "width": "60%", "height": "16%", "tone": " " },
+      { "width": "30%", "height": "60%", "tone": "gradient-accent" },
+      { "width": "30%", "height": "60%", "tone": "gradient-accent" },
+      { "width": "30%", "height": "60%", "tone": "gradient-accent" }
     ]
   },
   "sections": [
     {
-      "id": "sec_showcase_blank",
+      "id": "sec_projects",
       "type": "section",
       "role": "projects",
-      "name": "Showcase (blank)",
+      "name": "Featured Projects",
       "layout": { "direction": "column" },
-      "style": { "base": { "background": "var(--color-surface)" } },
       "children": [
-        { "id": "el_showcase_blank_title", "type": "heading", "role": "title", "content": "Showcase", "placeholder": "Add a section title" },
-        { "id": "el_showcase_blank_body", "type": "text", "role": "body", "content": "", "placeholder": "Empty Showcase section — drop your content here" }
+        { "id": "el_kicker_1", "type": "text", "role": "eyebrow", "content": "", "placeholder": "Add a eyebrow" },
+        { "id": "el_h2_1", "type": "heading", "role": "title", "content": "", "placeholder": "Add a section title" },
+        {
+          "id": "grid_projects",
+          "type": "row",
+          "layout": { "direction": "row", "wrap": true, "gap": "24px" },
+          "children": [
+            {
+              "id": "card_project_1",
+              "type": "group",
+              "role": "project-card",
+              "layout": { "direction": "column", "gap": "10px" },
+              "children": [
+                { "id": "img_project_1", "type": "image", "role": "thumbnail", "src": null, "alt": "Project thumbnail" },
+                { "id": "el_project_1_title", "type": "text", "role": "title", "content": "", "placeholder": "Project name" },
+                { "id": "el_project_1_tag", "type": "text", "role": "tag", "content": "", "placeholder": "Project category" }
+              ]
+            },
+            {
+              "id": "card_project_2",
+              "type": "group",
+              "role": "project-card",
+              "layout": { "direction": "column", "gap": "10px" },
+              "children": [
+                { "id": "img_project_1", "type": "image", "role": "thumbnail", "src": null, "alt": "Project thumbnail" },
+                { "id": "el_project_1_title", "type": "text", "role": "title", "content": "", "placeholder": "Project name" },
+                { "id": "el_project_1_tag", "type": "text", "role": "tag", "content": "", "placeholder": "Project category" }
+              ]
+            },
+            {
+              "id": "card_project_3",
+              "type": "group",
+              "role": "project-card",
+              "layout": { "direction": "column", "gap": "10px" },
+              "children": [
+                { "id": "img_project_1", "type": "image", "role": "thumbnail", "src": null, "alt": "Project thumbnail" },
+                { "id": "el_project_1_title", "type": "text", "role": "title", "content": "", "placeholder": "Project name" },
+                { "id": "el_project_1_tag", "type": "text", "role": "tag", "content": "", "placeholder": "Project category" }
+              ]
+            }
+          ]
+        }
       ]
     }
   ]
