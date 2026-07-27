@@ -359,7 +359,9 @@ button {
     flex-shrink: 0;
     display: flex;
     align-items: center;
-    justify-content: space-between;
+    /* the page selector used to sit on the left; pages now live as
+       accordion rows in the Layouts panel, so only zoom is left here */
+    justify-content: flex-end;
     padding: 0 16px;
     border-bottom: 1px solid var(--border-subtle);
 }
@@ -368,24 +370,6 @@ button {
     display: flex;
     align-items: center;
     gap: 8px;
-}
-
-.chip {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    font-size: 12.5px;
-    color: var(--text-secondary);
-    background: var(--bg-topbar);
-    border: 1px solid var(--border-subtle);
-    padding: 5px 10px;
-    border-radius: var(--radius-sm);
-    transition: color 0.15s ease, border-color 0.15s ease;
-}
-
-.chip:hover {
-    color: var(--text-primary);
-    border-color: var(--border-strong);
 }
 
 .canvas-toolbar__zoom {
@@ -730,7 +714,90 @@ button {
     margin-bottom: 12px;
 }
 
-/* layouts tab */
+/* layouts tab — one collapsible accordion row per page */
+
+.page-accordion {
+    display: flex;
+    flex-direction: column;
+    border-top: 1px solid var(--border-subtle);
+}
+
+.page-section {
+    border-bottom: 1px solid var(--border-subtle);
+}
+
+.page-section__header {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 11px 2px;
+    font-size: 13px;
+    color: var(--text-secondary);
+    text-align: left;
+    transition: color 0.15s ease;
+}
+
+.page-section__header:hover {
+    color: var(--text-primary);
+}
+
+.page-section.is-open .page-section__header {
+    color: var(--text-primary);
+}
+
+.page-section__chevron {
+    flex-shrink: 0;
+    transition: transform 0.22s ease;
+}
+
+.page-section.is-open .page-section__chevron {
+    transform: rotate(90deg);
+}
+
+.page-section__name {
+    flex: 1;
+    min-width: 0;
+}
+
+.page-section__count {
+    flex-shrink: 0;
+    font-size: 11px;
+    color: var(--text-muted);
+    background: var(--bg-app);
+    border-radius: 999px;
+    padding: 1px 7px;
+}
+
+/* 0fr -> 1fr on a grid row animates height without hardcoding one */
+.page-section__body {
+    display: grid;
+    grid-template-rows: 0fr;
+    transition: grid-template-rows 0.22s ease;
+}
+
+.page-section.is-open .page-section__body {
+    grid-template-rows: 1fr;
+}
+
+/* min-height:0 is required — a grid item defaults to min-height:auto,
+   which refuses to shrink below its content and breaks the collapse. */
+.page-section__inner {
+    overflow: hidden;
+    min-height: 0;
+}
+
+/* the row's bottom spacing goes on the content, not on __inner: padding
+   on the grid item itself survives the 0fr collapse and would leave a
+   sliver of open row behind */
+.page-section__inner > * {
+    padding-bottom: 14px;
+}
+
+.page-section__empty {
+    font-size: 12px;
+    color: var(--text-muted);
+}
 
 .layout-grid {
     display: grid;

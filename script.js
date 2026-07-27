@@ -71,19 +71,26 @@ document.addEventListener('DOMContentLoaded', () => {
     renderPageIntoCanvas([], document.querySelector('.canvas-frame'));
 
     // ---- Layouts: load automatically from /layout, then wire up selection ----
-    loadLayouts();
+    loadPages();
 
 });
 
 // ============================================================
-// LAYOUT LOADING
+// PAGE + LAYOUT LOADING
 //
-// Each layout lives as its own JSON file inside /layout, e.g:
-//   layout/minimal.json
-//   layout/bold-studio.json
+// The Layouts panel is an accordion: one collapsible row per page of
+// the site. /layout/pages.json lists those pages in order:
+//   [ { "id": "home", "name": "Home" }, ... ]
+//
+// Each page owns a folder under /layout, and every layout inside it
+// lives as its own JSON file:
+//   layout/home/minimal.json
+//   layout/home/bold-studio.json
 //   ...
-// /layout/manifest.json simply lists which files to load, since a
-// browser can't read a folder's contents by itself.
+// layout/<page>/manifest.json simply lists which files to load, since a
+// browser can't read a folder's contents by itself. A page with nothing
+// built for it yet has an empty manifest ([]) and renders as an empty
+// accordion row.
 //
 // Layout JSON shape:
 // {
@@ -103,26 +110,76 @@ document.addEventListener('DOMContentLoaded', () => {
 // }
 // ============================================================
 
-async function loadLayouts() {
-    const grid = document.getElementById('layoutGrid');
-    if (!grid) return;
+async function loadPages() {
+    const accordion = document.getElementById('pageAccordion');
+    if (!accordion) return;
 
     try {
-        const manifestRes = await fetch('layout/manifest.json');
-        const files = await manifestRes.json();
+        const pages = await fetch('layout/pages.json').then(res => res.json());
+        const loaded = await Promise.all(pages.map(loadPageLayouts));
 
-        const layouts = await Promise.all(
-            files.map(file => fetch(`layout/${file}`).then(res => res.json()))
-        );
+        accordion.innerHTML = '';
+        // The first page (Home) starts expanded; the rest start collapsed.
+        loaded.forEach((page, i) => accordion.appendChild(buildPageSection(page, i === 0)));
 
-        grid.innerHTML = '';
-        layouts.forEach(layout => grid.appendChild(buildLayoutCard(layout)));
-
-        wireLayoutCardSelection(grid, layouts);
+        wireLayoutCardSelection(accordion, loaded);
     } catch (err) {
-        grid.innerHTML = '<p class="panel__hint">Couldn\'t load layouts.</p>';
-        console.error('Failed to load layouts from /layout:', err);
+        accordion.innerHTML = '<p class="panel__hint">Couldn\'t load pages.</p>';
+        console.error('Failed to load pages from /layout:', err);
     }
+}
+
+async function loadPageLayouts(page) {
+    const files = await fetch(`layout/${page.id}/manifest.json`).then(res => res.json());
+    const layouts = await Promise.all(
+        files.map(file => fetch(`layout/${page.id}/${file}`).then(res => res.json()))
+    );
+    return { ...page, layouts };
+}
+
+function buildPageSection(page, isOpen) {
+    const section = document.createElement('div');
+    section.className = 'page-section';
+    section.classList.toggle('is-open', isOpen);
+    section.dataset.pageId = page.id;
+
+    const header = document.createElement('button');
+    header.className = 'page-section__header';
+    header.type = 'button';
+    header.setAttribute('aria-expanded', String(isOpen));
+    header.innerHTML =
+        '<svg viewBox="0 0 24 24" class="icon icon--sm page-section__chevron"><path d="M9 6l6 6-6 6"/></svg>' +
+        `<span class="page-section__name">${escapeHtml(page.name)}</span>` +
+        `<span class="page-section__count">${page.layouts.length}</span>`;
+
+    header.addEventListener('click', () => {
+        const nowOpen = !section.classList.contains('is-open');
+        section.classList.toggle('is-open', nowOpen);
+        header.setAttribute('aria-expanded', String(nowOpen));
+    });
+
+    const body = document.createElement('div');
+    body.className = 'page-section__body';
+
+    const inner = document.createElement('div');
+    inner.className = 'page-section__inner';
+
+    if (page.layouts.length === 0) {
+        const empty = document.createElement('p');
+        empty.className = 'page-section__empty';
+        empty.textContent = 'No layouts for this page yet.';
+        inner.appendChild(empty);
+    } else {
+        const grid = document.createElement('div');
+        grid.className = 'layout-grid';
+        page.layouts.forEach(layout => grid.appendChild(buildLayoutCard(layout)));
+        inner.appendChild(grid);
+    }
+
+    body.appendChild(inner);
+    section.appendChild(header);
+    section.appendChild(body);
+    return section;
 }
 
 function buildLayoutCard(layout) {
@@ -157,18 +214,26 @@ function buildLayoutCard(layout) {
     return card;
 }
 
-function wireLayoutCardSelection(grid, layouts) {
+function wireLayoutCardSelection(accordion, pages) {
     const canvasFrame = document.querySelector('.canvas-frame');
 
-    grid.querySelectorAll('.layout-card').forEach(card => {
+    accordion.querySelectorAll('.layout-card').forEach(card => {
         card.addEventListener('click', () => {
-            grid.querySelectorAll('.layout-card').forEach(c => c.classList.remove('is-active'));
+            // The canvas holds one page at a time, so selection is global
+            // across the accordion — picking a layout on any page clears
+            // the selection everywhere else.
+            accordion.querySelectorAll('.layout-card').forEach(c => c.classList.remove('is-active'));
             card.classList.add('is-active');
+
+            // Layout ids are only unique within a page (every page can have
+            // its own "blank"), so resolve the page first.
+            const pageId = card.closest('.page-section').dataset.pageId;
+            const page = pages.find(p => p.id === pageId);
+            const layout = page && page.layouts.find(l => l.id === card.dataset.layoutId);
 
             // NOTE: this swaps the canvas immediately with no confirmation
             // prompt yet — that's TODO Phase 9 item 38 ('confirmation
             // prompt when applying a layout over existing content').
-            const layout = layouts.find(l => l.id === card.dataset.layoutId);
             if (layout) renderPageIntoCanvas(layout.sections, canvasFrame);
         });
     });

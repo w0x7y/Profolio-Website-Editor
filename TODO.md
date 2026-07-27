@@ -47,10 +47,11 @@ can wait a long time).
 - [ ] Decide whether "layout" means a whole starter page, or a single section users can insert (right now it's page-level only) `Medium` `P1`
 - [ ] Support applying a layout to a single section instead of the whole page `Medium` `P2`
 - [ ] More layout options / categories (e.g. filter by style, industry, single-page vs multi-page) `Easy` `P3`
+- [ ] "Add page" / rename / reorder / delete actions on the Layouts tab's page accordion (pages are fixed by `layout/pages.json` right now) `Medium` `P1`
 - [ ] Search/filter within the Layouts tab if the list grows `Easy` `P3`
 - [ ] Show a bigger preview / hover-to-preview before applying a layout `Medium` `P2`
-- [ ] Loading and error states in the UI while `loadLayouts()` fetches (currently just a console error + plain text fallback) `Easy` `P2`
-- [ ] Consider bundling/inlining `layout/*.json` at build time instead of runtime `fetch`, so the editor also works from a plain `file://` open (currently requires a local server) `Medium` `P3`
+- [ ] Loading and error states in the UI while `loadPages()` fetches (currently just a console error + plain text fallback) `Easy` `P2`
+- [ ] Consider bundling/inlining `layout/**/*.json` at build time instead of runtime `fetch`, so the editor also works from a plain `file://` open (currently requires a local server) `Medium` `P3`
 
 ### Right panel — Themes tab
 - [ ] Theme cards actually apply colors to the canvas (currently only toggles a visual "selected" state) `Medium` `P0`
@@ -92,11 +93,10 @@ can wait a long time).
 - [ ] "Publish" button actually publishes/deploys the site somewhere `Hard` `P0`
 - [ ] Publish flow: choose subdomain vs custom domain, confirm, show progress/success state `Medium` `P1`
 - [ ] Avatar/account menu (currently a static "JD" circle with no click behavior) `Easy` `P2`
-- [ ] Multi-page support: page switcher (the canvas toolbar's "Page: Home" chip is currently a dead dropdown-styled button) `Hard` `P1`
+- [ ] Multi-page support: the Layouts tab now lists the pages (Home/About/Showcase/Blog/Contact/Links) as accordion rows, but the canvas still only ever holds one page — applying a layout from any row replaces the same canvas `Hard` `P1`
 - [ ] Zoom controls: actually change canvas zoom level (currently static "100%" label, buttons do nothing) `Medium` `P2`
 
 ### Canvas toolbar
-- [ ] "Page: Home" chip opens a real page list / page switcher + "add page" action `Medium` `P1`
 - [ ] Zoom in/out buttons functional, plus fit-to-screen and keyboard/scroll-wheel zoom `Medium` `P2`
 - [ ] Breadcrumb of currently selected element's parent chain (common in editors like this) `Medium` `P3`
 
@@ -219,8 +219,8 @@ Needed before real publishing/multi-user use is possible.
 49. Undo/redo buttons wired to the real history stack `Easy` `P1`
 50. "Preview" button opens a real, non-editable preview `Medium` `P1`
 51. Publish flow: subdomain vs custom domain, confirm, progress/success state `Medium` `P1`
-52. Multi-page support: page switcher `Hard` `P1`
-53. "Page: Home" chip opens a real page list / "add page" action `Medium` `P1`
+52. Multi-page support: canvas holds a page per accordion row, not one shared canvas `Hard` `P1`
+53. "Add page" / rename / reorder / delete on the Layouts page accordion `Medium` `P1`
 
 ### Phase 11 — Data & quality wrap-up (P1)
 54. Duplicate / delete / rename project from the dashboard `Easy` `P1`
@@ -268,7 +268,7 @@ Needed before real publishing/multi-user use is possible.
 92. Tooltips stay correct as tools gain real behavior `Easy` `P3`
 93. More layout options / categories `Easy` `P3`
 94. Search/filter within the Layouts tab `Easy` `P3`
-95. Bundle/inline `layout/*.json` at build time (works from `file://`) `Medium` `P3`
+95. Bundle/inline `layout/**/*.json` at build time (works from `file://`) `Medium` `P3`
 96. More theme presets `Easy` `P3`
 97. Dark-mode variant toggle for the published site `Medium` `P3`
 98. Asset search/filter and folders `Medium` `P3`
