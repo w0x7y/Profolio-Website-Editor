@@ -198,6 +198,7 @@ the right panel. The current tone meanings are:
 - `gradient-dark` = text
 - `accent` = links/navbar
 - `neutral` = other
+- ` ` = blank
 
 These tones are thumbnail-only hints; the actual canvas content is driven by
 the `sections` tree.
