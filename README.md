@@ -8,15 +8,24 @@ sites."
 This repo currently contains the **editor UI shell only**. It looks like a
 real editor (top bar, left tool rail, center canvas, right panel with
 Layouts/Themes/Assets/Settings tabs). The Layouts tab is an accordion with
-one collapsible row per page of the site (Home, About, Showcase, Blog,
-Contact, Links); each row loads its cards from that page's folder under
-`layout/`, and clicking a layout appends that layout's `sections` tree to the
-bottom of the canvas. Layouts are additive: Home's cards give you a page shell
-(nav / hero / projects / footer) and the other pages' cards stack their
-sections underneath, so a page is assembled by picking one card after another.
-Home and About ship with real layouts; the other pages currently hold only a
-`blank-test` placeholder. Selecting/editing content, saving, and publishing are
-not wired yet.
+one collapsible row per page of the site (Navbar, Home, About, Showcase,
+Blog, Contact, Links, Footer); every row starts collapsed, loads its cards
+from that page's folder under `layout/`, and clicking a card appends that
+layout's `sections` tree to the bottom of the canvas. Layouts are additive —
+nothing already on the canvas is replaced — so a page is assembled by stacking
+one card after another: Navbar's nav bar, then Home's hero, then Showcase's
+project grid, then Footer. Sections already on the canvas can be dragged by
+their grab handle to reorder them, or dropped on the right panel's trash zone
+to delete them. Selecting/editing individual elements, saving, and publishing
+are not wired yet.
+
+Content-wise: `home/example.json` and `about/example.json` are the only cards
+filled in with real copy. Every page also ships a `blank-test.json` card that
+inserts that page's real section structure with all of its slots left unfilled
+(placeholder text, empty image boxes) — useful both as a test fixture and as a
+preview of the placeholder system. `minimal.json`, `split-bio.json` and
+`photo-first.json` still have empty `sections` arrays, so clicking them does
+nothing.
 
 ## Project structure
 
@@ -24,35 +33,41 @@ not wired yet.
 Profolio Editor/
 ├── index.html          Editor shell markup (top bar, toolbar, canvas, right panel)
 ├── style.css            All styling (dark editor chrome + light canvas page + rendered node styles)
-├── script.js             UI interactions (tab/tool switching, page accordion, layout loader/insertion)
+├── script.js             UI interactions (tab/tool switching, page accordion, layout loader/insertion, section drag & drop)
 ├── renderer.js           Renders a sections node tree onto the canvas (see docs/DATA_MODEL.md)
+├── TODO.md               Full task list + a prioritized, dependency-ordered plan
 ├── docs/
 │   └── DATA_MODEL.md      The data model a page/site is built from (sections → blocks → elements)
 └── layout/
     ├── pages.json         The site's pages, in the order the accordion shows them
-    ├── home/
+    ├── navbar/
     │   ├── manifest.json   List of layout files to load for this page (see note below)
-    │   ├── minimal.json
-    │   ├── split-bio.json
-    │   ├── photo-first.json
-    │   ├── blank.json
-    │   └── example.json     Fully filled-in reference layout (nav/hero/projects/footer)
+    │   └── blank-test.json  Nav bar: logo + links + button, all slots unfilled
+    ├── home/
+    │   ├── manifest.json
+    │   ├── minimal.json     `sections: []` — not built yet
+    │   ├── split-bio.json   `sections: []` — not built yet
+    │   ├── photo-first.json `sections: []` — not built yet
+    │   └── example.json     Filled-in hero section (eyebrow, title, subtitle, two CTAs, portrait)
     ├── about/
     │   ├── manifest.json
     │   ├── example.json     Filled-in About section (title + portrait + bio)
-    │   └── blank-test.json  Placeholder section, for checking that inserts work
+    │   └── blank-test.json  Same section with its slots unfilled
     ├── showcase/
     │   ├── manifest.json
-    │   └── blank-test.json
+    │   └── blank-test.json  Project grid: three project cards, slots unfilled
     ├── blog/
     │   ├── manifest.json
     │   └── blank-test.json
     ├── contact/
     │   ├── manifest.json
     │   └── blank-test.json
-    └── links/
+    ├── links/
+    │   ├── manifest.json
+    │   └── blank-test.json
+    └── footer/
         ├── manifest.json
-        └── blank-test.json
+        └── blank-test.json  Footer: logo + tagline + link row, slots unfilled
 ```
 
 `pages.json` lists the site's pages as `{ "id", "name" }` pairs; each `id` is
@@ -75,7 +90,8 @@ its filename to that folder's `manifest.json`. To add a page, create the
 folder with an empty `manifest.json` and add an entry to `pages.json`.
 
 Preview block tones are semantic: `gradient-accent` = image,
-`gradient-dark` = text, `accent` = links/navbar, and `neutral` = other.
+`gradient-dark` = text, `accent` = links/navbar, `neutral` = other, and
+`" "` (a single space) = blank spacer.
 
 ## Running locally
 
@@ -98,10 +114,12 @@ npx serve .
 - [x] Visual-only tool selection, tab switching, theme/font card selection
 - [x] Device switcher visually resizes the canvas frame (desktop/tablet/mobile)
 - [x] Canvas is blank by default
-- [x] Layouts tab is a per-page accordion (Home / About / Showcase / Blog / Contact / Links) driven by `layout/pages.json`
+- [x] Layouts tab is a per-page accordion (Navbar / Home / About / Showcase / Blog / Contact / Links / Footer) driven by `layout/pages.json`, with every row collapsed at load
 - [x] Each page's layout cards load automatically from `layout/<page>/*.json` via that folder's `manifest.json`
 - [x] Data model for a site/page (sections → blocks → elements) decided — see [docs/DATA_MODEL.md](./docs/DATA_MODEL.md)
 - [x] Canvas renders from that data model (`renderer.js`) — clicking a layout card appends its sections to the bottom of the canvas, so layouts stack instead of replacing each other
+- [x] Unfilled slots render as real placeholders (dashed/muted text, upload-icon image boxes) rather than empty space
+- [x] Top-level sections can be dragged to reorder, and dropped on the right panel's trash zone to delete (DOM-only, no undo yet)
 - [ ] Everything else, including selecting/editing what's rendered (see [TODO.md](./TODO.md))
 
 See [TODO.md](./TODO.md) for the full task list and a prioritized, dependency-ordered implementation plan.

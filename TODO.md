@@ -18,6 +18,7 @@ can wait a long time).
 - [x] Drag-and-drop reordering of sections within the canvas `Hard` `P0` — grab handle per section, wired in `script.js` (`initSectionDragAndDrop()`). Reorders the DOM only; it needs to move the node in a real project tree once one exists
 - [ ] Drag-and-drop reordering of *elements* inside a section (the section-level case above is done) `Hard` `P0`
 - [ ] Drag elements from the left toolbar onto the canvas to insert them `Medium` `P1`
+- [ ] `renderer.js` only reads `href` on `button` nodes, so the `nav-link` text nodes in the Navbar/Footer layouts carry an href that renders as nothing — either render them as links or drop the field `Easy` `P2`
 - [ ] Multi-select elements (shift-click / marquee select) `Medium` `P2`
 - [ ] Copy / paste / duplicate elements `Easy` `P1`
 - [ ] Delete elements (with confirmation or undo safety net) `Easy` `P0` — sections can already be deleted by dragging them onto the right panel's trash zone, but that is immediate and unrecoverable; sub-section elements have no delete at all
@@ -44,9 +45,9 @@ can wait a long time).
 ### Right panel — Layouts tab
 - [x] Clicking a layout card actually applies it to the canvas `Hard` `P0` — wired in `script.js` via `appendSectionsToCanvas()`
 - [x] Decide whether "layout" means a whole starter page, or a single section users can insert `Medium` `P1` — both, and every card is additive: it appends its sections to the bottom of the canvas rather than replacing it. Home's cards are page shells, the other pages' cards are sections that stack underneath.
-- [x] Each page's folder loads its own layouts (Navbar / About / Showcase / Blog / Contact / Links / Footer, not just Home) `Easy` `P1` — every manifest is populated; only About has real content so far, the rest carry a `blank-test.json` placeholder
-- [ ] Fill in the `sections` field for `minimal.json`, `split-bio.json`, and `photo-first.json` (currently empty arrays — clicking them is a no-op now that cards append instead of replace; same for `home/blank.json`, whose "start from an empty page" meaning no longer applies) `Easy` `P1`
-- [ ] Real Navbar / Showcase / Blog / Contact / Links / Footer layouts to replace the `blank-test.json` placeholders `Medium` `P1`
+- [x] Each page's folder loads its own layouts (Navbar / About / Showcase / Blog / Contact / Links / Footer, not just Home) `Easy` `P1` — every manifest is populated; only `home/example.json` and `about/example.json` carry real copy, the rest are `blank-test.json` cards whose sections are structurally real but have every slot unfilled
+- [ ] Fill in the `sections` field for `minimal.json`, `split-bio.json`, and `photo-first.json` (currently empty arrays — clicking them is a no-op now that cards append instead of replace) `Easy` `P1`
+- [ ] Real Navbar / Showcase / Blog / Contact / Links / Footer layouts to replace the `blank-test.json` fixtures `Medium` `P1`
 - [ ] A "clear canvas" / start-over action — sections can now be removed one at a time via the trash zone, but there's still no single "empty the canvas" action, and no undo for a mis-drop `Easy` `P0`
 - [ ] Let the user choose where an inserted section lands (drop between existing sections) instead of always appending at the bottom `Medium` `P2`
 - [ ] Support applying a layout to a single existing section (replace in place) `Medium` `P2`
@@ -209,7 +210,7 @@ Needed before real publishing/multi-user use is possible.
 ### Phase 9 — Round out layouts, themes & assets (P1)
 38. ~~Confirmation prompt when applying a layout over existing content~~ — moot: layouts append instead of replacing `Easy` `P1`
 39. ~~Decide whether "layout" means a whole page or a single insertable section~~ — done: both, every card appends `Medium` `P1`
-39a. Real Showcase / Blog / Contact / Links layouts, replacing the `blank-test.json` placeholders `Medium` `P1`
+39a. Real Navbar / Showcase / Blog / Contact / Links / Footer layouts, replacing the `blank-test.json` fixtures `Medium` `P1`
 40. Load Google Fonts (or self-hosted fonts) for theme font options `Easy` `P1`
 41. Persist selected theme/font with the project data `Easy` `P1`
 42. Image thumbnails reflect actual uploaded files `Easy` `P1`

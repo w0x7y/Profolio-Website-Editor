@@ -1,7 +1,7 @@
 {
   "id": "example",
   "name": "Example Home Portfolio",
-  "description": "A fully filled-in home reference layout: nav, hero.",
+  "description": "A fully filled-in home reference layout: one hero section.",
   "preview": {
     "direction": "row",
     "wrap": true,

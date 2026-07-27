@@ -1,7 +1,7 @@
 {
   "id": "example",
   "name": "Example About Portfolio",
-  "description": "A fully filled-in About reference layout: hero, description.",
+  "description": "A fully filled-in About reference layout: title, portrait and bio.",
   "preview": {
     "direction": "row",
     "wrap": true,
