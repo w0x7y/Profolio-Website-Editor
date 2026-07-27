@@ -128,8 +128,8 @@ async function loadPages() {
         const loaded = await Promise.all(pages.map(loadPageLayouts));
 
         accordion.innerHTML = '';
-        // The first page (Home) starts expanded; the rest start collapsed.
-        loaded.forEach((page, i) => accordion.appendChild(buildPageSection(page, i === 0)));
+        // Every row starts collapsed; the user opens the page they want.
+        loaded.forEach(page => accordion.appendChild(buildPageSection(page, false)));
 
         wireLayoutCardInsertion(accordion, loaded);
     } catch (err) {
