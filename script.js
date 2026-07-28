@@ -64,21 +64,10 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 
-    // ---- Theme cards (visual selection only) ----
-    document.querySelectorAll('.theme-card').forEach(card => {
-        card.addEventListener('click', () => {
-            document.querySelectorAll('.theme-card').forEach(c => c.classList.remove('is-active'));
-            card.classList.add('is-active');
-        });
-    });
-
-    // ---- Font cards (visual selection only) ----
-    document.querySelectorAll('.font-card').forEach(card => {
-        card.addEventListener('click', () => {
-            document.querySelectorAll('.font-card').forEach(c => c.classList.remove('is-active'));
-            card.classList.add('is-active');
-        });
-    });
+    // ---- Right panel: the Themes tab's colors and fonts ----
+    // Builds the theme cards and the two font pickers, then puts the
+    // starting theme on the canvas. See theme.js.
+    initThemePanel();
 
     // ---- Canvas: render the initial (empty) state from the data model ----
     renderPageIntoCanvas([], document.querySelector('.canvas-frame'));

@@ -57,8 +57,12 @@ Project = {
       surface: string,
       text: string,
       textMuted: string,
-      accent: string
-      // extend as the Themes tab grows (see TODO: "customize individual colors")
+      accent: string,
+      onText: string            // text drawn on a `text`-colored fill (button, footer)
+      // These six are the whole theme — the hairline, placeholder and other
+      // neutral tokens are derived from them in style.css rather than stored,
+      // so they follow a light or a dark preset without being listed here.
+      // Extend deliberately (see TODO: "customize individual colors").
     },
     fonts: {
       heading: string,        // font-family stack

@@ -874,7 +874,7 @@ button {
     display: flex;
     flex-direction: column;
     gap: 14px;
-    color: #111114;
+    color: var(--color-text);
 }
 
 /* card treatment, shared by real sections and the blank-canvas placeholder */
@@ -894,7 +894,7 @@ button {
     align-items: center;
     justify-content: center;
     gap: 10px;
-    color: #c2c2c9;
+    color: var(--color-placeholder);
 }
 
 .canvas-frame__empty .icon {
@@ -913,19 +913,39 @@ button {
    only for a handful of sensible typographic/spacing defaults — none of
    this is specific to any one layout's content.
 
-   Theme tokens below are placeholders with sensible defaults; the Themes
-   tab (TODO: "Theme cards actually apply colors to the canvas") will
-   override these custom properties instead of touching individual nodes.
+   Every color and font below comes from a theme token rather than a
+   literal, which is what lets the Themes tab restyle the whole canvas by
+   writing custom properties on .canvas-frame and nothing else — including
+   sections added afterwards, since they're rendered inside the same frame
+   (see theme.js). A literal color anywhere in here would be a hole a theme
+   can't reach, so add tokens rather than hex values.
+
+   The values here are the defaults; theme.js overwrites the six base ones
+   on load and on every theme pick.
    ---------------------------------------------------------------- */
 
 .canvas-frame {
     --color-background: #ffffff;
-    --color-surface: #fafafa;
+    --color-surface: #f4f4f5;
     --color-text: #111114;
     --color-text-muted: #55555c;
     --color-accent: #6366f1;
-    --font-heading: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-    --font-body: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    /* text drawn on a --color-text fill: the primary button, the footer */
+    --color-on-text: #ffffff;
+
+    /* Derived from the six above so a theme only has to define those, and
+       so the neutrals follow the page instead of being a fixed set of
+       greys that fall apart on a dark theme: on Cyan Night these all come
+       out light-on-dark without the theme saying anything about them. */
+    --color-border: color-mix(in srgb, var(--color-text) 14%, var(--color-background));
+    --color-placeholder: color-mix(in srgb, var(--color-text) 40%, var(--color-background));
+    --color-placeholder-line: color-mix(in srgb, var(--color-text) 22%, var(--color-background));
+    --color-placeholder-fill: color-mix(in srgb, var(--color-text) 6%, var(--color-background));
+    --color-text-faint: color-mix(in srgb, var(--color-text-muted) 75%, var(--color-background));
+    --color-on-text-muted: color-mix(in srgb, var(--color-on-text) 70%, transparent);
+
+    --font-heading: system-ui, -apple-system, 'Segoe UI', sans-serif;
+    --font-body: system-ui, -apple-system, 'Segoe UI', sans-serif;
 
     font-family: var(--font-body);
 }
@@ -953,7 +973,7 @@ button {
 
 .node--text.is-empty,
 .node--heading.is-empty {
-    color: #b6b6be;
+    color: var(--color-placeholder);
     font-style: italic;
 }
 
@@ -967,13 +987,13 @@ button {
     border-radius: 8px;
     text-decoration: none;
     background: var(--color-text);
-    color: #fff;
+    color: var(--color-on-text);
     white-space: nowrap;
 }
 
 .node--button.role--cta-secondary {
     background: transparent;
-    border: 1px solid #dcdde0;
+    border: 1px solid var(--color-border);
     color: var(--color-text);
 }
 
@@ -998,9 +1018,9 @@ button {
     justify-content: center;
     gap: 8px;
     aspect-ratio: 4 / 3;
-    border: 1px dashed #d0d0d6;
-    background: linear-gradient(135deg, #f3f3f5, #e8e8ec);
-    color: #9a9aa2;
+    border: 1px dashed var(--color-placeholder-line);
+    background: var(--color-placeholder-fill);
+    color: var(--color-placeholder);
     font-size: 12px;
     text-align: center;
 }
@@ -1009,7 +1029,7 @@ button {
     width: 26px;
     height: 26px;
     fill: none;
-    stroke: #9a9aa2;
+    stroke: var(--color-placeholder);
     stroke-width: 1.6;
     stroke-linecap: round;
     stroke-linejoin: round;
@@ -1023,7 +1043,7 @@ button {
 
 .node--divider {
     border: none;
-    border-top: 1px solid #eceeef;
+    border-top: 1px solid var(--color-border);
     margin: 24px 0;
     width: 100%;
 }
@@ -1033,7 +1053,7 @@ button {
     width: 24px;
     height: 24px;
     border-radius: 50%;
-    background: #e4e4e7;
+    background: var(--color-border);
 }
 
 .node--embed.is-empty {
@@ -1041,10 +1061,10 @@ button {
     align-items: center;
     justify-content: center;
     min-height: 160px;
-    border: 1px dashed #d0d0d6;
+    border: 1px dashed var(--color-placeholder-line);
     border-radius: 12px;
     background: var(--color-surface);
-    color: #9a9aa2;
+    color: var(--color-placeholder);
     font-size: 12px;
 }
 
@@ -1078,7 +1098,7 @@ button {
 
 .node[data-node-role="tag"] {
     font-size: 12.5px;
-    color: #8b8b93;
+    color: var(--color-text-faint);
 }
 
 .node[data-node-role="subtitle"] {
@@ -1105,16 +1125,19 @@ button {
 .node--section.role--footer {
     padding: 44px 56px;
     background: var(--color-text);
-    color: #fff;
+    color: var(--color-on-text);
 }
 
+/* the footer inverts the page, so anything keyed to --color-text would be
+   drawn in the footer's own background color — these flip to its foreground */
 .node--section.role--footer .node--text,
 .node--section.role--footer [data-node-role="nav-link"] {
-    color: rgba(255, 255, 255, 0.7);
+    color: var(--color-on-text-muted);
 }
 
+.node--section.role--footer .node--heading,
 .node--section.role--footer [data-node-role="logo"] {
-    color: #fff;
+    color: var(--color-on-text);
 }
 
 /* ---------- section drag & drop (see script.js) ----------
@@ -1520,44 +1543,32 @@ button {
     margin-left: 0;
 }
 
-.font-list {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-}
-
-.font-card {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    padding: 9px 12px;
+/* a live sample of the two picked families — a native <select> can't be
+   relied on to preview an option in its own face, so the answer to "what
+   does this actually look like" lives here instead of in the dropdowns */
+.type-preview {
+    margin-top: 14px;
+    padding: 14px;
     border-radius: var(--radius-md);
     border: 1px solid var(--border-subtle);
-    font-size: 13px;
-    color: var(--text-secondary);
-    transition: border-color 0.15s ease, color 0.15s ease;
-}
-
-.font-card:hover {
-    border-color: var(--border-strong);
-    color: var(--text-primary);
-}
-
-.font-card.is-active {
-    border-color: var(--accent);
-    color: var(--text-primary);
-    background: var(--accent-soft);
-}
-
-.font-card__preview {
-    width: 30px;
-    height: 30px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border-radius: var(--radius-sm);
     background: var(--bg-app);
-    font-size: 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    overflow-wrap: anywhere;
+}
+
+.type-preview__heading {
+    font-size: 19px;
+    font-weight: 700;
+    line-height: 1.2;
+    color: var(--text-primary);
+}
+
+.type-preview__body {
+    font-size: 12.5px;
+    line-height: 1.5;
+    color: var(--text-secondary);
 }
 
 /* assets tab */

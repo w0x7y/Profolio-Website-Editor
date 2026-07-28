@@ -21,6 +21,12 @@
 // entry paths (tool click, canvas selection) go through — and its mirror in
 // closeToolPanel(), which points the pane back at nothing.
 //
+// The same boundary in the other direction: because these writes are the
+// only per-node style overrides on the canvas, this file is also what
+// removes them. The Themes tab calls clearTextStyleOverrides() when a theme
+// or a font is applied — it names the properties to drop, and everything
+// about tracking and undoing them lives here.
+//
 // Character styling is content, not style: Bold/Italic/Underline/Strike
 // wrap the selection inside the Content box in <b>/<i>/<u>/<s>, so
 // font-weight, font-style and text-decoration are never written here.
@@ -125,7 +131,7 @@ function syncTextPanel(el) {
 
     const computed = getComputedStyle(textTarget);
 
-    textEls.fontFamily.value = matchFontFamily(computed.fontFamily);
+    textEls.fontFamily.value = matchFontFamily();
 
     const size = readFontSize(computed);
     textEls.fontSize.value = size.value;
@@ -380,12 +386,22 @@ function readFontSize(computed) {
 }
 
 /**
- * Computed style reports `"Maple Mono", monospace` where the option value
- * reads `'Maple Mono', monospace`, so both sides are normalized before
- * comparing. No match falls back to "Theme default".
+ * The inline value wins here, for the same reason it does in readFontSize():
+ * it's the only thing that says whether this node is pinned to a font at
+ * all. A node with none is riding the site font, and the picker should say
+ * "Theme default" rather than naming whichever family the Themes tab
+ * currently resolves that to — otherwise the two are indistinguishable and
+ * there's no way to tell that changing the site font would move this node.
+ *
+ * Stacks are normalized before comparing: the same font reads
+ * `"Maple Mono", monospace` from the DOM and `'Maple Mono', monospace` in
+ * the option. No match falls back to "Theme default".
  */
-function matchFontFamily(computedFamily) {
-    const wanted = normalizeFontStack(computedFamily);
+function matchFontFamily() {
+    const inline = textTarget.style.fontFamily.trim();
+    if (!inline) return '';
+
+    const wanted = normalizeFontStack(inline);
     const match = Array.from(textEls.fontFamily.options)
         .find(option => option.value && normalizeFontStack(option.value) === wanted);
 
@@ -473,13 +489,24 @@ function normalizeHex(input) {
 }
 
 /** `rgb(17, 17, 20)` -> `#111114`. Fully transparent returns null. */
+/**
+ * Computed colors normally read `rgb(r, g, b)` with 0-255 channels, but one
+ * that came out of color-mix() is reported as `color(srgb r g b)` with 0-1
+ * channels instead — and every derived theme neutral is a color-mix (see the
+ * token block in style.css), so a placeholder or a footer link hits this
+ * branch. Both forms are read here; without the scale those 0-1 channels
+ * round to 0 and every such node's swatch reads as black.
+ */
 function rgbToHex(value) {
-    const parts = String(value).match(/-?\d*\.?\d+/g);
+    const text = String(value).trim();
+    const parts = text.match(/-?\d*\.?\d+/g);
     if (!parts || parts.length < 3) return null;
     if (parts.length >= 4 && parseFloat(parts[3]) === 0) return null;
 
+    const scale = text.startsWith('color(') ? 255 : 1;
+
     return '#' + parts.slice(0, 3).map(part => {
-        const channel = Math.max(0, Math.min(255, Math.round(parseFloat(part))));
+        const channel = Math.max(0, Math.min(255, Math.round(parseFloat(part) * scale)));
         return channel.toString(16).padStart(2, '0');
     }).join('');
 }
@@ -489,8 +516,56 @@ function rgbToHex(value) {
 function setTargetStyle(property, value) {
     if (!textTarget) return;
 
-    if (value === '' || value == null) textTarget.style.removeProperty(property);
+    const clearing = value === '' || value == null;
+
+    if (clearing) textTarget.style.removeProperty(property);
     else textTarget.style.setProperty(property, value);
+
+    recordUserStyle(textTarget, property, !clearing);
+}
+
+/**
+ * Keep a per-node list of the declarations *this pane* wrote, as
+ * data-user-styled="color,font-family".
+ *
+ * Applying a theme wipes per-node overrides so the canvas ends up uniformly
+ * on the new theme, and this is what tells it which declarations are the
+ * user's to remove. An inline style alone isn't enough to go on: the
+ * renderer writes inline styles too, straight from the layout file's
+ * `style.base` (a section's `background: var(--color-surface)`, say), and
+ * those are the layout's, not the user's — wiping them would tear the page
+ * apart. Only what is listed here is ever removed.
+ */
+function recordUserStyle(el, property, isSet) {
+    const props = new Set((el.dataset.userStyled || '').split(',').filter(Boolean));
+
+    if (isSet) props.add(property);
+    else props.delete(property);
+
+    if (props.size) el.dataset.userStyled = Array.from(props).join(',');
+    else delete el.dataset.userStyled;
+}
+
+/**
+ * Drop this pane's overrides for `properties` from every node on the canvas
+ * that has them, handing those nodes back to the theme. Called by the Themes
+ * tab (theme.js) — colors when a theme is picked, font-family when a font is.
+ *
+ * Not undoable, like every other canvas write in the editor today.
+ */
+function clearTextStyleOverrides(properties) {
+    const wanted = new Set(properties);
+
+    document.querySelectorAll('.canvas-frame [data-user-styled]').forEach(el => {
+        (el.dataset.userStyled || '').split(',').filter(Boolean).forEach(property => {
+            if (!wanted.has(property)) return;
+            el.style.removeProperty(property);
+            recordUserStyle(el, property, false);
+        });
+    });
+
+    // The controls are showing values that just stopped being true.
+    if (textTarget) syncTextPanel(textTarget);
 }
 
 function setSwitch(btn, on) {
