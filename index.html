@@ -105,8 +105,9 @@
                     (see NODE_TYPE_PANES in script.js). Settings has no pane,
                     so choosing it closes the panel.
 
-                    Every pane is a placeholder for now — the real per-tool
-                    controls land here later (see TODO.md, "Left toolbar").
+                    The Text pane has real controls (see text-panel.js); the
+                    rest are still placeholders — their controls land here
+                    later (see TODO.md, "Left toolbar").
                 -->
                 <aside class="tool-panel" id="toolPanel" hidden>
                     <div class="tool-panel__header">
@@ -117,7 +118,118 @@
                     </div>
 
                     <div class="tool-panel__content">
-                        <div class="tool-panel__pane" data-tool-pane="text">the text tool panel</div>
+                        <div class="tool-panel__pane" data-tool-pane="text">
+                            <p class="tool-panel__empty" id="textPanelEmpty">Select text on the canvas to edit it.</p>
+
+                            <div class="tool-panel__body" id="textPanelBody" hidden>
+
+                                <!-- CONTENT — the inline toggles act on the
+                                     selection inside the box above them. -->
+                                <section class="panel-group">
+                                    <h3 class="panel-group__title">Content</h3>
+                                    <div class="rich-input" id="textContent" contenteditable="true" role="textbox" aria-multiline="true" aria-label="Content"></div>
+                                    <div class="toggle-row" id="textInlineToggles">
+                                        <button class="toggle-btn toggle-btn--bold" type="button" data-command="bold" title="Bold" aria-label="Bold" aria-pressed="false">B</button>
+                                        <button class="toggle-btn toggle-btn--italic" type="button" data-command="italic" title="Italic" aria-label="Italic" aria-pressed="false">I</button>
+                                        <button class="toggle-btn toggle-btn--underline" type="button" data-command="underline" title="Underline" aria-label="Underline" aria-pressed="false">U</button>
+                                        <button class="toggle-btn toggle-btn--strike" type="button" data-command="strikeThrough" title="Strikethrough" aria-label="Strikethrough" aria-pressed="false">S</button>
+                                    </div>
+                                </section>
+
+                                <!-- TYPOGRAPHY -->
+                                <section class="panel-group">
+                                    <h3 class="panel-group__title">Typography</h3>
+
+                                    <div class="ctrl">
+                                        <label class="ctrl__label" for="textFontFamily">Font family</label>
+                                        <select class="select" id="textFontFamily">
+                                            <option value="">Theme default</option>
+                                            <optgroup label="Theme fonts">
+                                                <option value="'Maple Mono', monospace">Maple Mono</option>
+                                                <option value="Georgia, serif">Editorial Serif</option>
+                                                <option value="Arial, sans-serif">Neutral Sans</option>
+                                            </optgroup>
+                                            <optgroup label="Web-safe">
+                                                <option value="system-ui, -apple-system, 'Segoe UI', sans-serif">System Sans</option>
+                                                <option value="'Times New Roman', Times, serif">Serif</option>
+                                                <option value="ui-monospace, SFMono-Regular, Menlo, monospace">Mono</option>
+                                            </optgroup>
+                                        </select>
+                                    </div>
+
+                                    <div class="ctrl">
+                                        <label class="ctrl__label" for="textFontSize">Font size</label>
+                                        <div class="ctrl__row">
+                                            <input class="input" type="number" id="textFontSize" min="1" step="1" inputmode="decimal">
+                                            <select class="select select--unit" id="textFontSizeUnit" aria-label="Font size unit">
+                                                <option value="px">px</option>
+                                                <option value="rem">rem</option>
+                                                <option value="em">em</option>
+                                                <option value="%">%</option>
+                                            </select>
+                                        </div>
+                                    </div>
+
+                                    <div class="ctrl">
+                                        <label class="ctrl__label" for="textLetterSpacing">Letter spacing</label>
+                                        <div class="ctrl__row">
+                                            <input class="input" type="number" id="textLetterSpacing" step="0.1" inputmode="decimal">
+                                            <span class="unit-tag">px</span>
+                                        </div>
+                                    </div>
+
+                                    <div class="ctrl ctrl--inline">
+                                        <span class="ctrl__label">Uppercase</span>
+                                        <button class="switch" type="button" id="textUppercase" role="switch" aria-checked="false" aria-label="Uppercase"></button>
+                                    </div>
+                                </section>
+
+                                <!-- COLOR -->
+                                <section class="panel-group">
+                                    <h3 class="panel-group__title">Color</h3>
+
+                                    <div class="ctrl">
+                                        <label class="ctrl__label" for="textColorHex">Text</label>
+                                        <div class="color-field">
+                                            <input class="color-field__swatch" type="color" id="textColorSwatch" aria-label="Text color">
+                                            <input class="input color-field__hex" type="text" id="textColorHex" spellcheck="false" maxlength="7" placeholder="#000000">
+                                        </div>
+                                    </div>
+
+                                    <div class="ctrl" id="textBgCtrl">
+                                        <div class="ctrl__head">
+                                            <label class="ctrl__label" for="textBgHex">Background</label>
+                                            <button class="switch" type="button" id="textBgToggle" role="switch" aria-checked="false" aria-label="Background"></button>
+                                        </div>
+                                        <div class="ctrl__body">
+                                            <div class="color-field">
+                                                <input class="color-field__swatch" type="color" id="textBgSwatch" aria-label="Background color">
+                                                <input class="input color-field__hex" type="text" id="textBgHex" spellcheck="false" maxlength="7" placeholder="#ffffff">
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- a stroke on the letterforms, not a border round the box -->
+                                    <div class="ctrl" id="textStrokeCtrl">
+                                        <div class="ctrl__head">
+                                            <label class="ctrl__label" for="textStrokeHex">Outline</label>
+                                            <button class="switch" type="button" id="textStrokeToggle" role="switch" aria-checked="false" aria-label="Outline"></button>
+                                        </div>
+                                        <div class="ctrl__body">
+                                            <div class="ctrl__row">
+                                                <input class="input" type="number" id="textStrokeWidth" min="0" step="0.5" inputmode="decimal" aria-label="Outline width">
+                                                <span class="unit-tag">px</span>
+                                            </div>
+                                            <div class="color-field">
+                                                <input class="color-field__swatch" type="color" id="textStrokeSwatch" aria-label="Outline color">
+                                                <input class="input color-field__hex" type="text" id="textStrokeHex" spellcheck="false" maxlength="7" placeholder="#000000">
+                                            </div>
+                                        </div>
+                                    </div>
+                                </section>
+
+                            </div>
+                        </div>
                         <div class="tool-panel__pane" data-tool-pane="image">the image tool panel</div>
                         <div class="tool-panel__pane" data-tool-pane="button">the button tool panel</div>
                         <div class="tool-panel__pane" data-tool-pane="section">the section tool panel</div>
@@ -283,6 +395,7 @@
         </div>
 
         <script src='renderer.js'></script>
+        <script src='text-panel.js'></script>
         <script src='script.js'></script>
     </body>
 </html>

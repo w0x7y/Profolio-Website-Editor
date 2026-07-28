@@ -195,8 +195,12 @@ StyleProps = {
   padding?: string, margin?: string,
   width?: string, height?: string,
   // typography
+  fontFamily?: string,
   fontSize?: string, fontWeight?: string, lineHeight?: string,
+  letterSpacing?: string,
   textAlign?: "left" | "center" | "right",
+  textTransform?: "none" | "uppercase",
+  webkitTextStroke?: string,  // "2px #000" — a stroke on the letterforms
   color?: string,           // prefer a theme token, e.g. "var(--color-text)"
   // appearance
   background?: string,       // prefer a theme token
@@ -207,6 +211,11 @@ StyleProps = {
 
 Extend this list deliberately as editor features need new properties —
 resist letting it become "any CSS property."
+
+Note what is *not* here: `fontWeight` and `fontStyle` are listed, but the Text
+panel never writes them. Bold/italic/underline/strikethrough are per-selection
+formatting, so they live in `content` as `<b>`/`<i>`/`<u>`/`<s>` rather than as
+element-level style — see the content rules below.
 
 ### Preview block tones
 
@@ -238,6 +247,24 @@ Two rules make this work:
 Both states currently render with an `.is-empty` class for CSS styling
 (dashed outline, muted color). This is not stored in the model itself; it is
 derived at render time from `content`/`src`.
+
+Text leaves also carry their placeholder through to the DOM as
+`data-placeholder`. An empty node holds the placeholder *as its text*, so
+without the attribute the Text panel would read that placeholder back as
+content the user had typed, and would have nothing to restore once the content
+was cleared again.
+
+### Inline HTML in `content`
+
+`content` is a **sanitized subset** of HTML: `b`, `i`, `u`, `s`, `strong`,
+`em`, `br`, with all attributes stripped. Everything else is unwrapped to its
+text on the way in.
+
+This is what makes per-word formatting possible — selecting one word in the
+Text panel's Content box and hitting Bold produces
+`Product <b>Designer</b> and Developer`, not an element-wide `font-weight`.
+`text-panel.js` owns the whitelist (`TEXT_INLINE_TAGS`) and applies it to
+every write reaching the canvas.
 
 ---
 
@@ -305,9 +332,9 @@ upload" slot. Both are ordinary data, not special-cased markup.
 
 - Exact list of `role` values — expect to grow this organically as more
   layouts get built, rather than trying to enumerate it up front.
-- Whether `content` allows any inline HTML (bold/links) or plain text only
-  for v1. Leaning toward a small sanitized subset once inline text editing
-  (Phase 2) is implemented — not decided yet.
+- ~~Whether `content` allows any inline HTML (bold/links) or plain text only
+  for v1.~~ Decided: a small sanitized subset, see "Inline HTML in `content`"
+  above. Links are still excluded.
 - Repeating/collection content (e.g. data-bound project grids) — explicitly
   out of scope until there's a real need for it.
 

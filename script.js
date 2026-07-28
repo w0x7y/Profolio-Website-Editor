@@ -86,6 +86,9 @@ document.addEventListener('DOMContentLoaded', () => {
     // ---- Canvas: drag sections to reorder them, or onto the trash to delete ----
     initSectionDragAndDrop();
 
+    // ---- Left tool panel: the Text pane's controls ----
+    initTextPanel();
+
     // ---- Canvas: click content to select it (Select tool) ----
     setActiveTool('select');
     initCanvasSelection();
@@ -636,12 +639,23 @@ function openToolPanel(tool) {
     const label = document.querySelector(`.tool[data-tool="${tool}"] .tool__label`);
     if (title) title.textContent = label ? label.textContent : '';
 
+    // Panes with real controls point themselves at the current selection.
+    // This is the one funnel both entry paths reach — picking the tool, and
+    // selectNode() mapping a node type to its pane — so it also covers
+    // re-selecting a node after the panel was dismissed with ✕.
+    if (tool === 'text') syncTextPanel(selectedEl);
+
     panel.hidden = false;
 }
 
 function closeToolPanel() {
     const panel = document.getElementById('toolPanel');
     if (panel) panel.hidden = true;
+
+    // Mirror of the sync in openToolPanel(). Without it a pane keeps holding
+    // the element it was editing after the panel closes — including one that
+    // has since been trashed off the canvas.
+    syncTextPanel(null);
 }
 
 /** Re-clicking the active tool: hide its panel, or bring it back if hidden. */
