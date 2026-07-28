@@ -9,11 +9,23 @@ document.addEventListener('DOMContentLoaded', () => {
     const tools = document.querySelectorAll('.tool');
     tools.forEach(tool => {
         tool.addEventListener('click', () => {
+            // Clicking the tool that's already active toggles its extended
+            // panel instead of re-selecting the tool. Either way the tool
+            // stays active — see closeToolPanel().
+            if (tool.dataset.tool === activeTool) {
+                toggleToolPanel(activeTool);
+                return;
+            }
+
             tools.forEach(t => t.classList.remove('is-active'));
             tool.classList.add('is-active');
             setActiveTool(tool.dataset.tool);
         });
     });
+
+    // ---- Left tool panel: close button ----
+    const toolPanelClose = document.getElementById('toolPanelClose');
+    if (toolPanelClose) toolPanelClose.addEventListener('click', closeToolPanel);
 
     // ---- Right panel: tab switching ----
     const panelTabs = document.querySelectorAll('.panel__tab');
@@ -503,6 +515,11 @@ function setActiveTool(tool) {
     if (area) area.dataset.activeTool = activeTool;
 
     if (activeTool !== 'select') clearSelection();
+
+    // Tools with a pane open the extended panel; Select and Settings have
+    // none, so switching to them closes it.
+    if (TOOL_PANEL_TOOLS.has(activeTool)) openToolPanel(activeTool);
+    else closeToolPanel();
 }
 
 function onCanvasClick(e) {
@@ -558,4 +575,57 @@ function clearSelection() {
  */
 function clearSelectionIfDetached() {
     if (selectedEl && !document.contains(selectedEl)) clearSelection();
+}
+
+// ============================================================
+// LEFT TOOL PANEL
+//
+// The extended panel next to the left toolbar. Each tool listed in
+// TOOL_PANEL_TOOLS has a pane in index.html; opening the panel reveals that
+// tool's pane and titles the header from the tool's own tooltip label.
+//
+// Panel visibility is deliberately independent of tool state: closing the
+// panel leaves the tool active, so it never silently changes what clicking
+// on the canvas does. Select and Settings simply have no pane — Select's
+// properties belong on the contextual toolbar, and the Settings tool's UX
+// is still undecided (see TODO.md).
+//
+// Every pane holds placeholder text for now; the real per-tool controls go
+// into the markup later.
+// ============================================================
+
+const TOOL_PANEL_TOOLS = new Set(['text', 'image', 'link', 'button', 'section', 'embed']);
+
+function openToolPanel(tool) {
+    const panel = document.getElementById('toolPanel');
+    if (!panel) return;
+
+    const panes = panel.querySelectorAll('.tool-panel__pane');
+    panes.forEach(pane => {
+        pane.classList.toggle('is-active', pane.dataset.toolPane === tool);
+    });
+
+    // Read the title off the tool button's existing tooltip label rather than
+    // duplicating the name, so the two can't drift apart.
+    const title = document.getElementById('toolPanelTitle');
+    const label = document.querySelector(`.tool[data-tool="${tool}"] .tool__label`);
+    if (title) title.textContent = label ? label.textContent : '';
+
+    panel.hidden = false;
+}
+
+function closeToolPanel() {
+    const panel = document.getElementById('toolPanel');
+    if (panel) panel.hidden = true;
+}
+
+/** Re-clicking the active tool: hide its panel, or bring it back if hidden. */
+function toggleToolPanel(tool) {
+    if (!TOOL_PANEL_TOOLS.has(tool)) return;
+
+    const panel = document.getElementById('toolPanel');
+    if (!panel) return;
+
+    if (panel.hidden) openToolPanel(tool);
+    else closeToolPanel();
 }

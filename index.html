@@ -98,6 +98,34 @@
                     </nav>
                 </aside>
 
+                <!-- ============ LEFT TOOL PANEL ============ -->
+                <!--
+                    The extended panel for the active left-toolbar tool. One
+                    pane per tool; script.js (openToolPanel()) reveals the
+                    matching one and fills in the title. Select and Settings
+                    have no pane, so choosing them closes the panel.
+
+                    Every pane is a placeholder for now — the real per-tool
+                    controls land here later (see TODO.md, "Left toolbar").
+                -->
+                <aside class="tool-panel" id="toolPanel" hidden>
+                    <div class="tool-panel__header">
+                        <h2 class="tool-panel__title" id="toolPanelTitle"></h2>
+                        <button class="icon-btn icon-btn--sm tool-panel__close" type="button" id="toolPanelClose" title="Close panel" aria-label="Close panel">
+                            <svg viewBox="0 0 24 24" class="icon icon--sm"><path d="M6 6l12 12M18 6L6 18"/></svg>
+                        </button>
+                    </div>
+
+                    <div class="tool-panel__content">
+                        <div class="tool-panel__pane" data-tool-pane="text">the text tool panel</div>
+                        <div class="tool-panel__pane" data-tool-pane="image">the image tool panel</div>
+                        <div class="tool-panel__pane" data-tool-pane="link">the link tool panel</div>
+                        <div class="tool-panel__pane" data-tool-pane="button">the button tool panel</div>
+                        <div class="tool-panel__pane" data-tool-pane="section">the section tool panel</div>
+                        <div class="tool-panel__pane" data-tool-pane="embed">the embed tool panel</div>
+                    </div>
+                </aside>
+
                 <!-- ============ CENTER CANVAS ============ -->
                 <main class="canvas-area">
                     <div class="canvas-toolbar">
