@@ -11,8 +11,8 @@ can wait a long time).
 ### Core canvas & editing engine
 - [x] Decide on a data model for a "site"/"page" (JSON tree of sections → blocks → elements) that the canvas renders from, instead of static HTML `Hard` `P0` — see [docs/DATA_MODEL.md](./docs/DATA_MODEL.md)
 - [x] Render the canvas from that data model instead of hardcoded markup `Hard` `P0` — see `renderer.js` (`renderNode`/`renderSections`/`renderPageIntoCanvas`)
-- [ ] Click-to-select an element on the canvas `Medium` `P0`
-- [ ] Show a selection outline + resize/move handles around the selected element `Hard` `P0`
+- [x] Click-to-select an element on the canvas `Medium` `P0` — wired in `script.js` (`initCanvasSelection()`); content nodes only (image/icon, heading/text, button), tracked as a DOM reference, and nothing acts on the selection yet
+- [ ] Show a selection outline + resize/move handles around the selected element `Hard` `P0` — the outline (plus a hover hint) is done in `style.css`; resize/move handles are not
 - [ ] A floating/contextual toolbar for the selected element (font size, color, alignment, spacing, etc.) `Medium` `P1`
 - [ ] Inline text editing (contenteditable or similar) for text elements `Medium` `P0`
 - [x] Drag-and-drop reordering of sections within the canvas `Hard` `P0` — grab handle per section, wired in `script.js` (`initSectionDragAndDrop()`). Reorders the DOM only; it needs to move the node in a real project tree once one exists
@@ -32,7 +32,7 @@ can wait a long time).
 - [ ] Manual "Save" state indicator (saved / saving / unsaved changes) `Easy` `P2`
 
 ### Left toolbar (tools)
-- [ ] Select tool: real selection behavior (currently just toggles active style) `Medium` `P0`
+- [x] Select tool: real selection behavior `Medium` `P0` — click-to-select is live only while this tool is active; switching tools drops the selection (`setActiveTool()` in `script.js`)
 - [ ] Text tool: click-to-place a new text block on canvas `Easy` `P0`
 - [ ] Image tool: click-to-place an image placeholder, then upload/choose an image `Medium` `P0`
 - [ ] Section tool: insert a new full-width section (with layout presets: 1 col, 2 col, grid, etc.) `Medium` `P1`
@@ -161,9 +161,9 @@ Nothing else can be built until there's a data model and a place to store it.
 
 ### Phase 2 — Core selection & direct editing
 The minimum interaction loop: select something, change it, remove it.
-7. Select tool: real selection behavior `Medium` `P0`
-8. Click-to-select an element on the canvas `Medium` `P0`
-9. Selection outline + resize/move handles around the selected element `Hard` `P0`
+7. ~~Select tool: real selection behavior~~ `Medium` `P0` — done, see `script.js` (`setActiveTool()`)
+8. ~~Click-to-select an element on the canvas~~ `Medium` `P0` — done, see `script.js` (`initCanvasSelection()`); selectable = content nodes (image/icon, heading/text, button), held as a DOM reference until there's a project tree to hold a node id instead
+9. Selection outline + resize/move handles around the selected element `Hard` `P0` — outline done; resize/move handles still open
 10. Delete elements (with confirmation or undo safety net) `Easy` `P0` — sections are deletable via the trash zone; elements and the undo safety net are not
 11. Inline text editing (contenteditable) for text elements `Medium` `P0`
 12. Text tool: click-to-place a new text block `Easy` `P0`

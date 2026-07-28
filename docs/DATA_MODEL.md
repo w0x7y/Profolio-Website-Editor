@@ -317,11 +317,19 @@ the canvas DOM with `data-node-id` (plus `data-node-type` and, when set,
 `data-node-role`) on every rendered element. Ids are rewritten on insert
 (`withUniqueIds()`) so the same layout can be added twice without colliding.
 
+Click-to-select (Phase 2) is now wired in `script.js`: clicking canvas content
+walks up from the click target to the nearest selectable node and marks it
+`.is-selected`. Only content nodes are selectable — `image`/`icon`,
+`heading`/`text`, `button` — since those are the ones a user edits; containers
+and the remaining leaves (`divider`, `shape`, `embed`) deselect instead.
+
 Two things follow from that, in order:
 
-1. **A real project object** (Phase 1, item 3). Section drag-reorder and
-   trash-deletion currently mutate the DOM directly; once the canvas is backed
-   by a `Page.sections` tree they should mutate that tree and re-render, which
-   is also what makes undo/redo and autosave possible.
-2. **Click-to-select** (Phase 2), which should use `data-node-id` to map a
-   clicked DOM element back to its `Node`.
+1. **A real project object** (Phase 1, item 3). Section drag-reorder,
+   trash-deletion and selection currently work on the DOM directly — selection
+   is held as a DOM reference, not a node id. Once the canvas is backed by a
+   `Page.sections` tree, all three should address nodes in that tree and
+   re-render, which is also what makes undo/redo and autosave possible.
+2. **Acting on the selection**: a contextual toolbar, a properties panel, and
+   inline text editing, all reading the selected node out of that tree via its
+   `data-node-id`.

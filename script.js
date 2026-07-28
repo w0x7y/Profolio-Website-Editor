@@ -11,6 +11,7 @@ document.addEventListener('DOMContentLoaded', () => {
         tool.addEventListener('click', () => {
             tools.forEach(t => t.classList.remove('is-active'));
             tool.classList.add('is-active');
+            setActiveTool(tool.dataset.tool);
         });
     });
 
@@ -72,6 +73,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // ---- Canvas: drag sections to reorder them, or onto the trash to delete ----
     initSectionDragAndDrop();
+
+    // ---- Canvas: click content to select it (Select tool) ----
+    setActiveTool('select');
+    initCanvasSelection();
 
     // ---- Layouts: load automatically from /layout, then wire up selection ----
     loadPages();
@@ -337,6 +342,8 @@ function initSectionDragAndDrop() {
 
         trash.classList.remove('is-over');
         removeDropIndicator();
+        // The selected element may have been inside the section just deleted.
+        clearSelectionIfDetached();
         refreshCanvasEmptyState(frameEl);
     });
 }
@@ -440,4 +447,115 @@ function showDropIndicator(frameEl, before) {
 
 function removeDropIndicator() {
     if (dropIndicator) dropIndicator.remove();
+}
+
+// ============================================================
+// CANVAS SELECTION
+//
+// Click content on the canvas to select it. Only *content* is
+// selectable — the three categories a user actually edits:
+//
+//   images   image, icon      (an <img>, the inline SVG placeholder, ...)
+//   text     heading, text    (h1..h6, p — anything carrying copy)
+//   actions  button           (links/buttons, rendered as <a>)
+//
+// Containers (section / row / column / group) and non-content leaves
+// (divider, shape, embed) are deliberately not selectable: clicking one
+// reads as "click the background", i.e. deselect. Sections are still
+// manipulated through their drag handle, not through selection.
+//
+// Selection is a Select-tool concept. Any other tool in the left rail
+// turns click-to-select off and drops the current selection.
+//
+// Nothing happens on select yet, by design — this is purely the selection
+// state plus its outline. The contextual toolbar, inline text editing and
+// the properties panel all hang off `selectedEl` later; when the canvas is
+// backed by a real project tree (TODO Phase 1), selection should be stored
+// as a node id rather than as a DOM reference.
+// ============================================================
+
+const SELECTABLE_NODE_TYPES = new Set(['image', 'icon', 'heading', 'text', 'button']);
+
+let activeTool = 'select';
+let selectedEl = null;
+
+function initCanvasSelection() {
+    const scroller = document.querySelector('.canvas-scroll');
+    if (!scroller) return;
+
+    // One listener on the scroller rather than per element: it covers
+    // everything rendered later, and clicks that land on the canvas
+    // background (outside any selectable node) come through here too and
+    // clear the selection.
+    scroller.addEventListener('click', onCanvasClick);
+
+    document.addEventListener('keydown', e => {
+        if (e.key === 'Escape') clearSelection();
+    });
+}
+
+function setActiveTool(tool) {
+    activeTool = tool || 'select';
+
+    // Drives the hover affordance in CSS — content only looks clickable
+    // while the Select tool is the active one.
+    const area = document.querySelector('.canvas-area');
+    if (area) area.dataset.activeTool = activeTool;
+
+    if (activeTool !== 'select') clearSelection();
+}
+
+function onCanvasClick(e) {
+    if (activeTool !== 'select') return;
+
+    // The drag handle is editor chrome layered over a section, not content.
+    if (e.target.closest('.section-handle')) return;
+
+    selectNode(selectableTargetFrom(e.target));
+}
+
+/**
+ * Resolve a clicked DOM node to the element that should be selected: the
+ * nearest ancestor-or-self that is a selectable node.
+ *
+ * Walking up matters because a rendered node isn't always the click target
+ * — an image node's real target is the inner <img> or the placeholder
+ * <svg>/<span>, none of which carry a data-node-id.
+ *
+ * Returns null when the click landed on a container, a non-content leaf, or
+ * the canvas background — all of which mean "deselect".
+ */
+function selectableTargetFrom(target) {
+    let el = target.closest('[data-node-id]');
+
+    while (el) {
+        if (SELECTABLE_NODE_TYPES.has(el.dataset.nodeType)) return el;
+        el = el.parentElement ? el.parentElement.closest('[data-node-id]') : null;
+    }
+    return null;
+}
+
+function selectNode(el) {
+    if (el === selectedEl) return;
+
+    clearSelection();
+    if (!el) return;
+
+    selectedEl = el;
+    el.classList.add('is-selected');
+}
+
+function clearSelection() {
+    if (!selectedEl) return;
+    selectedEl.classList.remove('is-selected');
+    selectedEl = null;
+}
+
+/**
+ * Drop the selection when the selected element is no longer on the canvas
+ * (its section was dragged onto the trash), so nothing keeps pointing at a
+ * detached node.
+ */
+function clearSelectionIfDetached() {
+    if (selectedEl && !document.contains(selectedEl)) clearSelection();
 }

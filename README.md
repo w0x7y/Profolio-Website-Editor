@@ -16,8 +16,10 @@ nothing already on the canvas is replaced — so a page is assembled by stacking
 one card after another: Navbar's nav bar, then Home's hero, then Showcase's
 project grid, then Footer. Sections already on the canvas can be dragged by
 their grab handle to reorder them, or dropped on the right panel's trash zone
-to delete them. Selecting/editing individual elements, saving, and publishing
-are not wired yet.
+to delete them. With the Select tool active, the content inside a section —
+images, text, and buttons/links — can be clicked to select it, which draws a
+selection outline and nothing more. Editing what's selected, saving, and
+publishing are not wired yet.
 
 Content-wise: `home/example.json` and `about/example.json` are the only cards
 filled in with real copy. Every page also ships a `blank-test.json` card that
@@ -33,7 +35,7 @@ nothing.
 Profolio Editor/
 ├── index.html          Editor shell markup (top bar, toolbar, canvas, right panel)
 ├── style.css            All styling (dark editor chrome + light canvas page + rendered node styles)
-├── script.js             UI interactions (tab/tool switching, page accordion, layout loader/insertion, section drag & drop)
+├── script.js             UI interactions (tab/tool switching, page accordion, layout loader/insertion, section drag & drop, canvas selection)
 ├── renderer.js           Renders a sections node tree onto the canvas (see docs/DATA_MODEL.md)
 ├── TODO.md               Full task list + a prioritized, dependency-ordered plan
 ├── docs/
@@ -120,6 +122,7 @@ npx serve .
 - [x] Canvas renders from that data model (`renderer.js`) — clicking a layout card appends its sections to the bottom of the canvas, so layouts stack instead of replacing each other
 - [x] Unfilled slots render as real placeholders (dashed/muted text, upload-icon image boxes) rather than empty space
 - [x] Top-level sections can be dragged to reorder, and dropped on the right panel's trash zone to delete (DOM-only, no undo yet)
-- [ ] Everything else, including selecting/editing what's rendered (see [TODO.md](./TODO.md))
+- [x] Click-to-select content on the canvas with the Select tool — images, text and buttons/links get a selection outline; clicking a container or the page background deselects, as does Escape or picking another tool. Nothing acts on the selection yet
+- [ ] Everything else, including editing what's selected (see [TODO.md](./TODO.md))
 
 See [TODO.md](./TODO.md) for the full task list and a prioritized, dependency-ordered implementation plan.

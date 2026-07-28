@@ -41,6 +41,9 @@
     --accent: #6366f1;
     --accent-hover: #7678f4;
     --accent-soft: rgba(99, 102, 241, 0.14);
+    /* strong enough to read as a hairline on the white canvas, faint enough
+       not to compete with a real selection outline */
+    --accent-line: rgba(99, 102, 241, 0.45);
 
     /* destructive actions (trash zone) */
     --danger: #f87171;
@@ -720,6 +723,40 @@ button {
     border-radius: 999px;
     background: var(--accent);
     box-shadow: 0 0 0 4px var(--accent-soft);
+}
+
+/* ---------- canvas selection (see script.js) ----------
+   Which node types are selectable is decided in script.js
+   (SELECTABLE_NODE_TYPES); the selectors below just have to agree with it.
+   `outline` rather than `border`, so highlighting never shifts the layout
+   of the page being edited.
+
+   The hover affordance is scoped to [data-active-tool="select"]: with any
+   other tool picked, canvas content isn't clickable and shouldn't look it.
+   ------------------------------------------------------ */
+
+.canvas-area[data-active-tool="select"] .node--image,
+.canvas-area[data-active-tool="select"] .node--icon,
+.canvas-area[data-active-tool="select"] .node--heading,
+.canvas-area[data-active-tool="select"] .node--text,
+.canvas-area[data-active-tool="select"] .node--button {
+    cursor: pointer;
+}
+
+.canvas-area[data-active-tool="select"] .node--image:hover,
+.canvas-area[data-active-tool="select"] .node--icon:hover,
+.canvas-area[data-active-tool="select"] .node--heading:hover,
+.canvas-area[data-active-tool="select"] .node--text:hover,
+.canvas-area[data-active-tool="select"] .node--button:hover {
+    outline: 1.5px solid var(--accent-line);
+    outline-offset: 3px;
+}
+
+/* the selected element wins over the hover hint */
+.canvas-frame .node.is-selected,
+.canvas-area[data-active-tool="select"] .node.is-selected:hover {
+    outline: 2px solid var(--accent);
+    outline-offset: 3px;
 }
 
 /* ============================================================
