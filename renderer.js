@@ -42,10 +42,14 @@ const STYLE_PROP_TO_JS = {
     margin: 'margin',
     width: 'width',
     height: 'height',
+    fontFamily: 'fontFamily',
     fontSize: 'fontSize',
     fontWeight: 'fontWeight',
     lineHeight: 'lineHeight',
+    letterSpacing: 'letterSpacing',
     textAlign: 'textAlign',
+    textTransform: 'textTransform',
+    webkitTextStroke: 'webkitTextStroke',
     color: 'color',
     background: 'background',
     borderRadius: 'borderRadius',
@@ -145,10 +149,16 @@ function renderLeafContent(el, node) {
 
 function renderTextLeaf(el, node) {
     const hasContent = !!(node.content && node.content.trim());
+
+    // Stamped like data-node-id/type/role: model data the editor needs back.
+    // An empty node holds its placeholder as text, so without this the Text
+    // panel would read that placeholder as content the user had typed — and
+    // would have nothing to restore once the content is cleared again.
+    el.dataset.placeholder = node.placeholder ||
+        (node.type === 'heading' ? 'Empty heading' : 'Empty text');
+
     el.classList.toggle('is-empty', !hasContent);
-    el.innerHTML = hasContent
-        ? node.content
-        : (node.placeholder || (node.type === 'heading' ? 'Empty heading' : 'Empty text'));
+    el.innerHTML = hasContent ? node.content : el.dataset.placeholder;
 }
 
 function renderButtonLeaf(el, node) {
