@@ -5,6 +5,17 @@
         <meta name='viewport' content='width=device-width, initial-scale=1.0'>
         <link rel='stylesheet' href='style.css'>
         <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource/maple-mono@5.2.6/index.css" />
+
+        <!-- The canvas font families offered in the Themes tab (see
+             FONT_GROUPS in theme.js — the two lists have to stay in step).
+             Regular + bold only: the faces are declared here but each one is
+             only downloaded once something on the page is actually set in
+             it, so the whole list costs one request until fonts get used.
+             If this request fails the canvas falls back to the generic
+             family at the end of each stack. -->
+        <link rel="preconnect" href="https://fonts.googleapis.com">
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;700&family=Fraunces:wght@400;700&family=IBM+Plex+Mono:wght@400;700&family=Inter:wght@400;700&family=JetBrains+Mono:wght@400;700&family=Libre+Baskerville:wght@400;700&family=Lora:wght@400;700&family=Manrope:wght@400;700&family=Merriweather:wght@400;700&family=Montserrat:wght@400;700&family=Outfit:wght@400;700&family=Playfair+Display:wght@400;700&family=Poppins:wght@400;700&family=Source+Serif+4:wght@400;700&family=Space+Grotesk:wght@400;700&family=Space+Mono:wght@400;700&family=Work+Sans:wght@400;700&display=swap">
         <title>Profolio Editor</title>
     </head>
     <body>
@@ -151,19 +162,12 @@
 
                                     <div class="ctrl">
                                         <label class="ctrl__label" for="textFontFamily">Font family</label>
-                                        <select class="select" id="textFontFamily">
-                                            <option value="">Theme default</option>
-                                            <optgroup label="Theme fonts">
-                                                <option value="'Maple Mono', monospace">Maple Mono</option>
-                                                <option value="Georgia, serif">Editorial Serif</option>
-                                                <option value="Arial, sans-serif">Neutral Sans</option>
-                                            </optgroup>
-                                            <optgroup label="Web-safe">
-                                                <option value="system-ui, -apple-system, 'Segoe UI', sans-serif">System Sans</option>
-                                                <option value="'Times New Roman', Times, serif">Serif</option>
-                                                <option value="ui-monospace, SFMono-Regular, Menlo, monospace">Mono</option>
-                                            </optgroup>
-                                        </select>
+                                        <!-- Options are filled in from FONT_GROUPS in
+                                             theme.js, so this offers the same
+                                             families as the Themes tab plus a
+                                             "Theme default" that hands the node
+                                             back to the site font. -->
+                                        <select class="select" id="textFontFamily"></select>
                                     </div>
 
                                     <div class="ctrl">
@@ -349,55 +353,23 @@
                             <!-- THEMES -->
                             <div class="panel__pane" data-pane="themes">
                                 <p class="panel__hint">Pick a color and type theme for your site.</p>
-                                <div class="theme-list">
-                                    <button class="theme-card is-active">
-                                        <div class="theme-card__swatches">
-                                            <span style="background:#111114"></span>
-                                            <span style="background:#6366f1"></span>
-                                            <span style="background:#f4f4f5"></span>
-                                        </div>
-                                        <span>Ink &amp; Violet</span>
-                                    </button>
-                                    <button class="theme-card">
-                                        <div class="theme-card__swatches">
-                                            <span style="background:#1c1917"></span>
-                                            <span style="background:#f97316"></span>
-                                            <span style="background:#fafaf9"></span>
-                                        </div>
-                                        <span>Ember</span>
-                                    </button>
-                                    <button class="theme-card">
-                                        <div class="theme-card__swatches">
-                                            <span style="background:#0f172a"></span>
-                                            <span style="background:#22d3ee"></span>
-                                            <span style="background:#f8fafc"></span>
-                                        </div>
-                                        <span>Cyan Night</span>
-                                    </button>
-                                    <button class="theme-card">
-                                        <div class="theme-card__swatches">
-                                            <span style="background:#f5f5f4"></span>
-                                            <span style="background:#16a34a"></span>
-                                            <span style="background:#ffffff"></span>
-                                        </div>
-                                        <span>Sage Light</span>
-                                    </button>
-                                </div>
+                                <!-- Cards and font options are both built from the
+                                     data in theme.js, so a preset's swatches can't
+                                     drift from the colors it actually applies. -->
+                                <div class="theme-list" id="themeList"></div>
 
                                 <p class="panel__hint panel__hint--tight">Typography</p>
-                                <div class="font-list">
-                                    <button class="font-card is-active">
-                                        <span class="font-card__preview" style="font-family: 'Maple Mono', monospace;">Aa</span>
-                                        <span>Maple Mono</span>
-                                    </button>
-                                    <button class="font-card">
-                                        <span class="font-card__preview" style="font-family: Georgia, serif;">Aa</span>
-                                        <span>Editorial Serif</span>
-                                    </button>
-                                    <button class="font-card">
-                                        <span class="font-card__preview" style="font-family: Arial, sans-serif;">Aa</span>
-                                        <span>Neutral Sans</span>
-                                    </button>
+                                <div class="ctrl">
+                                    <label class="ctrl__label" for="themeHeadingFont">Headings</label>
+                                    <select class="select" id="themeHeadingFont"></select>
+                                </div>
+                                <div class="ctrl">
+                                    <label class="ctrl__label" for="themeBodyFont">Body text</label>
+                                    <select class="select" id="themeBodyFont"></select>
+                                </div>
+                                <div class="type-preview" id="themeFontPreview">
+                                    <span class="type-preview__heading">heading</span>
+                                    <span class="type-preview__body">This is a body text.</span>
                                 </div>
                             </div>
 
@@ -456,6 +428,7 @@
         <script src='link-controls.js'></script>
         <script src='renderer.js'></script>
         <script src='text-panel.js'></script>
+        <script src='theme.js'></script>
         <script src='button-panel.js'></script>
         <script src='script.js'></script>
     </body>

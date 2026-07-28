@@ -61,10 +61,10 @@ can wait a long time).
 - [ ] Consider bundling/inlining `layout/**/*.json` at build time instead of runtime `fetch`, so the editor also works from a plain `file://` open (currently requires a local server) `Medium` `P3`
 
 ### Right panel — Themes tab
-- [ ] Theme cards actually apply colors to the canvas (currently only toggles a visual "selected" state) `Medium` `P0`
-- [ ] Font cards actually apply the chosen font to the canvas (currently only toggles a visual "selected" state) `Easy` `P0`
-- [ ] Load Google Fonts (or self-hosted fonts) for the "Editorial Serif" / "Neutral Sans" options — currently just fall back to system fonts `Easy` `P1`
-- [ ] Let users customize a theme's individual colors (not just pick a preset) `Medium` `P2`
+- [x] Theme cards actually apply colors to the canvas `Medium` `P0` — see `theme.js`; a preset writes six custom properties on `.canvas-frame` and every canvas rule reads them, so sections added later come out on-theme with no re-theming step
+- [x] Font cards actually apply the chosen font to the canvas `Easy` `P0` — replaced by two dropdowns (headings and body text) covering ~27 families
+- [x] Load Google Fonts (or self-hosted fonts) for theme font options `Easy` `P1` — 17 Google families alongside the web-safe stacks; the faces are declared in one request and only downloaded once something is set in them
+- [ ] Let users customize a theme's individual colors (not just pick a preset) `Medium` `P2` — the six tokens in `THEMES` are the ones to expose; the rest are derived from them in `style.css`
 - [ ] Let users customize font sizes / scale, not just family `Medium` `P2`
 - [ ] More theme presets `Easy` `P3`
 - [ ] Custom theme creation + save as a new preset `Hard` `P2`
@@ -176,8 +176,8 @@ The minimum interaction loop: select something, change it, remove it.
 Makes the existing UI shell actually do something.
 15. ~~Layouts tab: clicking a card applies it to the canvas~~ `Hard` `P0` — done (no confirmation prompt yet, see Phase 9 #38)
 16. Fill in the `sections` field for `minimal.json`, `split-bio.json`, and `photo-first.json` (schema migrated from `html` to `sections` — see [docs/DATA_MODEL.md](./docs/DATA_MODEL.md)) `Easy` `P1`
-17. Theme cards actually apply colors to the canvas `Medium` `P0`
-18. Font cards actually apply the chosen font `Easy` `P0`
+17. ~~Theme cards actually apply colors to the canvas~~ `Medium` `P0` — done, see `theme.js`
+18. ~~Font cards actually apply the chosen font~~ `Easy` `P0` — done: heading + body dropdowns, see `theme.js`
 19. Site title field editable and persisted `Easy` `P0`
 
 ### Phase 4 — Assets pipeline
@@ -213,7 +213,7 @@ Needed before real publishing/multi-user use is possible.
 38. ~~Confirmation prompt when applying a layout over existing content~~ — moot: layouts append instead of replacing `Easy` `P1`
 39. ~~Decide whether "layout" means a whole page or a single insertable section~~ — done: both, every card appends `Medium` `P1`
 39a. Real Navbar / Showcase / Blog / Contact / Links / Footer layouts, replacing the `blank-test.json` fixtures `Medium` `P1`
-40. Load Google Fonts (or self-hosted fonts) for theme font options `Easy` `P1`
+40. ~~Load Google Fonts (or self-hosted fonts) for theme font options~~ `Easy` `P1` — done, see the stylesheet link in `index.html` and `FONT_GROUPS` in `theme.js`
 41. Persist selected theme/font with the project data `Easy` `P1`
 42. Image thumbnails reflect actual uploaded files `Easy` `P1`
 43. Click an asset to insert it into the canvas / assign to selected image `Medium` `P1`

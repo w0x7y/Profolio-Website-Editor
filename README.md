@@ -18,8 +18,10 @@ project grid, then Footer. Sections already on the canvas can be dragged by
 their grab handle to reorder them, or dropped on the right panel's trash zone
 to delete them. With the Select tool active, the content inside a section —
 images, text, and buttons/links — can be clicked to select it, which draws a
-selection outline and nothing more. Editing what's selected, saving, and
-publishing are not wired yet.
+selection outline and opens the matching left tool panel. The Themes tab
+restyles the whole canvas: a color preset and a heading/body font pair, both
+applied through custom properties on the canvas frame. Saving and publishing
+are not wired yet.
 
 Content-wise: `home/example.json` and `about/example.json` are the only cards
 filled in with real copy. Every page also ships a `blank-test.json` card that
@@ -37,6 +39,7 @@ Profolio Editor/
 ├── style.css            All styling (dark editor chrome + light canvas page + rendered node styles)
 ├── script.js             UI interactions (tab/tool switching, page accordion, layout loader/insertion, section drag & drop, canvas selection)
 ├── renderer.js           Renders a sections node tree onto the canvas (see docs/DATA_MODEL.md)
+├── theme.js              Themes tab: the color presets, the font list, and applying either to the canvas
 ├── TODO.md               Full task list + a prioritized, dependency-ordered plan
 ├── docs/
 │   └── DATA_MODEL.md      The data model a page/site is built from (sections → blocks → elements)
@@ -123,7 +126,8 @@ npx serve .
 - [x] Unfilled slots render as real placeholders (dashed/muted text, upload-icon image boxes) rather than empty space
 - [x] Top-level sections can be dragged to reorder, and dropped on the right panel's trash zone to delete (DOM-only, no undo yet)
 - [x] Click-to-select content on the canvas with the Select tool — images, text and buttons/links get a selection outline; clicking a container or the page background deselects, as does Escape or picking another tool
-- [x] Selecting content opens the left tool panel on the pane for what you picked (Image for images/icons, Text for headings/text, Button for buttons); deselecting closes it. The panes are still placeholders, so nothing is editable there yet
+- [x] Selecting content opens the left tool panel on the pane for what you picked (Image for images/icons, Text for headings/text, Button for buttons); deselecting closes it. The Text and Button panes have real controls; the Image pane is still a placeholder
+- [x] Themes tab applies colors and fonts to the canvas (`theme.js`) — four color presets plus separate heading and body font pickers (web-safe stacks and Google families). Both write custom properties on `.canvas-frame`, which every canvas style rule reads, so one write restyles what's on the canvas *and* whatever is added later. Applying a preset clears the per-node colors set in the Text panel, and picking a font clears its per-node fonts, so the canvas ends up uniformly on the new theme
 - [ ] Everything else, including editing what's selected (see [TODO.md](./TODO.md))
 
 See [TODO.md](./TODO.md) for the full task list and a prioritized, dependency-ordered implementation plan.
