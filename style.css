@@ -789,7 +789,6 @@ button {
     min-height: 0;
     padding: 12px;
     border-top: 1px solid var(--border-subtle);
-    background: var(--bg-app);
 }
 
 /* the inner box is the visual drop target; pointer-events:none keeps it out

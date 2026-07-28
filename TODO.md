@@ -35,10 +35,10 @@ can wait a long time).
 - [x] Select tool: real selection behavior `Medium` `P0` — click-to-select is live only while this tool is active; switching tools drops the selection (`setActiveTool()` in `script.js`)
 - [ ] Text tool: click-to-place a new text block on canvas `Easy` `P0`
 - [ ] Image tool: click-to-place an image placeholder, then upload/choose an image `Medium` `P0`
+- [ ] Links tool: click-to-place a link, then set its label and target `Easy` `P0`
+- [ ] Button tool: click-to-place a button, then set its label, target and style `Easy` `P0`
 - [ ] Section tool: insert a new full-width section (with layout presets: 1 col, 2 col, grid, etc.) `Medium` `P1`
-- [ ] Shapes tool: insert basic shapes (rectangle, circle, line, divider) `Easy` `P2`
 - [ ] Embed tool: insert custom HTML/embed blocks (e.g. YouTube, Spotify, custom code) `Medium` `P2`
-- [ ] Layers tool: build an actual layers panel (tree view of the page structure, click to select, drag to reorder/reparent, visibility toggle, lock toggle) `Hard` `P1`
 - [ ] Settings tool (left toolbar): decide what this opens (currently duplicates the right panel's Settings tab — clarify UX) `Easy` `P3`
 - [ ] Tooltips are static — verify they stay correct as tools gain real behavior `Easy` `P3`
 
@@ -205,7 +205,7 @@ Needed before real publishing/multi-user use is possible.
 34. Nested elements / grouping `Hard` `P1`
 35. Drag elements from the left toolbar onto the canvas to insert them `Medium` `P1`
 36. Section tool: insert a new full-width section with layout presets `Medium` `P1`
-37. Layers tool: full layers panel (tree view, reorder/reparent, visibility, lock) `Hard` `P1`
+37. ~~Layers tool: full layers panel (tree view, reorder/reparent, visibility, lock)~~ — moot: the Layers tool was removed from the left toolbar `Hard` `P1`
 
 ### Phase 9 — Round out layouts, themes & assets (P1)
 38. ~~Confirmation prompt when applying a layout over existing content~~ — moot: layouts append instead of replacing `Easy` `P1`
@@ -239,7 +239,7 @@ Needed before real publishing/multi-user use is possible.
 59. Snapping / alignment guides while dragging or resizing `Hard` `P2`
 60. Z-index / layer ordering support `Medium` `P2`
 61. Manual "Save" state indicator `Easy` `P2`
-62. Shapes tool (rectangle, circle, line, divider) `Easy` `P2`
+62. ~~Shapes tool (rectangle, circle, line, divider)~~ — moot: the Shapes tool was removed from the left toolbar `Easy` `P2`
 63. Embed tool (custom HTML/embed blocks) `Medium` `P2`
 64. Support applying a layout to a single existing section (replace in place), and choosing where an inserted section lands instead of always appending `Medium` `P2`
 65. Bigger preview / hover-to-preview before applying a layout `Medium` `P2`
