@@ -122,7 +122,8 @@ npx serve .
 - [x] Canvas renders from that data model (`renderer.js`) — clicking a layout card appends its sections to the bottom of the canvas, so layouts stack instead of replacing each other
 - [x] Unfilled slots render as real placeholders (dashed/muted text, upload-icon image boxes) rather than empty space
 - [x] Top-level sections can be dragged to reorder, and dropped on the right panel's trash zone to delete (DOM-only, no undo yet)
-- [x] Click-to-select content on the canvas with the Select tool — images, text and buttons/links get a selection outline; clicking a container or the page background deselects, as does Escape or picking another tool. Nothing acts on the selection yet
+- [x] Click-to-select content on the canvas with the Select tool — images, text and buttons/links get a selection outline; clicking a container or the page background deselects, as does Escape or picking another tool
+- [x] Selecting content opens the left tool panel on the pane for what you picked (Image for images/icons, Text for headings/text, Button for buttons); deselecting closes it. The panes are still placeholders, so nothing is editable there yet
 - [ ] Everything else, including editing what's selected (see [TODO.md](./TODO.md))
 
 See [TODO.md](./TODO.md) for the full task list and a prioritized, dependency-ordered implementation plan.

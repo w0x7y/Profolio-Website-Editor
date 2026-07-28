@@ -479,14 +479,27 @@ function removeDropIndicator() {
 // Selection is a Select-tool concept. Any other tool in the left rail
 // turns click-to-select off and drops the current selection.
 //
-// Nothing happens on select yet, by design — this is purely the selection
-// state plus its outline. The contextual toolbar, inline text editing and
-// the properties panel all hang off `selectedEl` later; when the canvas is
-// backed by a real project tree (TODO Phase 1), selection should be stored
-// as a node id rather than as a DOM reference.
+// Selecting opens the left tool panel on the pane for that node's type, and
+// deselecting closes it again — the panel is the one thing acting on the
+// selection so far. Inline text editing and the contextual toolbar hang off
+// `selectedEl` later; when the canvas is backed by a real project tree
+// (TODO Phase 1), selection should be stored as a node id rather than as a
+// DOM reference.
 // ============================================================
 
-const SELECTABLE_NODE_TYPES = new Set(['image', 'icon', 'heading', 'text', 'button']);
+// Which tool panel pane each selectable node type belongs to — the three
+// content categories above, named after the tool that will eventually edit
+// them. SELECTABLE_NODE_TYPES derives from this map rather than repeating it,
+// so a type cannot become selectable without declaring a pane to show for it.
+const NODE_TYPE_PANES = {
+    image: 'image',
+    icon: 'image',
+    heading: 'text',
+    text: 'text',
+    button: 'button',
+};
+
+const SELECTABLE_NODE_TYPES = new Set(Object.keys(NODE_TYPE_PANES));
 
 let activeTool = 'select';
 let selectedEl = null;
@@ -553,19 +566,27 @@ function selectableTargetFrom(target) {
 }
 
 function selectNode(el) {
-    if (el === selectedEl) return;
+    if (el !== selectedEl) {
+        clearSelection();
+        selectedEl = el;
+        if (el) el.classList.add('is-selected');
+    }
 
-    clearSelection();
-    if (!el) return;
-
-    selectedEl = el;
-    el.classList.add('is-selected');
+    // Synced on every call rather than only when the selection changes, so
+    // re-clicking the selected element brings back a panel closed with ✕.
+    if (el) openToolPanel(NODE_TYPE_PANES[el.dataset.nodeType]);
 }
 
 function clearSelection() {
     if (!selectedEl) return;
     selectedEl.classList.remove('is-selected');
     selectedEl = null;
+
+    // The panel mirrors the selection only while Select is the active tool.
+    // setActiveTool() reassigns `activeTool` before calling this, so switching
+    // to another tool clears the selection without closing the panel it is
+    // about to open for that tool.
+    if (activeTool === 'select') closeToolPanel();
 }
 
 /**
@@ -584,11 +605,15 @@ function clearSelectionIfDetached() {
 // TOOL_PANEL_TOOLS has a pane in index.html; opening the panel reveals that
 // tool's pane and titles the header from the tool's own tooltip label.
 //
+// Two things open the panel: picking a tool that has a pane, and selecting
+// content on the canvas (see selectNode(), which maps the selected node's
+// type to a pane). Select and Settings have no pane of their own — Select
+// shows the pane for whatever is selected instead, and the Settings tool's
+// UX is still undecided (see TODO.md).
+//
 // Panel visibility is deliberately independent of tool state: closing the
-// panel leaves the tool active, so it never silently changes what clicking
-// on the canvas does. Select and Settings simply have no pane — Select's
-// properties belong on the contextual toolbar, and the Settings tool's UX
-// is still undecided (see TODO.md).
+// panel leaves the tool active and the selection intact, so it never
+// silently changes what clicking on the canvas does.
 //
 // Every pane holds placeholder text for now; the real per-tool controls go
 // into the markup later.

@@ -32,7 +32,7 @@ can wait a long time).
 - [ ] Manual "Save" state indicator (saved / saving / unsaved changes) `Easy` `P2`
 
 ### Left toolbar (tools)
-- [x] Select tool: real selection behavior `Medium` `P0` — click-to-select is live only while this tool is active; switching tools drops the selection (`setActiveTool()` in `script.js`)
+- [x] Select tool: real selection behavior `Medium` `P0` — click-to-select is live only while this tool is active; switching tools drops the selection (`setActiveTool()` in `script.js`). Selecting opens the tool panel on that node type's pane via `NODE_TYPE_PANES`, and deselecting closes it
 - [ ] Text tool: click-to-place a new text block on canvas `Easy` `P0`
 - [ ] Image tool: click-to-place an image placeholder, then upload/choose an image `Medium` `P0`
 - [ ] Button tool: click-to-place a button, then set its label, target and style `Easy` `P0`
