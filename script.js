@@ -460,7 +460,7 @@ function removeDropIndicator() {
 //   actions  button           (links/buttons, rendered as <a>)
 //
 // Containers (section / row / column / group) and non-content leaves
-// (divider, shape, embed) are deliberately not selectable: clicking one
+// (divider, embed) are deliberately not selectable: clicking one
 // reads as "click the background", i.e. deselect. Sections are still
 // manipulated through their drag handle, not through selection.
 //

@@ -575,12 +575,6 @@ button {
     width: 100%;
 }
 
-.node--shape.is-empty {
-    min-height: 80px;
-    border-radius: 8px;
-    background: #e4e4e7;
-}
-
 .node--icon.is-empty {
     display: inline-block;
     width: 24px;

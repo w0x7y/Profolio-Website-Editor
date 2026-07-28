@@ -108,7 +108,8 @@ Node = {
                         // (e.g. nanoid(8)). This is what click-to-select,
                         // undo/redo, and drag-reorder all key off of.
   type: NodeType,       // see table below
-  name?: string,        // human label for the Layers panel, e.g. "Hero Section"
+  name?: string,        // human-readable label, e.g. "Hero Section" — not
+                        // currently surfaced in any UI
   role?: string,        // semantic tag, independent of `type` — see below
   locked?: boolean,     // if true, can't be deleted/moved (e.g. nav, footer)
 
@@ -149,7 +150,7 @@ Node = {
 | Category  | Types                                                              |
 |-----------|---------------------------------------------------------------------|
 | Container | `section`, `row`, `column`, `group`                                 |
-| Leaf      | `heading`, `text`, `image`, `button`, `icon`, `shape`, `divider`, `embed` |
+| Leaf      | `heading`, `text`, `image`, `button`, `icon`, `divider`, `embed`     |
 
 Container types have `children` and `layout`; leaf types have `content`/`src`/etc
 and no `children`. A node should never mix the two.
@@ -321,7 +322,7 @@ Click-to-select (Phase 2) is now wired in `script.js`: clicking canvas content
 walks up from the click target to the nearest selectable node and marks it
 `.is-selected`. Only content nodes are selectable — `image`/`icon`,
 `heading`/`text`, `button` — since those are the ones a user edits; containers
-and the remaining leaves (`divider`, `shape`, `embed`) deselect instead.
+and the remaining leaves (`divider`, `embed`) deselect instead.
 
 Two things follow from that, in order:
 

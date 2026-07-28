@@ -29,7 +29,6 @@ const NODE_TAG_BY_TYPE = {
     image: 'div',
     button: 'a',
     icon: 'span',
-    shape: 'div',
     divider: 'hr',
     embed: 'div'
 };
@@ -133,9 +132,6 @@ function renderLeafContent(el, node) {
             renderImageLeaf(el, node);
             break;
         case 'icon':
-            el.classList.add('is-empty');
-            break;
-        case 'shape':
             el.classList.add('is-empty');
             break;
         case 'divider':
