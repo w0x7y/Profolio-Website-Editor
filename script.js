@@ -594,7 +594,7 @@ function clearSelectionIfDetached() {
 // into the markup later.
 // ============================================================
 
-const TOOL_PANEL_TOOLS = new Set(['text', 'image', 'link', 'button', 'section', 'embed']);
+const TOOL_PANEL_TOOLS = new Set(['text', 'image', 'button', 'section', 'embed']);
 
 function openToolPanel(tool) {
     const panel = document.getElementById('toolPanel');

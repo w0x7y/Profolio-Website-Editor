@@ -35,7 +35,6 @@ can wait a long time).
 - [x] Select tool: real selection behavior `Medium` `P0` — click-to-select is live only while this tool is active; switching tools drops the selection (`setActiveTool()` in `script.js`)
 - [ ] Text tool: click-to-place a new text block on canvas `Easy` `P0`
 - [ ] Image tool: click-to-place an image placeholder, then upload/choose an image `Medium` `P0`
-- [ ] Links tool: click-to-place a link, then set its label and target `Easy` `P0` — open question: should this create a new `link` node type, or a `button` node with a distinguishing `role` (there's currently no `link` type — see `docs/DATA_MODEL.md`'s `NodeType` table)? Decide before wiring the click handler, so Links and Button don't end up producing identical nodes.
 - [ ] Button tool: click-to-place a button, then set its label, target and style `Easy` `P0`
 - [ ] Section tool: insert a new full-width section (with layout presets: 1 col, 2 col, grid, etc.) `Medium` `P1`
 - [ ] Embed tool: insert custom HTML/embed blocks (e.g. YouTube, Spotify, custom code) `Medium` `P2`
