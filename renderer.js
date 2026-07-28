@@ -14,8 +14,9 @@
 // Every rendered element carries data-node-id (+ data-node-type /
 // data-node-role) so later work (click-to-select, drag-reorder, the
 // layers panel, undo/redo, ...) can map a DOM node back to its place in
-// the tree. None of that interactivity is wired up yet — this file only
-// renders.
+// the tree. Section drag-reorder and click-to-select read those
+// attributes today (both in script.js); the rest is still ahead. This
+// file only renders — no interactivity is wired up here.
 // ============================================================
 
 const NODE_TAG_BY_TYPE = {
