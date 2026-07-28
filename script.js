@@ -86,8 +86,9 @@ document.addEventListener('DOMContentLoaded', () => {
     // ---- Canvas: drag sections to reorder them, or onto the trash to delete ----
     initSectionDragAndDrop();
 
-    // ---- Left tool panel: the Text pane's controls ----
+    // ---- Left tool panel: the Text and Button panes' controls ----
     initTextPanel();
+    initButtonPanel();
 
     // ---- Canvas: click content to select it (Select tool) ----
     setActiveTool('select');
@@ -644,6 +645,7 @@ function openToolPanel(tool) {
     // selectNode() mapping a node type to its pane — so it also covers
     // re-selecting a node after the panel was dismissed with ✕.
     if (tool === 'text') syncTextPanel(selectedEl);
+    if (tool === 'button') syncButtonPanel(selectedEl);
 
     panel.hidden = false;
 }
@@ -656,6 +658,7 @@ function closeToolPanel() {
     // the element it was editing after the panel closes — including one that
     // has since been trashed off the canvas.
     syncTextPanel(null);
+    syncButtonPanel(null);
 }
 
 /** Re-clicking the active tool: hide its panel, or bring it back if hidden. */
