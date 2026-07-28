@@ -18,7 +18,7 @@ can wait a long time).
 - [x] Drag-and-drop reordering of sections within the canvas `Hard` `P0` — grab handle per section, wired in `script.js` (`initSectionDragAndDrop()`). Reorders the DOM only; it needs to move the node in a real project tree once one exists
 - [ ] Drag-and-drop reordering of *elements* inside a section (the section-level case above is done) `Hard` `P0`
 - [ ] Drag elements from the left toolbar onto the canvas to insert them `Medium` `P1`
-- [ ] `renderer.js` only reads `href` on `button` nodes, so the `nav-link` text nodes in the Navbar/Footer layouts carry an href that renders as nothing — either render them as links or drop the field `Easy` `P2`
+- [ ] `renderer.js` only renders `href` on `button` nodes, so a `nav-link` text node's target still renders as nothing — the Text pane's Link group now *edits* that target (stored on the element, see `link-controls.js`), but these need to render as real links for it to do anything `Easy` `P2`
 - [ ] Multi-select elements (shift-click / marquee select) `Medium` `P2`
 - [ ] Copy / paste / duplicate elements `Easy` `P1`
 - [ ] Delete elements (with confirmation or undo safety net) `Easy` `P0` — sections can already be deleted by dragging them onto the right panel's trash zone, but that is immediate and unrecoverable; sub-section elements have no delete at all
@@ -36,7 +36,9 @@ can wait a long time).
 - [x] Text tool panel: real controls for the selected text node `Medium` `P0` — see `text-panel.js`; content (with per-word bold/italic/underline/strikethrough), font family, size with unit conversion, letter spacing, uppercase, and text/background/outline colors. Writes to the canvas DOM, so nothing persists across a reload until there's a project object
 - [ ] Text tool: click-to-place a new text block on canvas `Easy` `P0` — the pane's controls exist, but the tool itself still places nothing, so it always shows the "select text" empty state
 - [ ] Image tool: click-to-place an image placeholder, then upload/choose an image `Medium` `P0`
-- [ ] Button tool: click-to-place a button, then set its label, target and style `Easy` `P0`
+- [x] Button tool panel: real controls for the selected button `Easy` `P0` — see `button-panel.js` / `link-controls.js`; "Edit Text" hands the label off to the Text pane, a Link/Button toggle picks what it does, and a link points at a section on the canvas or at an address. On-click JS is stored (`data-on-click`) and never executed inside the editor. Writes to the canvas DOM, so nothing persists across a reload
+- [ ] Button tool: click-to-place a new button on canvas `Easy` `P0` — the pane's controls exist, but the tool itself still places nothing, so it always shows the "select a button" empty state
+- [ ] Button styling controls (fill, radius, padding, size) — color and typography currently reach a button only via the Button pane's "Edit Text" `Easy` `P1`
 - [ ] Section tool: insert a new full-width section (with layout presets: 1 col, 2 col, grid, etc.) `Medium` `P1`
 - [ ] Embed tool: insert custom HTML/embed blocks (e.g. YouTube, Spotify, custom code) `Medium` `P2`
 - [ ] Settings tool (left toolbar): decide what this opens (currently duplicates the right panel's Settings tab — clarify UX) `Easy` `P3`

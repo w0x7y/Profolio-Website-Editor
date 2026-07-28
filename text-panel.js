@@ -5,6 +5,10 @@
 // currently selected heading/text node on the canvas: its content, font,
 // size, character styling and colors.
 //
+// A `button` node is edited here too — its label is text like any other, and
+// the Button pane's "Edit Text" hands off to this pane rather than growing a
+// second copy of these controls.
+//
 // Everything is written straight to the DOM element, exactly like section
 // drag-reorder and trash-deletion in script.js — there is no in-memory
 // project object yet (see docs/DATA_MODEL.md), so none of it survives a
@@ -31,10 +35,19 @@ const TEXT_INLINE_TAGS = new Set(['B', 'I', 'U', 'S', 'STRONG', 'EM', 'BR']);
 // anything else, but they leave a <br> behind so the line break survives.
 const TEXT_BLOCK_TAGS = new Set(['DIV', 'P']);
 
-const TEXT_PANEL_NODE_TYPES = new Set(['heading', 'text']);
+// `button` is here because a button's label is text like any other: content,
+// typography and color are generic writes with nothing heading-specific in
+// them. The Button pane's "Edit Text" hands off to this pane.
+const TEXT_PANEL_NODE_TYPES = new Set(['heading', 'text', 'button']);
+
+// Text nodes whose role means they point somewhere, and so get the Link
+// group. Gated on role deliberately — link controls under every paragraph on
+// the page would be noise.
+const LINK_TEXT_ROLES = new Set(['nav-link']);
 
 let textTarget = null;   // the canvas element the controls are editing
 let textEls = null;      // cached control refs, null until initTextPanel()
+let textLinkControls = null;
 
 function initTextPanel() {
     const content = document.getElementById('textContent');
@@ -43,6 +56,9 @@ function initTextPanel() {
     textEls = {
         empty: document.getElementById('textPanelEmpty'),
         body: document.getElementById('textPanelBody'),
+        back: document.getElementById('textBackToButton'),
+        linkGroup: document.getElementById('textLinkGroup'),
+        linkMount: document.getElementById('textLinkMount'),
         content: content,
         inlineToggles: Array.from(document.querySelectorAll('#textInlineToggles .toggle-btn')),
         fontFamily: document.getElementById('textFontFamily'),
@@ -67,6 +83,15 @@ function initTextPanel() {
     // A document-level setting, so it's re-asserted before each command too.
     document.execCommand('styleWithCSS', false, false);
 
+    // The way back from the Button pane's "Edit Text". Without it the only
+    // route back is re-clicking the element on the canvas, which nothing
+    // tells the user about.
+    textEls.back.addEventListener('click', () => openToolPanel('button'));
+
+    // Same group the Button pane mounts — see link-controls.js.
+    textLinkControls = createLinkControls();
+    textEls.linkMount.appendChild(textLinkControls.root);
+
     wireContentBox();
     wireInlineToggles();
     wireTypographyControls();
@@ -84,6 +109,16 @@ function syncTextPanel(el) {
     textTarget = el && TEXT_PANEL_NODE_TYPES.has(el.dataset.nodeType) ? el : null;
     textEls.empty.hidden = !!textTarget;
     textEls.body.hidden = !textTarget;
+
+    const isButton = !!textTarget && textTarget.dataset.nodeType === 'button';
+    const isLinkText = !!textTarget && LINK_TEXT_ROLES.has(textTarget.dataset.nodeRole);
+
+    textEls.back.hidden = !isButton;
+    // A button's target is edited in the Button pane, which owns the
+    // Link/Button toggle these controls hang off.
+    textEls.linkGroup.hidden = !isLinkText;
+    textLinkControls.sync(isLinkText ? textTarget : null);
+
     if (!textTarget) return;
 
     syncContentBox();
@@ -167,10 +202,13 @@ function applyTextContent() {
     textEls.content.classList.toggle('is-empty', !hasContent);
 }
 
-/** The placeholder renderTextLeaf() stamped, with its own fallback. */
+/** The placeholder the renderer stamped, with its own fallback. */
 function textPlaceholderFor(el) {
-    return el.dataset.placeholder ||
-        (el.dataset.nodeType === 'heading' ? 'Empty heading' : 'Empty text');
+    if (el.dataset.placeholder) return el.dataset.placeholder;
+
+    if (el.dataset.nodeType === 'heading') return 'Empty heading';
+    if (el.dataset.nodeType === 'button') return 'Button';
+    return 'Empty text';
 }
 
 /**

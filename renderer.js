@@ -17,6 +17,10 @@
 // the tree. Section drag-reorder and click-to-select read those
 // attributes today (both in script.js); the rest is still ahead. This
 // file only renders — no interactivity is wired up here.
+//
+// One outward call: leaves that can carry a link target hand off to
+// applyNodeAction() in link-controls.js, which owns that state and is the
+// single writer of a node's href.
 // ============================================================
 
 const NODE_TAG_BY_TYPE = {
@@ -75,6 +79,9 @@ function renderNode(node) {
     el.classList.add('node', `node--${node.type}`);
     el.dataset.nodeId = node.id;
     el.dataset.nodeType = node.type;
+    // Model data the editor needs back, like the ids above: the Button pane's
+    // section dropdown labels its options with this.
+    if (node.name) el.dataset.nodeName = node.name;
     if (node.role) {
         el.dataset.nodeRole = node.role;
         el.classList.add(`role--${node.role}`);
@@ -159,13 +166,31 @@ function renderTextLeaf(el, node) {
 
     el.classList.toggle('is-empty', !hasContent);
     el.innerHTML = hasContent ? node.content : el.dataset.placeholder;
+
+    // Text nodes carry a target too — the navbar/footer `nav-link` nodes. It
+    // is stored but not yet rendered as a real link (TODO.md:21); stamping it
+    // here is what lets the Text pane's Link group edit it.
+    applyNodeAction(el, node);
 }
 
 function renderButtonLeaf(el, node) {
     const hasContent = !!(node.content && node.content.trim());
+
+    // Same reason as renderTextLeaf: an empty button holds its placeholder as
+    // text, so without this the Text pane would read that placeholder back as
+    // content the user had typed.
+    el.dataset.placeholder = node.placeholder || 'Button';
+
     el.classList.toggle('is-empty', !hasContent);
-    el.textContent = hasContent ? node.content : (node.placeholder || 'Button');
-    el.href = node.href || '#';
+    // innerHTML, not textContent: a label can hold the <b>/<i> markup the
+    // Text pane's B/I/U/S produces, and `content` is documented as a
+    // sanitized HTML fragment.
+    el.innerHTML = hasContent ? node.content : el.dataset.placeholder;
+
+    // href is derived from the action state rather than set here, so there is
+    // one writer of it (applyAction in link-controls.js).
+    applyNodeAction(el, node);
+
     // No real navigation inside the editor canvas.
     el.addEventListener('click', e => e.preventDefault());
 }

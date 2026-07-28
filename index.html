@@ -105,9 +105,10 @@
                     (see NODE_TYPE_PANES in script.js). Settings has no pane,
                     so choosing it closes the panel.
 
-                    The Text pane has real controls (see text-panel.js); the
-                    rest are still placeholders — their controls land here
-                    later (see TODO.md, "Left toolbar").
+                    The Text and Button panes have real controls (see
+                    text-panel.js / button-panel.js); the rest are still
+                    placeholders — their controls land here later (see
+                    TODO.md, "Left toolbar").
                 -->
                 <aside class="tool-panel" id="toolPanel" hidden>
                     <div class="tool-panel__header">
@@ -122,6 +123,14 @@
                             <p class="tool-panel__empty" id="textPanelEmpty">Select text on the canvas to edit it.</p>
 
                             <div class="tool-panel__body" id="textPanelBody" hidden>
+
+                                <!-- Only shown when the selected node is a
+                                     button, i.e. we got here via the Button
+                                     pane's "Edit Text". -->
+                                <button class="panel-back" type="button" id="textBackToButton" hidden>
+                                    <svg viewBox="0 0 24 24" class="icon icon--sm"><path d="M15 6l-6 6 6 6"/></svg>
+                                    Back to Button options
+                                </button>
 
                                 <!-- CONTENT — the inline toggles act on the
                                      selection inside the box above them. -->
@@ -228,10 +237,60 @@
                                     </div>
                                 </section>
 
+                                <!-- LINK — only for text nodes whose role
+                                     means they point somewhere (nav-links).
+                                     The controls are built by
+                                     link-controls.js and mounted here. -->
+                                <section class="panel-group" id="textLinkGroup" hidden>
+                                    <h3 class="panel-group__title">Link</h3>
+                                    <div id="textLinkMount"></div>
+                                </section>
+
                             </div>
                         </div>
                         <div class="tool-panel__pane" data-tool-pane="image">the image tool panel</div>
-                        <div class="tool-panel__pane" data-tool-pane="button">the button tool panel</div>
+
+                        <!--
+                            The Button pane. Its controls are in
+                            button-panel.js; the link target group inside it
+                            is built by link-controls.js and shared with the
+                            Text pane above.
+                        -->
+                        <div class="tool-panel__pane" data-tool-pane="button">
+                            <p class="tool-panel__empty" id="buttonPanelEmpty">Select a button on the canvas to edit it.</p>
+
+                            <div class="tool-panel__body" id="buttonPanelBody" hidden>
+
+                                <!-- The label lives in the Text pane — this
+                                     hands off to it rather than duplicating
+                                     content/typography/color controls. -->
+                                <button class="panel-btn" type="button" id="buttonEditText">
+                                    <svg viewBox="0 0 24 24" class="icon icon--sm"><path d="M5 5h14M12 5v14"/></svg>
+                                    Edit Text
+                                </button>
+
+                                <!-- TYPE -->
+                                <section class="panel-group">
+                                    <h3 class="panel-group__title">Type</h3>
+                                    <div id="buttonTypeMount"></div>
+                                </section>
+
+                                <!-- LINK — shown for type "Link" -->
+                                <section class="panel-group" id="buttonLinkGroup" hidden>
+                                    <h3 class="panel-group__title">Link to</h3>
+                                    <div id="buttonLinkMount"></div>
+                                </section>
+
+                                <!-- ON CLICK — shown for type "Button".
+                                     Stored only; the editor never runs it. -->
+                                <section class="panel-group" id="buttonScriptGroup" hidden>
+                                    <h3 class="panel-group__title">On click</h3>
+                                    <textarea class="input code-input" id="buttonOnClick" rows="6" spellcheck="false" placeholder="alert('Hello');" aria-label="On click JavaScript"></textarea>
+                                    <p class="ctrl__note">Runs on the published site. Never runs inside the editor.</p>
+                                </section>
+
+                            </div>
+                        </div>
                         <div class="tool-panel__pane" data-tool-pane="section">the section tool panel</div>
                         <div class="tool-panel__pane" data-tool-pane="embed">the embed tool panel</div>
                     </div>
@@ -394,8 +453,10 @@
             </div>
         </div>
 
+        <script src='link-controls.js'></script>
         <script src='renderer.js'></script>
         <script src='text-panel.js'></script>
+        <script src='button-panel.js'></script>
         <script src='script.js'></script>
     </body>
 </html>

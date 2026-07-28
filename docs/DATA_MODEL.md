@@ -129,10 +129,12 @@ Node = {
   placeholder?: string,  // shown muted/dashed when content is empty
   src?: string | null,   // image: null = unfilled placeholder slot
   alt?: string,
-  href?: string,         // button/link. NOTE: renderer.js only reads this on
-                         // `button` nodes today — the `nav-link` text nodes in
-                         // the navbar/footer layouts carry an href that is
-                         // currently ignored at render time
+  href?: string,         // button/link: the *destination*, derived from
+                         // `meta` below rather than authored alongside it —
+                         // see "Button actions". NOTE: renderer.js only
+                         // renders this on `button` nodes today; a `nav-link`
+                         // text node's target can be edited in the Text pane
+                         // but does not render as a real link yet
 
   // ---------- style ----------
   style?: {
@@ -327,6 +329,34 @@ description here" slot. `el_avatar` has `src: null` — a genuine "click to
 upload" slot. Both are ordinary data, not special-cased markup.
 
 ---
+
+## Button actions
+
+A `button` node does one of two things, held in `meta`:
+
+```js
+meta?: {
+  actionType: "link" | "button",   // default "link"
+  linkMode:   "section" | "url",   // link only
+  sectionId?: string,              // linkMode "section": target section's node id
+  url?: string,                    // linkMode "url"
+  onClick?: string                 // button only: JS source
+}
+```
+
+`href` is **derived** from this, not authored beside it — `#<sectionId>` or
+the url. Keeping the two link modes in separate fields is what lets the editor
+toggle between Link and Button without discarding whichever value is not
+currently in play.
+
+`onClick` is stored as source text and is never executed inside the editor: it
+reaches the DOM as `data-on-click`, not as an `onclick` attribute, since an
+attribute would run user JS in the editor's own page. It becomes a real
+handler at publish time.
+
+The Button tool panel edits all of this (`button-panel.js` /
+`link-controls.js`). Text nodes with a link role — `nav-link` — carry the same
+link fields and are edited by the same controls mounted in the Text pane.
 
 ## Open questions / deliberately deferred
 
