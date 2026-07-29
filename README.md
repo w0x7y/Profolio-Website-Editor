@@ -36,10 +36,15 @@ nothing.
 ```
 Profolio Editor/
 ├── index.html          Editor shell markup (top bar, toolbar, canvas, right panel)
-├── style.css            All styling (dark editor chrome + light canvas page + rendered node styles)
-├── script.js             UI interactions (tab/tool switching, page accordion, layout loader/insertion, section drag & drop, canvas selection)
-├── renderer.js           Renders a sections node tree onto the canvas (see docs/DATA_MODEL.md)
-├── theme.js              Themes tab: the color presets, the font list, and applying either to the canvas
+├── styles/
+│   └── style.css        All styling (dark editor chrome + light canvas page + rendered node styles)
+├── scripts/
+│   ├── script.js         UI interactions (tab/tool switching, page accordion, layout loader/insertion, section drag & drop, canvas selection)
+│   ├── renderer.js       Renders a sections node tree onto the canvas (see docs/DATA_MODEL.md)
+│   ├── text-panel.js     Text tool panel: content, typography and color for the selected node
+│   ├── button-panel.js   Button tool panel: link/button type, target and stored on-click
+│   ├── link-controls.js  The link action model plus the shared link-target controls
+│   └── theme.js          Themes tab: the color presets, the font list, and applying either to the canvas
 ├── TODO.md               Full task list + a prioritized, dependency-ordered plan
 ├── docs/
 │   └── DATA_MODEL.md      The data model a page/site is built from (sections → blocks → elements)

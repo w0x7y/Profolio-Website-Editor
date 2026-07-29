@@ -9,24 +9,28 @@
 // pane, which already owns content, typography and color for every node type
 // that carries copy.
 //
-// Ownership boundary, same as text-panel.js: script.js decides *what* is
+// Ownership boundary, same as text-panel.js: selection.js decides *what* is
 // selected and calls syncButtonPanel() with the element; this file never
-// reads script.js's `selectedEl`. The seams are openToolPanel() and its
+// reads selection.js's `selectedEl`. The seams are openToolPanel() and its
 // mirror in closeToolPanel().
 //
-// The action state itself (readAction / writeAction / applyAction) lives in
+// The action state itself (readAction / writeAction / renderActionAttributes) lives in
 // link-controls.js — this file is only the pane around it.
 //
 // Everything is written straight to the DOM element, exactly like the Text
 // pane, so none of it survives a reload (see docs/DATA_MODEL.md).
 // ============================================================
 
+import { buildSegmented, setSegmentedValue } from './panel-widgets.js';
+import { createLinkControls, readAction, writeAction } from './link-controls.js';
+import { openToolPanel } from './tool-panel.js';
+
 let buttonTarget = null;   // the canvas element the controls are editing
 let buttonEls = null;      // cached control refs, null until initButtonPanel()
 let buttonTypeSwitch = null;
 let buttonLinkControls = null;
 
-function initButtonPanel() {
+export function initButtonPanel() {
     const body = document.getElementById('buttonPanelBody');
     if (!body) return;
 
@@ -70,7 +74,7 @@ function initButtonPanel() {
  * openToolPanel() every time the Button pane is revealed, so re-selecting the
  * same node after dismissing the panel repopulates it.
  */
-function syncButtonPanel(el) {
+export function syncButtonPanel(el) {
     if (!buttonEls) return;
 
     buttonTarget = el && el.dataset.nodeType === 'button' ? el : null;

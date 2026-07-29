@@ -6,7 +6,7 @@
 // element on the canvas exists because a node in the data model says it
 // should, not because it was written into index.html.
 //
-// Content reaches the canvas two ways: renderPageIntoCanvas() replaces
+// Content reaches the canvas two ways: renderSectionsIntoCanvas() replaces
 // everything (used for the initial empty state), and
 // appendSectionsToCanvas() adds sections below what's already there (used
 // by every layout card).
@@ -15,13 +15,16 @@
 // data-node-role) so later work (click-to-select, drag-reorder, the
 // layers panel, undo/redo, ...) can map a DOM node back to its place in
 // the tree. Section drag-reorder and click-to-select read those
-// attributes today (both in script.js); the rest is still ahead. This
+// attributes today (selection.js / section-dnd.js); the rest is still ahead. This
 // file only renders — no interactivity is wired up here.
 //
 // One outward call: leaves that can carry a link target hand off to
-// applyNodeAction() in link-controls.js, which owns that state and is the
+// stampActionFromNode() in link-controls.js, which owns that state and is the
 // single writer of a node's href.
 // ============================================================
+
+import { sanitizeInlineHtml } from './text-panel.js';
+import { stampActionFromNode } from './link-controls.js';
 
 const NODE_TAG_BY_TYPE = {
     section: 'section',
@@ -38,6 +41,18 @@ const NODE_TAG_BY_TYPE = {
 };
 
 const CONTAINER_NODE_TYPES = new Set(['section', 'row', 'column', 'group']);
+
+// What an empty copy leaf says when its node names no placeholder of its own.
+// Shared with text-panel.js, which needs the same answer when the Text pane
+// restores a placeholder after the user clears the Content box.
+const DEFAULT_PLACEHOLDER = {
+    heading: 'Empty heading',
+    button: 'Button'
+};
+
+export function fallbackPlaceholder(nodeType) {
+    return DEFAULT_PLACEHOLDER[nodeType] || 'Empty text';
+}
 
 // Whitelisted style props from Node.style.base -> el.style.<jsProp>.
 // Keep this in sync with the StyleProps whitelist in docs/DATA_MODEL.md.
@@ -63,7 +78,7 @@ const STYLE_PROP_TO_JS = {
 /**
  * Render an array of section nodes into a DocumentFragment.
  */
-function renderSections(sections) {
+export function renderSections(sections) {
     const fragment = document.createDocumentFragment();
     (sections || []).forEach(section => fragment.appendChild(renderNode(section)));
     return fragment;
@@ -72,7 +87,7 @@ function renderSections(sections) {
 /**
  * Render a single node (and, recursively, its children) into a DOM element.
  */
-function renderNode(node) {
+export function renderNode(node) {
     const tag = NODE_TAG_BY_TYPE[node.type] || 'div';
     const el = document.createElement(tag);
 
@@ -86,8 +101,6 @@ function renderNode(node) {
         el.dataset.nodeRole = node.role;
         el.classList.add(`role--${node.role}`);
     }
-    if (node.locked) el.dataset.locked = 'true';
-
     applyNodeLayout(el, node);
     applyNodeStyle(el, node);
 
@@ -114,16 +127,15 @@ function applyNodeLayout(el, node) {
     if (layout.justify) el.style.justifyContent = layout.justify;
 }
 
+/**
+ * node.style.tablet / node.style.mobile are intentionally unused for now —
+ * they'll come into play once the device switcher drives real per-breakpoint
+ * rendering instead of just resizing the frame.
+ */
 function applyNodeStyle(el, node) {
-    if (!node.style) return;
-    applyStyleProps(el, node.style.base);
-    // node.style.tablet / node.style.mobile are intentionally unused for
-    // now — they'll come into play once the device switcher drives real
-    // per-breakpoint rendering instead of just resizing the frame.
-}
-
-function applyStyleProps(el, props) {
+    const props = node.style && node.style.base;
     if (!props) return;
+
     Object.keys(props).forEach(key => {
         const jsProp = STYLE_PROP_TO_JS[key];
         if (jsProp) el.style[jsProp] = props[key];
@@ -134,10 +146,8 @@ function renderLeafContent(el, node) {
     switch (node.type) {
         case 'heading':
         case 'text':
-            renderTextLeaf(el, node);
-            break;
         case 'button':
-            renderButtonLeaf(el, node);
+            renderCopyLeaf(el, node);
             break;
         case 'image':
             renderImageLeaf(el, node);
@@ -154,45 +164,61 @@ function renderLeafContent(el, node) {
     }
 }
 
-function renderTextLeaf(el, node) {
-    const hasContent = !!(node.content && node.content.trim());
+/**
+ * Write a leaf's copy — the node's content, or its placeholder when empty.
+ *
+ * The two are written through different sinks on purpose:
+ *
+ *   content     markup, but only the inline subset. A label or paragraph can
+ *               hold the <b>/<i>/<u>/<s> the Text pane's toggles produce, so
+ *               it can't be plain text — but `content` is documented as a
+ *               *sanitized* fragment (docs/DATA_MODEL.md) and nothing on this
+ *               path used to enforce that. sanitizeInlineHtml() is the same
+ *               whitelist the Text pane applies on the way in, so a layout
+ *               file, a saved project or an import can't smuggle a script,
+ *               an <img onerror> or an event-handler attribute onto the canvas.
+ *
+ *   placeholder copy, never markup. textContent, so there is no sink at all.
+ *
+ * @param {Element} el
+ * @param {string}  content
+ * @param {boolean} hasContent  false -> fall back to el.dataset.placeholder
+ */
+function setLeafCopy(el, content, hasContent) {
+    if (hasContent) el.innerHTML = sanitizeInlineHtml(content).html;
+    else el.textContent = el.dataset.placeholder;
+}
+
+/**
+ * Render a leaf that carries copy — `heading`, `text` and `button`, which
+ * differ only in their placeholder fallback and are otherwise the same node
+ * as far as content, emptiness and link target are concerned.
+ *
+ * "Empty" is decided by the *sanitized* text rather than the raw content, the
+ * same way applyTextContent() decides it in text-panel.js. Content that
+ * survives sanitizing as nothing at all — markup with no whitelisted tag and
+ * no text — is empty, and falls back to the placeholder instead of rendering
+ * as a blank node the user can't see or select.
+ */
+function renderCopyLeaf(el, node) {
+    const clean = sanitizeInlineHtml(node.content || '');
+    const hasContent = !!clean.text.trim();
 
     // Stamped like data-node-id/type/role: model data the editor needs back.
     // An empty node holds its placeholder as text, so without this the Text
     // panel would read that placeholder as content the user had typed — and
     // would have nothing to restore once the content is cleared again.
-    el.dataset.placeholder = node.placeholder ||
-        (node.type === 'heading' ? 'Empty heading' : 'Empty text');
+    el.dataset.placeholder = node.placeholder || fallbackPlaceholder(node.type);
 
     el.classList.toggle('is-empty', !hasContent);
-    el.innerHTML = hasContent ? node.content : el.dataset.placeholder;
+    setLeafCopy(el, node.content, hasContent);
 
-    // Text nodes carry a target too — the navbar/footer `nav-link` nodes. It
-    // is stored but not yet rendered as a real link (TODO.md:21); stamping it
-    // here is what lets the Text pane's Link group edit it.
-    applyNodeAction(el, node);
-}
-
-function renderButtonLeaf(el, node) {
-    const hasContent = !!(node.content && node.content.trim());
-
-    // Same reason as renderTextLeaf: an empty button holds its placeholder as
-    // text, so without this the Text pane would read that placeholder back as
-    // content the user had typed.
-    el.dataset.placeholder = node.placeholder || 'Button';
-
-    el.classList.toggle('is-empty', !hasContent);
-    // innerHTML, not textContent: a label can hold the <b>/<i> markup the
-    // Text pane's B/I/U/S produces, and `content` is documented as a
-    // sanitized HTML fragment.
-    el.innerHTML = hasContent ? node.content : el.dataset.placeholder;
-
-    // href is derived from the action state rather than set here, so there is
-    // one writer of it (applyAction in link-controls.js).
-    applyNodeAction(el, node);
-
-    // No real navigation inside the editor canvas.
-    el.addEventListener('click', e => e.preventDefault());
+    // Leaves that can point somewhere stamp their target here — buttons, and
+    // the navbar/footer `nav-link` text nodes. A nav-link's target is stored
+    // but not yet rendered as a real link (TODO.md:21); stamping it is what
+    // lets the Text pane's Link group edit it. href itself is derived from
+    // that state by the one writer of it in link-controls.js.
+    stampActionFromNode(el, node);
 }
 
 function renderImageLeaf(el, node) {
@@ -219,7 +245,7 @@ function renderEmbedLeaf(el, node) {
     el.textContent = node.placeholder || 'Embed';
 }
 
-function escapeHtml(str) {
+export function escapeHtml(str) {
     const div = document.createElement('div');
     div.textContent = str;
     return div.innerHTML;
@@ -232,7 +258,7 @@ function escapeHtml(str) {
  * whatever was there before. Falls back to the blank-canvas empty state
  * when there are no sections (e.g. the "Blank" layout).
  */
-function renderPageIntoCanvas(sections, frameEl) {
+export function renderSectionsIntoCanvas(sections, frameEl) {
     if (!frameEl) return;
     frameEl.innerHTML = '';
 
@@ -259,7 +285,7 @@ function renderPageIntoCanvas(sections, frameEl) {
  * Returns the first appended element, or null when the layout had no
  * sections to add.
  */
-function appendSectionsToCanvas(sections, frameEl) {
+export function appendSectionsToCanvas(sections, frameEl) {
     if (!frameEl || !sections || sections.length === 0) return null;
 
     // The empty state is a placeholder, not content — the first real
@@ -278,7 +304,7 @@ function appendSectionsToCanvas(sections, frameEl) {
  * every section has been dragged onto the trash), so an emptied canvas reads
  * as "start here" instead of as a broken, zero-height page.
  */
-function refreshCanvasEmptyState(frameEl) {
+export function refreshCanvasEmptyState(frameEl) {
     if (!frameEl) return;
     if (frameEl.querySelector('[data-node-id]')) return;
     if (frameEl.querySelector('.canvas-frame__empty')) return;
@@ -318,7 +344,7 @@ function nextFreeId(base, usedIds) {
     return `${base}_${n}`;
 }
 
-function buildCanvasEmptyState() {
+export function buildCanvasEmptyState() {
     const wrap = document.createElement('div');
     wrap.className = 'canvas-frame__empty';
     wrap.innerHTML =

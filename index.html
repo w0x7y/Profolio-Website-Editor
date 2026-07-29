@@ -3,8 +3,16 @@
     <head>
         <meta charset='UTF-8'>
         <meta name='viewport' content='width=device-width, initial-scale=1.0'>
-        <link rel='stylesheet' href='style.css'>
-        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource/maple-mono@5.2.6/index.css" />
+        <link rel='stylesheet' href='styles/style.css'>
+        <!-- The editor chrome's own typeface. Pinned to an exact version, so
+             its bytes are stable and can carry an integrity hash: if the CDN
+             ever serves something else, the browser refuses it rather than
+             applying it. Regenerate the hash if the version is bumped:
+               curl -sL <url> | openssl dgst -sha384 -binary | openssl base64 -A -->
+        <link rel="stylesheet"
+              href="https://cdn.jsdelivr.net/npm/@fontsource/maple-mono@5.2.6/index.css"
+              integrity="sha384-HzXKwXVo3BQHLsczQefCtvLbpN+qN6UKKO4FqcJOBxGBwxjjys9+39ISJR8dz7df"
+              crossorigin="anonymous" />
 
         <!-- The canvas font families offered in the Themes tab (see
              FONT_GROUPS in theme.js — the two lists have to stay in step).
@@ -13,6 +21,12 @@
              it, so the whole list costs one request until fonts get used.
              If this request fails the canvas falls back to the generic
              family at the end of each stack. -->
+        <!-- No integrity hash here, deliberately: the css2 endpoint serves a
+             different @font-face block per browser by design, so there is no
+             stable set of bytes to pin. Accepted because it is a stylesheet
+             rather than a script — a compromised response could restyle the
+             canvas, but not execute anything. Vendoring the families actually
+             used is the fix if that trade stops being acceptable. -->
         <link rel="preconnect" href="https://fonts.googleapis.com">
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
         <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;700&family=Fraunces:wght@400;700&family=IBM+Plex+Mono:wght@400;700&family=Inter:wght@400;700&family=JetBrains+Mono:wght@400;700&family=Libre+Baskerville:wght@400;700&family=Lora:wght@400;700&family=Manrope:wght@400;700&family=Merriweather:wght@400;700&family=Montserrat:wght@400;700&family=Outfit:wght@400;700&family=Playfair+Display:wght@400;700&family=Poppins:wght@400;700&family=Source+Serif+4:wght@400;700&family=Space+Grotesk:wght@400;700&family=Space+Mono:wght@400;700&family=Work+Sans:wght@400;700&display=swap">
@@ -252,7 +266,9 @@
 
                             </div>
                         </div>
-                        <div class="tool-panel__pane" data-tool-pane="image">the image tool panel</div>
+                        <div class="tool-panel__pane" data-tool-pane="image">
+                            <p class="tool-panel__empty">Image controls aren't built yet.</p>
+                        </div>
 
                         <!--
                             The Button pane. Its controls are in
@@ -295,8 +311,12 @@
 
                             </div>
                         </div>
-                        <div class="tool-panel__pane" data-tool-pane="section">the section tool panel</div>
-                        <div class="tool-panel__pane" data-tool-pane="embed">the embed tool panel</div>
+                        <div class="tool-panel__pane" data-tool-pane="section">
+                            <p class="tool-panel__empty">Section controls aren't built yet.</p>
+                        </div>
+                        <div class="tool-panel__pane" data-tool-pane="embed">
+                            <p class="tool-panel__empty">Embed controls aren't built yet.</p>
+                        </div>
                     </div>
                 </aside>
 
@@ -425,11 +445,15 @@
             </div>
         </div>
 
-        <script src='link-controls.js'></script>
-        <script src='renderer.js'></script>
-        <script src='text-panel.js'></script>
-        <script src='theme.js'></script>
-        <script src='button-panel.js'></script>
-        <script src='script.js'></script>
+        <!--
+            One entry point. Everything else is an ES module main.js imports,
+            so the load order that used to live in this list is now declared
+            by the imports themselves.
+
+            Modules mean the editor has to be served over HTTP rather than
+            opened as a file:// path — which was already true, since the
+            Layouts panel loads /layout through fetch(). See agent/NOTES.md.
+        -->
+        <script type="module" src='scripts/main.js'></script>
     </body>
 </html>
