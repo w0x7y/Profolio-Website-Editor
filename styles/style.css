@@ -361,7 +361,10 @@ button {
     z-index: 20;
 }
 
-.tool:hover .tool__label {
+/* keyboard focus reveals the label too — tabbing through the rail is
+   otherwise unlabelled, same reason .section-handle:focus-visible exists */
+.tool:hover .tool__label,
+.tool:focus-visible .tool__label {
     opacity: 1;
     transform: translateY(-50%) translateX(2px);
 }
@@ -1140,7 +1143,7 @@ button {
     color: var(--color-on-text);
 }
 
-/* ---------- section drag & drop (see script.js) ----------
+/* ---------- section drag & drop (see scripts/section-dnd.js) ----------
    Editor chrome layered over the canvas, not part of the rendered node
    tree: a grab handle per section, a translucent state while it's being
    dragged, and an accent line marking where it would land.
@@ -1195,8 +1198,8 @@ button {
     box-shadow: 0 0 0 4px var(--accent-soft);
 }
 
-/* ---------- canvas selection (see script.js) ----------
-   Which node types are selectable is decided in script.js
+/* ---------- canvas selection (see scripts/selection.js) ----------
+   Which node types are selectable is decided in scripts/selection.js
    (SELECTABLE_NODE_TYPES); the selectors below just have to agree with it.
    `outline` rather than `border`, so highlighting never shifts the layout
    of the page being edited.

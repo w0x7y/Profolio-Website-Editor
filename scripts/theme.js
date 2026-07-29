@@ -27,6 +27,9 @@
 // (TODO.md: "Persist selected theme/font with the project data").
 // ============================================================
 
+import { canvasFrame, activateOne } from './dom.js';
+import { clearTextStyleOverrides } from './text-panel.js';
+
 const THEMES = [
     {
         id: 'ink-violet',
@@ -99,7 +102,7 @@ const THEME_COLOR_PROPS = {
 // render with no network at all. The Google families need the stylesheet
 // linked in index.html; if that request fails they fall back to the generic
 // family at the end of each stack rather than breaking the canvas.
-const FONT_GROUPS = [
+export const FONT_GROUPS = [
     {
         label: 'Web-safe',
         fonts: [
@@ -161,8 +164,8 @@ const FONT_OVERRIDE_PROPS = ['font-family'];
 let themeEls = null;         // cached refs, null until initThemePanel()
 let activeThemeId = THEMES[0].id;
 
-function initThemePanel() {
-    const frame = document.querySelector('.canvas-frame');
+export function initThemePanel() {
+    const frame = canvasFrame();
     const list = document.getElementById('themeList');
     if (!frame || !list) return;
 
@@ -233,9 +236,7 @@ function applyTheme(themeId, options) {
         themeEls.frame.style.setProperty(THEME_COLOR_PROPS[key], theme.colors[key]);
     });
 
-    themeEls.list.querySelectorAll('.theme-card').forEach(card => {
-        card.classList.toggle('is-active', card.dataset.theme === theme.id);
-    });
+    activateOne(themeEls.list.querySelectorAll('.theme-card'), card => card.dataset.theme === theme.id);
 
     if (!options || options.wipeOverrides !== false) {
         clearTextStyleOverrides(THEME_OVERRIDE_PROPS);
@@ -248,17 +249,16 @@ function buildFontSelects() {
     fillFontSelect(themeEls.headingFont, DEFAULT_HEADING_FONT);
     fillFontSelect(themeEls.bodyFont, DEFAULT_BODY_FONT);
 
-    // The Text pane picks a font for a single node. It offers the same
-    // families plus "Theme default", which is how a node is handed back to
-    // whatever these two selects say.
-    const textSelect = document.getElementById('textFontFamily');
-    if (textSelect) fillFontSelect(textSelect, '', { themeDefaultOption: true });
+    // The Text pane's per-node font picker offers this same list plus a
+    // "Theme default"; it fills itself from fillFontSelect() in
+    // initTextPanel(), rather than this file reaching across into a control
+    // the Text pane owns and reads back.
 
     themeEls.headingFont.addEventListener('change', () => applyFonts());
     themeEls.bodyFont.addEventListener('change', () => applyFonts());
 }
 
-function fillFontSelect(select, selectedStack, options) {
+export function fillFontSelect(select, selectedStack, options) {
     if (!select) return;
     select.innerHTML = '';
 

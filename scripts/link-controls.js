@@ -6,8 +6,8 @@
 //   1. The action model — what a button or link *does*. Held on the canvas
 //      element as dataset (there is still no in-memory project object, see
 //      docs/DATA_MODEL.md), read by readAction() and written by
-//      writeAction(). applyAction() is the one place that turns that state
-//      into rendered attributes.
+//      writeAction(). renderActionAttributes() is the one place that turns
+//      that state into rendered attributes.
 //
 //   2. createLinkControls() — the "where does this go" controls: a
 //      Section/Address toggle, a section dropdown and an address field.
@@ -16,7 +16,7 @@
 // the same group is mounted twice — in the Button pane, and in the Text pane
 // for link-role text nodes (nav-links). Two copies of the markup would drift
 // apart. This is the pattern buildLayoutCard()/buildPageSection() already
-// follow in script.js. It also means the group carries no ids, only
+// follow in layouts-panel.js. It also means the group carries no ids, only
 // aria-labels: two mounts can't share an id.
 //
 // The dataset is the model and href is *derived* from it. That's what makes
@@ -25,16 +25,19 @@
 // in the first place.
 // ============================================================
 
+import { buildSegmented, setSegmentedValue, buildCtrl } from './panel-widgets.js';
+import { canvasFrame } from './dom.js';
+
 const ACTION_TYPES = new Set(['link', 'button']);
 const LINK_MODES = new Set(['section', 'url']);
 
 /**
  * Read an element's action state, resolving every default so callers never
  * have to. An element straight out of a layout JSON has its dataset stamped
- * by applyNodeAction(); the href fallback below covers anything that reaches
+ * by stampActionFromNode(); the href fallback below covers anything that reaches
  * the panel without having gone through the renderer.
  */
-function readAction(el) {
+export function readAction(el) {
     const data = el.dataset;
     const fallback = resolveLinkFromHref(el.getAttribute && el.getAttribute('href'));
 
@@ -52,16 +55,21 @@ function readAction(el) {
  * Empty values are removed rather than stored as "", so readAction()'s
  * defaults stay in charge of what an unset field means.
  */
-function writeAction(el, patch) {
+export function writeAction(el, patch) {
     if (!el) return;
 
-    Object.keys(patch).forEach(key => {
-        const value = patch[key];
-        if (value === '' || value == null) delete el.dataset[key];
-        else el.dataset[key] = String(value);
-    });
+    Object.keys(patch).forEach(key => setActionField(el, key, patch[key]));
+    renderActionAttributes(el);
+}
 
-    applyAction(el);
+/**
+ * One field of the action state. Empty values are removed rather than stored
+ * as "", so readAction()'s defaults stay in charge of what an unset field
+ * means.
+ */
+function setActionField(el, key, value) {
+    if (value === '' || value == null) delete el.dataset[key];
+    else el.dataset[key] = String(value);
 }
 
 /**
@@ -73,7 +81,7 @@ function writeAction(el, patch) {
  * other half of TODO.md:21; when that lands, they start deriving an href
  * through this same path with no change to the panels.
  */
-function applyAction(el) {
+export function renderActionAttributes(el) {
     if (!el || el.tagName !== 'A') return;
 
     const action = readAction(el);
@@ -92,10 +100,38 @@ function applyAction(el) {
     el.setAttribute('href', linkHref(action));
 }
 
-/** `#` — the layouts' stub — means "a link with no target chosen yet". */
+// The schemes a portfolio link is allowed to point at. Anything else — most
+// of all `javascript:` — is refused and falls back to the `#` stub.
+const SAFE_LINK_SCHEMES = new Set(['http:', 'https:', 'mailto:', 'tel:']);
+
+/**
+ * `#` — the layouts' stub — means "a link with no target chosen yet", and is
+ * also where an address we won't render lands.
+ *
+ * The scheme is checked on the *resolved* URL rather than on the raw text.
+ * Browsers strip tabs, newlines and control characters out of an href before
+ * acting on it, so a pattern match against the typed string is bypassed by
+ * `java\nscript:alert(1)`; the URL parser strips them exactly the same way and
+ * reports the scheme the browser will actually use. Resolving against the page
+ * is also what lets relative paths, bare hosts and `#anchor` through — they
+ * inherit the document's own scheme.
+ */
 function linkHref(action) {
     if (action.mode === 'section') return action.sectionId ? '#' + action.sectionId : '#';
-    return action.url.trim() || '#';
+
+    const url = action.url.trim();
+    if (!url) return '#';
+
+    let resolved;
+    try {
+        resolved = new URL(url, document.baseURI);
+    } catch (err) {
+        return '#';
+    }
+
+    // The user's own text is returned, not the normalized form — the address
+    // field should keep rendering what they typed.
+    return SAFE_LINK_SCHEMES.has(resolved.protocol) ? url : '#';
 }
 
 /**
@@ -103,22 +139,17 @@ function linkHref(action) {
  * every leaf that can carry a target. Values in `node.meta` win; `node.href`
  * is the fallback, which is what every layout file ships today.
  */
-function applyNodeAction(el, node) {
+export function stampActionFromNode(el, node) {
     const meta = node.meta || {};
     const fromHref = resolveLinkFromHref(node.href);
 
-    setNodeAction(el, 'actionType', meta.actionType);
-    setNodeAction(el, 'linkMode', meta.linkMode || fromHref.mode);
-    setNodeAction(el, 'sectionId', meta.sectionId || fromHref.sectionId);
-    setNodeAction(el, 'url', meta.url || fromHref.url);
-    setNodeAction(el, 'onClick', meta.onClick);
-
-    applyAction(el);
-}
-
-function setNodeAction(el, key, value) {
-    if (value === '' || value == null) delete el.dataset[key];
-    else el.dataset[key] = String(value);
+    writeAction(el, {
+        actionType: meta.actionType,
+        linkMode: meta.linkMode || fromHref.mode,
+        sectionId: meta.sectionId || fromHref.sectionId,
+        url: meta.url || fromHref.url,
+        onClick: meta.onClick
+    });
 }
 
 /**
@@ -146,7 +177,7 @@ function resolveLinkFromHref(href) {
  * Returns `{ root, sync }` — mount `root` wherever the group belongs, and
  * call `sync(el)` to point it at a canvas element (or at nothing).
  */
-function createLinkControls() {
+export function createLinkControls() {
     let target = null;
 
     const root = document.createElement('div');
@@ -243,7 +274,7 @@ function fillSectionOptions(select, selectedId) {
 
 /** The top-level sections on the canvas, in document order. */
 function canvasSections() {
-    const frame = document.querySelector('.canvas-frame');
+    const frame = canvasFrame();
     if (!frame) return [];
 
     return Array.from(frame.querySelectorAll(':scope > .node--section')).map(el => ({
@@ -259,55 +290,5 @@ function humanizeRole(role) {
     return words.charAt(0).toUpperCase() + words.slice(1);
 }
 
-// ---- shared widgets ---------------------------------------------------
-
-/**
- * A segmented control: one button per option, exactly one active. Used for
- * Link/Button and for Section/Address.
- */
-function buildSegmented(options, label, onChange) {
-    const root = document.createElement('div');
-    root.className = 'segmented';
-    root.setAttribute('role', 'radiogroup');
-    root.setAttribute('aria-label', label);
-
-    options.forEach(option => {
-        const btn = document.createElement('button');
-        btn.className = 'segmented__btn';
-        btn.type = 'button';
-        btn.dataset.value = option.value;
-        btn.textContent = option.label;
-        btn.setAttribute('role', 'radio');
-        btn.setAttribute('aria-checked', 'false');
-
-        btn.addEventListener('click', () => {
-            setSegmentedValue(root, option.value);
-            onChange(option.value);
-        });
-
-        root.appendChild(btn);
-    });
-
-    return root;
-}
-
-function setSegmentedValue(root, value) {
-    root.querySelectorAll('.segmented__btn').forEach(btn => {
-        const on = btn.dataset.value === value;
-        btn.classList.toggle('is-active', on);
-        btn.setAttribute('aria-checked', String(on));
-    });
-}
-
-/** A labelled control wrapper, matching the markup the Text pane uses. */
-function buildCtrl(label) {
-    const ctrl = document.createElement('div');
-    ctrl.className = 'ctrl';
-
-    const text = document.createElement('span');
-    text.className = 'ctrl__label';
-    text.textContent = label;
-
-    ctrl.appendChild(text);
-    return ctrl;
-}
+// buildSegmented() / setSegmentedValue() / buildCtrl() used to live here.
+// They are generic panel widgets, not link controls — see panel-widgets.js.

@@ -10,13 +10,13 @@
 // second copy of these controls.
 //
 // Everything is written straight to the DOM element, exactly like section
-// drag-reorder and trash-deletion in script.js — there is no in-memory
+// drag-reorder and trash-deletion in section-dnd.js — there is no in-memory
 // project object yet (see docs/DATA_MODEL.md), so none of it survives a
 // reload. Once one exists, these writes should update the node in that tree
 // and re-render instead.
 //
-// Ownership boundary: script.js decides *what* is selected and calls
-// syncTextPanel() with the element; this file never reads script.js's
+// Ownership boundary: selection.js decides *what* is selected and calls
+// syncTextPanel() with the element; this file never reads selection.js's
 // `selectedEl`. The seams are openToolPanel() — already the one funnel both
 // entry paths (tool click, canvas selection) go through — and its mirror in
 // closeToolPanel(), which points the pane back at nothing.
@@ -35,6 +35,15 @@
 // The tags allowed to reach the canvas from the Content box. Everything else
 // is unwrapped to its text — this is the "sanitized subset" the content
 // field is documented as accepting in docs/DATA_MODEL.md.
+import {
+    setSwitch, isSwitchOn, toggleSwitch, setCtrlOff,
+    wireColorField, setColorField, normalizeHex, rgbToHex, round3
+} from './panel-widgets.js';
+import { createLinkControls } from './link-controls.js';
+import { fillFontSelect } from './theme.js';
+import { fallbackPlaceholder } from './renderer.js';
+import { openToolPanel } from './tool-panel.js';
+
 const TEXT_INLINE_TAGS = new Set(['B', 'I', 'U', 'S', 'STRONG', 'EM', 'BR']);
 
 // Block tags a contenteditable produces for new lines. Unwrapped like
@@ -55,7 +64,7 @@ let textTarget = null;   // the canvas element the controls are editing
 let textEls = null;      // cached control refs, null until initTextPanel()
 let textLinkControls = null;
 
-function initTextPanel() {
+export function initTextPanel() {
     const content = document.getElementById('textContent');
     if (!content) return;
 
@@ -94,6 +103,13 @@ function initTextPanel() {
     // tells the user about.
     textEls.back.addEventListener('click', () => openToolPanel('button'));
 
+    // The per-node font picker offers the same families as the Themes tab —
+    // filled from that one list (FONT_GROUPS in theme.js) so the two can't
+    // drift — plus a "Theme default" that hands the node back to the site
+    // font. matchFontFamily() reads these options back, so this pane fills
+    // its own control rather than having the Themes tab reach in.
+    fillFontSelect(textEls.fontFamily, '', { themeDefaultOption: true });
+
     // Same group the Button pane mounts — see link-controls.js.
     textLinkControls = createLinkControls();
     textEls.linkMount.appendChild(textLinkControls.root);
@@ -109,7 +125,7 @@ function initTextPanel() {
  * openToolPanel() every time the Text pane is revealed, so re-selecting the
  * same node after dismissing the panel repopulates it.
  */
-function syncTextPanel(el) {
+export function syncTextPanel(el) {
     if (!textEls) return;
 
     textTarget = el && TEXT_PANEL_NODE_TYPES.has(el.dataset.nodeType) ? el : null;
@@ -184,7 +200,7 @@ function wireContentBox() {
 
 function syncContentBox() {
     const placeholder = textPlaceholderFor(textTarget);
-    // An empty node holds its *placeholder* as text (see renderTextLeaf), so
+    // An empty node holds its *placeholder* as text (see renderCopyLeaf), so
     // showing textTarget.innerHTML here would load the placeholder into the
     // box as if the user had typed it.
     const isEmpty = textTarget.classList.contains('is-empty');
@@ -208,13 +224,13 @@ function applyTextContent() {
     textEls.content.classList.toggle('is-empty', !hasContent);
 }
 
-/** The placeholder the renderer stamped, with its own fallback. */
+/**
+ * The placeholder the renderer stamped, with the renderer's own fallback table
+ * behind it (fallbackPlaceholder in renderer.js) so the two can't disagree
+ * about what an unnamed heading or button is called when it's empty.
+ */
 function textPlaceholderFor(el) {
-    if (el.dataset.placeholder) return el.dataset.placeholder;
-
-    if (el.dataset.nodeType === 'heading') return 'Empty heading';
-    if (el.dataset.nodeType === 'button') return 'Button';
-    return 'Empty text';
+    return el.dataset.placeholder || fallbackPlaceholder(el.dataset.nodeType);
 }
 
 /**
@@ -225,7 +241,7 @@ function textPlaceholderFor(el) {
  * still loads resources, so `<img src=x onerror=...>` can fire before the
  * strip pass reaches it. An inert document never runs anything.
  */
-function sanitizeInlineHtml(html) {
+export function sanitizeInlineHtml(html) {
     const doc = document.implementation.createHTMLDocument('');
     doc.body.innerHTML = html;
     stripToInlineTags(doc.body);
@@ -433,29 +449,6 @@ function wireColorControls() {
     });
 }
 
-/**
- * Keep a swatch and its hex field in step, calling back with a valid
- * `#rrggbb` whenever one of them produces a usable value. A half-typed hex
- * is marked invalid and applies nothing, so the element never blanks out
- * mid-keystroke.
- */
-function wireColorField(swatch, hex, onChange) {
-    swatch.addEventListener('input', () => {
-        hex.value = swatch.value;
-        hex.classList.remove('is-invalid');
-        onChange(swatch.value);
-    });
-
-    hex.addEventListener('input', () => {
-        const value = normalizeHex(hex.value);
-        hex.classList.toggle('is-invalid', !value && hex.value.trim() !== '');
-        if (!value) return;
-
-        swatch.value = value;
-        onChange(value);
-    });
-}
-
 function applyBackground() {
     const on = isSwitchOn(textEls.bgToggle);
     setTargetStyle('background-color', on ? (normalizeHex(textEls.bgHex.value) || '#ffffff') : '');
@@ -473,45 +466,7 @@ function applyStroke() {
     setTargetStyle('-webkit-text-stroke-color', normalizeHex(textEls.strokeHex.value) || '#000000');
 }
 
-function setColorField(swatch, hex, value) {
-    swatch.value = value;
-    hex.value = value;
-    hex.classList.remove('is-invalid');
-}
-
-/** Accepts `#f00`, `f00`, `#ff0000`, `ff0000`. Returns null for anything else. */
-function normalizeHex(input) {
-    const raw = String(input).trim().replace(/^#/, '');
-    if (!/^([0-9a-f]{3}|[0-9a-f]{6})$/i.test(raw)) return null;
-
-    const full = raw.length === 3 ? raw.split('').map(char => char + char).join('') : raw;
-    return '#' + full.toLowerCase();
-}
-
-/** `rgb(17, 17, 20)` -> `#111114`. Fully transparent returns null. */
-/**
- * Computed colors normally read `rgb(r, g, b)` with 0-255 channels, but one
- * that came out of color-mix() is reported as `color(srgb r g b)` with 0-1
- * channels instead — and every derived theme neutral is a color-mix (see the
- * token block in style.css), so a placeholder or a footer link hits this
- * branch. Both forms are read here; without the scale those 0-1 channels
- * round to 0 and every such node's swatch reads as black.
- */
-function rgbToHex(value) {
-    const text = String(value).trim();
-    const parts = text.match(/-?\d*\.?\d+/g);
-    if (!parts || parts.length < 3) return null;
-    if (parts.length >= 4 && parseFloat(parts[3]) === 0) return null;
-
-    const scale = text.startsWith('color(') ? 255 : 1;
-
-    return '#' + parts.slice(0, 3).map(part => {
-        const channel = Math.max(0, Math.min(255, Math.round(parseFloat(part) * scale)));
-        return channel.toString(16).padStart(2, '0');
-    }).join('');
-}
-
-// ---- shared helpers ---------------------------------------------------
+// ---- the per-node override ledger -------------------------------------
 
 function setTargetStyle(property, value) {
     if (!textTarget) return;
@@ -553,7 +508,7 @@ function recordUserStyle(el, property, isSet) {
  *
  * Not undoable, like every other canvas write in the editor today.
  */
-function clearTextStyleOverrides(properties) {
+export function clearTextStyleOverrides(properties) {
     const wanted = new Set(properties);
 
     document.querySelectorAll('.canvas-frame [data-user-styled]').forEach(el => {
@@ -566,31 +521,4 @@ function clearTextStyleOverrides(properties) {
 
     // The controls are showing values that just stopped being true.
     if (textTarget) syncTextPanel(textTarget);
-}
-
-function setSwitch(btn, on) {
-    btn.setAttribute('aria-checked', String(!!on));
-    btn.classList.toggle('is-on', !!on);
-}
-
-function isSwitchOn(btn) {
-    return btn.getAttribute('aria-checked') === 'true';
-}
-
-function toggleSwitch(btn) {
-    const on = !isSwitchOn(btn);
-    setSwitch(btn, on);
-    return on;
-}
-
-/** Dim and disable a control's body while its switch is off. */
-function setCtrlOff(ctrl, off) {
-    ctrl.classList.toggle('is-off', off);
-    ctrl.querySelectorAll('.ctrl__body input').forEach(input => {
-        input.disabled = off;
-    });
-}
-
-function round3(value) {
-    return Math.round(value * 1000) / 1000;
 }

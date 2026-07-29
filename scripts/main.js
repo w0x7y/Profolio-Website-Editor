@@ -1,0 +1,92 @@
+// ============================================================
+// BOOT
+//
+// The one entry point index.html loads. Everything else is a module this
+// file wires together on DOMContentLoaded; the order of the init calls
+// below is the order the app expects, and is the only place it is stated.
+// ============================================================
+
+import { canvasFrame, activateOne } from './dom.js';
+import { renderSectionsIntoCanvas } from './renderer.js';
+import { initThemePanel } from './theme.js';
+import { initTextPanel } from './text-panel.js';
+import { initButtonPanel } from './button-panel.js';
+import { initSectionDragAndDrop } from './section-dnd.js';
+import { initCanvasSelection, setActiveTool, activeTool } from './selection.js';
+import { closeToolPanel, toggleToolPanel } from './tool-panel.js';
+import { loadPages } from './layouts-panel.js';
+
+document.addEventListener('DOMContentLoaded', () => {
+
+    // ---- Left toolbar: tool selection ----
+    const tools = document.querySelectorAll('.tool');
+    tools.forEach(tool => {
+        tool.addEventListener('click', () => {
+            // Clicking the tool that's already active toggles its extended
+            // panel instead of re-selecting the tool. Either way the tool
+            // stays active — see closeToolPanel().
+            if (tool.dataset.tool === activeTool) {
+                toggleToolPanel(activeTool);
+                return;
+            }
+
+            // setActiveTool() owns every representation of the active tool,
+            // including this button's highlight.
+            setActiveTool(tool.dataset.tool);
+        });
+    });
+
+    // ---- Left tool panel: close button ----
+    const toolPanelClose = document.getElementById('toolPanelClose');
+    if (toolPanelClose) toolPanelClose.addEventListener('click', closeToolPanel);
+
+    // ---- Right panel: tab switching ----
+    const panelTabs = document.querySelectorAll('.panel__tab');
+    const panelPanes = document.querySelectorAll('.panel__pane');
+    panelTabs.forEach(tab => {
+        tab.addEventListener('click', () => {
+            activateOne(panelTabs, t => t === tab);
+            activateOne(panelPanes, pane => pane.dataset.pane === tab.dataset.panel);
+        });
+    });
+
+    // ---- Top bar: device switcher (visual resize of canvas frame) ----
+    const deviceButtons = document.querySelectorAll('.device-switch__btn');
+    const frameWidths = {
+        desktop: '1200px',
+        tablet: '768px',
+        mobile: '390px'
+    };
+
+    deviceButtons.forEach(btn => {
+        btn.addEventListener('click', () => {
+            activateOne(deviceButtons, b => b === btn);
+
+            const width = frameWidths[btn.dataset.device];
+            if (canvasFrame() && width) canvasFrame().style.width = width;
+        });
+    });
+
+    // ---- Right panel: the Themes tab's colors and fonts ----
+    // Builds the theme cards and the two font pickers, then puts the
+    // starting theme on the canvas. See theme.js.
+    initThemePanel();
+
+    // ---- Canvas: render the initial (empty) state from the data model ----
+    renderSectionsIntoCanvas([], canvasFrame());
+
+    // ---- Canvas: drag sections to reorder them, or onto the trash to delete ----
+    initSectionDragAndDrop();
+
+    // ---- Left tool panel: the Text and Button panes' controls ----
+    initTextPanel();
+    initButtonPanel();
+
+    // ---- Canvas: click content to select it (Select tool) ----
+    setActiveTool('select');
+    initCanvasSelection();
+
+    // ---- Layouts: load automatically from /layout, then wire up selection ----
+    loadPages();
+
+});
