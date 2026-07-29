@@ -40,7 +40,7 @@
 
 import {
     setSwitch, isSwitchOn, toggleSwitch, setCtrlOff,
-    wireColorField, setColorField, normalizeHex, rgbToHex, round3, pxPerUnit
+    wireColorField, setColorField, normalizeHex, rgbToHex, round3, convertFieldUnit
 } from './panel-widgets.js';
 import { setNodeStyle, onOverridesCleared } from './node-style.js';
 import { setImageLeafSrc } from './renderer.js';
@@ -204,20 +204,10 @@ function wireLength(input, unitSelect, property) {
     input.addEventListener('input', apply);
 
     // Switching units converts rather than relabelling: a 260px portrait
-    // becomes 16.25rem, not 16.25px worth of nothing. Same rule the Text
-    // pane's font size follows.
+    // becomes 16.25rem, not 16.25px worth of nothing. Same helper the Text
+    // pane's font size uses, given a percent basis it doesn't need.
     unitSelect.addEventListener('change', () => {
-        const next = unitSelect.value;
-        const previous = unitSelect.dataset.unit || 'px';
-        const value = parseFloat(input.value);
-
-        if (isFinite(value) && next !== previous) {
-            const basis = percentBasis(property);
-            const px = value * pxPerUnit(previous, imageTarget, basis);
-            input.value = round3(px / pxPerUnit(next, imageTarget, basis));
-        }
-
-        unitSelect.dataset.unit = next;
+        convertFieldUnit(input, unitSelect, imageTarget, percentBasis(property));
         apply();
     });
 }

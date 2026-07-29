@@ -189,6 +189,37 @@ export function rgbToHex(value) {
  * `vh` resolves against the real viewport because that is what the browser
  * does here — the canvas frame is a div on this page, not an iframe.
  */
+/**
+ * Move a number field to a new unit without changing what it means: read the
+ * unit it was in, convert through px, write the equivalent value back, and
+ * record the new unit for next time.
+ *
+ * The "convert, don't relabel" rule has one definition here because both
+ * panes that offer a unit picker need it and both would read as broken
+ * without it — a 32px heading relabelled to rem is 512px of text, a 260px
+ * image is 4160px wide.
+ *
+ * Call it from the select's `change` handler, then apply the field as usual;
+ * this only touches the field and `dataset.unit`, never the canvas.
+ *
+ * @param {HTMLInputElement}  input           the number field
+ * @param {HTMLSelectElement} unitSelect      the unit picker, already on its new value
+ * @param {Element}           el              what `em`/`%` resolve against
+ * @param {number}           [percentBasisPx] see pxPerUnit(); omit for font-size
+ */
+export function convertFieldUnit(input, unitSelect, el, percentBasisPx) {
+    const next = unitSelect.value;
+    const previous = unitSelect.dataset.unit || 'px';
+    const value = parseFloat(input.value);
+
+    if (isFinite(value) && next !== previous) {
+        const px = value * pxPerUnit(previous, el, percentBasisPx);
+        input.value = round3(px / pxPerUnit(next, el, percentBasisPx));
+    }
+
+    unitSelect.dataset.unit = next;
+}
+
 export function pxPerUnit(unit, el, percentBasisPx) {
     if (unit === 'px') return 1;
     if (unit === 'rem') return parseFloat(getComputedStyle(document.documentElement).fontSize) || 16;

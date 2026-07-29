@@ -35,7 +35,7 @@
 // field is documented as accepting in docs/DATA_MODEL.md.
 import {
     setSwitch, isSwitchOn, toggleSwitch, setCtrlOff,
-    wireColorField, setColorField, normalizeHex, rgbToHex, round3, pxPerUnit
+    wireColorField, setColorField, normalizeHex, rgbToHex, round3, convertFieldUnit
 } from './panel-widgets.js';
 import { setNodeStyle, onOverridesCleared } from './node-style.js';
 import { createLinkControls } from './link-controls.js';
@@ -372,18 +372,9 @@ function applyFontSize() {
  * broken.
  */
 function changeFontSizeUnit() {
-    const next = textEls.fontSizeUnit.value;
-    const previous = textEls.fontSizeUnit.dataset.unit || 'px';
-    const value = parseFloat(textEls.fontSize.value);
-
     // No percent basis passed: for font-size, 100% *is* the parent's font
-    // size, which is what pxPerUnit() falls back to.
-    if (isFinite(value) && next !== previous) {
-        const px = value * pxPerUnit(previous, textTarget);
-        textEls.fontSize.value = round3(px / pxPerUnit(next, textTarget));
-    }
-
-    textEls.fontSizeUnit.dataset.unit = next;
+    // size, which is what the helper falls back to.
+    convertFieldUnit(textEls.fontSize, textEls.fontSizeUnit, textTarget);
     applyFontSize();
 }
 

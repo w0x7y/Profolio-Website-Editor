@@ -25,12 +25,18 @@ import { addFiles } from './asset-store.js';
 let dialog = null;
 
 export function initUploadModal() {
-    dialog = document.getElementById('uploadDialog');
-    if (!dialog) return;
-
+    const el = document.getElementById('uploadDialog');
     const zone = document.getElementById('uploadDropZone');
     const input = document.getElementById('uploadFileInput');
     const close = document.getElementById('uploadDialogClose');
+
+    // All four or none. Guarding only the dialog would let a missing zone
+    // throw out of boot(), taking every init after this one in main.js with
+    // it — and `dialog` would be left set, so openUploadModal() would still
+    // open a window with nothing wired inside it.
+    if (!el || !zone || !input || !close) return;
+
+    dialog = el;
 
     // Clicking the box is the second of the two ways in: it opens the file
     // manager through a hidden input, since a file picker can only be opened
