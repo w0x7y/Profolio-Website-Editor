@@ -35,7 +35,7 @@ can wait a long time).
 - [x] Select tool: real selection behavior `Medium` `P0` — click-to-select is live only while this tool is active; switching tools drops the selection (`setActiveTool()` in `script.js`). Selecting opens the tool panel on that node type's pane via `NODE_TYPE_PANES`, and deselecting closes it
 - [x] Text tool panel: real controls for the selected text node `Medium` `P0` — see `text-panel.js`; content (with per-word bold/italic/underline/strikethrough), font family, size with unit conversion, letter spacing, uppercase, and text/background/outline colors. Writes to the canvas DOM, so nothing persists across a reload until there's a project object
 - [ ] Text tool: click-to-place a new text block on canvas `Easy` `P0` — the pane's controls exist, but the tool itself still places nothing, so it always shows the "select text" empty state
-- [ ] Image tool: click-to-place an image placeholder, then upload/choose an image `Medium` `P0`
+- [ ] Image tool: click-to-place an image placeholder `Medium` `P0` — the pane itself is built (`image-panel.js`); what's left is inserting a new image node from the toolbar
 - [x] Button tool panel: real controls for the selected button `Easy` `P0` — see `button-panel.js` / `link-controls.js`; "Edit Text" hands the label off to the Text pane, a Link/Button toggle picks what it does, and a link points at a section on the canvas or at an address. On-click JS is stored (`data-on-click`) and never executed inside the editor. Writes to the canvas DOM, so nothing persists across a reload
 - [ ] Button tool: click-to-place a new button on canvas `Easy` `P0` — the pane's controls exist, but the tool itself still places nothing, so it always shows the "select a button" empty state
 - [ ] Button styling controls (fill, radius, padding, size) — color and typography currently reach a button only via the Button pane's "Edit Text" `Easy` `P1`
@@ -72,11 +72,11 @@ can wait a long time).
 - [ ] Persist selected theme/font with the project data `Easy` `P1`
 
 ### Right panel — Assets tab
-- [ ] Real file upload (drag-and-drop and click-to-upload currently do nothing) `Medium` `P0`
-- [ ] Image storage/hosting (needs a backend or third-party storage — decide on provider) `Hard` `P0`
-- [ ] Image thumbnails reflect actual uploaded files instead of empty gradient placeholders `Easy` `P1`
-- [ ] Click an asset to insert it into the canvas / assign it to the selected image element `Medium` `P1`
-- [ ] Delete / replace uploaded assets `Easy` `P1`
+- [x] Real file upload (drag-and-drop and click-to-upload) `Medium` `P0` — `upload-modal.js`; the Assets tab's box is both a button that opens it and a drop target of its own
+- [ ] Image storage/hosting (needs a backend or third-party storage — decide on provider) `Hard` `P0` — in-memory blob URLs for now (`asset-store.js`), which is the one file this changes
+- [x] Image thumbnails reflect actual uploaded files `Easy` `P1` — `asset-grid.js`, rendered in both the Assets tab and the Image pane
+- [x] Assign an asset to the selected image element `Medium` `P1` — the Image pane's Source grid. Inserting a *new* image into the canvas still needs click-to-place
+- [x] Delete / replace uploaded assets `Easy` `P1` — deleting one first resets every canvas image using it, since removing it revokes the blob URL
 - [ ] Basic image editing (crop, resize) on upload `Hard` `P2`
 - [ ] File size / type validation and limits `Easy` `P1`
 - [ ] Support other asset types beyond images (icons, documents/resume PDF, video) `Medium` `P2`
@@ -169,7 +169,7 @@ The minimum interaction loop: select something, change it, remove it.
 10. Delete elements (with confirmation or undo safety net) `Easy` `P0` — sections are deletable via the trash zone; elements and the undo safety net are not
 11. Inline text editing (contenteditable) for text elements `Medium` `P0` — partly done: editable in the Text panel (`text-panel.js`), not yet directly on the canvas
 12. Text tool: click-to-place a new text block `Easy` `P0`
-13. Image tool: click-to-place an image placeholder `Medium` `P0`
+13. Image tool: click-to-place an image placeholder `Medium` `P0` — the Image *pane* is done; this is the insert-into-canvas half
 14. ~~Drag-and-drop reordering of sections within the canvas~~ `Hard` `P0` — done, see `script.js`; reordering elements *inside* a section is still open
 
 ### Phase 3 — Layouts, themes & basic settings
@@ -181,7 +181,7 @@ Makes the existing UI shell actually do something.
 19. Site title field editable and persisted `Easy` `P0`
 
 ### Phase 4 — Assets pipeline
-20. Real file upload (drag-and-drop and click-to-upload) `Medium` `P0`
+20. ~~Real file upload (drag-and-drop and click-to-upload)~~ `Medium` `P0` — done, see `upload-modal.js`
 21. Image storage/hosting (backend or third-party provider) `Hard` `P0`
 
 ### Phase 5 — History & autosave
@@ -215,9 +215,9 @@ Needed before real publishing/multi-user use is possible.
 39a. Real Navbar / Showcase / Blog / Contact / Links / Footer layouts, replacing the `blank-test.json` fixtures `Medium` `P1`
 40. ~~Load Google Fonts (or self-hosted fonts) for theme font options~~ `Easy` `P1` — done, see the stylesheet link in `index.html` and `FONT_GROUPS` in `theme.js`
 41. Persist selected theme/font with the project data `Easy` `P1`
-42. Image thumbnails reflect actual uploaded files `Easy` `P1`
-43. Click an asset to insert it into the canvas / assign to selected image `Medium` `P1`
-44. Delete / replace uploaded assets `Easy` `P1`
+42. ~~Image thumbnails reflect actual uploaded files~~ `Easy` `P1` — done, see `asset-grid.js`
+43. ~~Assign an asset to the selected image~~ `Medium` `P1` — done, see the Image pane's Source grid; inserting a new one is item 13
+44. ~~Delete / replace uploaded assets~~ `Easy` `P1` — done, see `assets-panel.js`
 45. File size / type validation and limits `Easy` `P1`
 46. Favicon upload wired to the Assets/upload system `Easy` `P1`
 

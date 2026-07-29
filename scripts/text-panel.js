@@ -21,11 +21,9 @@
 // entry paths (tool click, canvas selection) go through — and its mirror in
 // closeToolPanel(), which points the pane back at nothing.
 //
-// The same boundary in the other direction: because these writes are the
-// only per-node style overrides on the canvas, this file is also what
-// removes them. The Themes tab calls clearTextStyleOverrides() when a theme
-// or a font is applied — it names the properties to drop, and everything
-// about tracking and undoing them lives here.
+// Style writes go through node-style.js, which records each one on the node
+// so the Themes tab can take them back off again when a theme or a font is
+// applied. This pane only names the properties; the ledger lives there.
 //
 // Character styling is content, not style: Bold/Italic/Underline/Strike
 // wrap the selection inside the Content box in <b>/<i>/<u>/<s>, so
@@ -37,8 +35,9 @@
 // field is documented as accepting in docs/DATA_MODEL.md.
 import {
     setSwitch, isSwitchOn, toggleSwitch, setCtrlOff,
-    wireColorField, setColorField, normalizeHex, rgbToHex, round3
+    wireColorField, setColorField, normalizeHex, rgbToHex, round3, pxPerUnit
 } from './panel-widgets.js';
+import { setNodeStyle, onOverridesCleared } from './node-style.js';
 import { createLinkControls } from './link-controls.js';
 import { fillFontSelect } from './theme.js';
 import { fallbackPlaceholder } from './renderer.js';
@@ -118,6 +117,12 @@ export function initTextPanel() {
     wireInlineToggles();
     wireTypographyControls();
     wireColorControls();
+
+    // Applying a theme drops this pane's overrides out from under it, so the
+    // controls have to be repopulated from what is actually on the node now.
+    onOverridesCleared(() => {
+        if (textTarget) syncTextPanel(textTarget);
+    });
 }
 
 /**
@@ -371,22 +376,15 @@ function changeFontSizeUnit() {
     const previous = textEls.fontSizeUnit.dataset.unit || 'px';
     const value = parseFloat(textEls.fontSize.value);
 
+    // No percent basis passed: for font-size, 100% *is* the parent's font
+    // size, which is what pxPerUnit() falls back to.
     if (isFinite(value) && next !== previous) {
-        textEls.fontSize.value = round3(value * pxPerUnit(previous) / pxPerUnit(next));
+        const px = value * pxPerUnit(previous, textTarget);
+        textEls.fontSize.value = round3(px / pxPerUnit(next, textTarget));
     }
 
     textEls.fontSizeUnit.dataset.unit = next;
     applyFontSize();
-}
-
-function pxPerUnit(unit) {
-    if (unit === 'px') return 1;
-    if (unit === 'rem') return parseFloat(getComputedStyle(document.documentElement).fontSize) || 16;
-
-    // em and % are both relative to the parent's font size.
-    const parent = (textTarget && textTarget.parentElement) || document.documentElement;
-    const base = parseFloat(getComputedStyle(parent).fontSize) || 16;
-    return unit === '%' ? base / 100 : base;
 }
 
 /**
@@ -466,59 +464,9 @@ function applyStroke() {
     setTargetStyle('-webkit-text-stroke-color', normalizeHex(textEls.strokeHex.value) || '#000000');
 }
 
-// ---- the per-node override ledger -------------------------------------
+// ---- writing to the node ----------------------------------------------
 
+/** This pane's shorthand for setNodeStyle() on whatever is selected. */
 function setTargetStyle(property, value) {
-    if (!textTarget) return;
-
-    const clearing = value === '' || value == null;
-
-    if (clearing) textTarget.style.removeProperty(property);
-    else textTarget.style.setProperty(property, value);
-
-    recordUserStyle(textTarget, property, !clearing);
-}
-
-/**
- * Keep a per-node list of the declarations *this pane* wrote, as
- * data-user-styled="color,font-family".
- *
- * Applying a theme wipes per-node overrides so the canvas ends up uniformly
- * on the new theme, and this is what tells it which declarations are the
- * user's to remove. An inline style alone isn't enough to go on: the
- * renderer writes inline styles too, straight from the layout file's
- * `style.base` (a section's `background: var(--color-surface)`, say), and
- * those are the layout's, not the user's — wiping them would tear the page
- * apart. Only what is listed here is ever removed.
- */
-function recordUserStyle(el, property, isSet) {
-    const props = new Set((el.dataset.userStyled || '').split(',').filter(Boolean));
-
-    if (isSet) props.add(property);
-    else props.delete(property);
-
-    if (props.size) el.dataset.userStyled = Array.from(props).join(',');
-    else delete el.dataset.userStyled;
-}
-
-/**
- * Drop this pane's overrides for `properties` from every node on the canvas
- * that has them, handing those nodes back to the theme. Called by the Themes
- * tab (theme.js) — colors when a theme is picked, font-family when a font is.
- *
- * Not undoable, like every other canvas write in the editor today.
- */
-export function clearTextStyleOverrides(properties) {
-    const wanted = new Set(properties);
-
-    document.querySelectorAll('.canvas-frame [data-user-styled]').forEach(el => {
-        (el.dataset.userStyled || '').split(',').filter(Boolean).forEach(property => {
-            if (!wanted.has(property)) return;
-            el.style.removeProperty(property);
-            recordUserStyle(el, property, false);
-        });
-    });
-
-    // The controls are showing values that just stopped being true.
-    if (textTarget) syncTextPanel(textTarget);
+    setNodeStyle(textTarget, property, value);
 }

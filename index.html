@@ -302,8 +302,179 @@
 
                             </div>
                         </div>
+                        <!--
+                        <!--
+                            The Image pane. Its controls are in
+                            image-panel.js. The Source grid is a second view
+                            of the same library the right panel's Assets tab
+                            shows — both render from asset-store.js through
+                            asset-grid.js.
+                        -->
                         <div class="tool-panel__pane" data-tool-pane="image">
-                            <p class="tool-panel__empty">Image controls aren't built yet.</p>
+                            <p class="tool-panel__empty" id="imagePanelEmpty">Select an image on the canvas to edit it.</p>
+
+                            <div class="tool-panel__body" id="imagePanelBody" hidden>
+
+                                <!-- SOURCE -->
+                                <section class="panel-group">
+                                    <h3 class="panel-group__title">Source</h3>
+
+                                    <div class="asset-grid asset-grid--panel" id="imageSourceGrid"></div>
+
+                                    <div class="btn-row">
+                                        <button class="panel-btn" type="button" id="imageUpload">
+                                            <svg viewBox="0 0 24 24" class="icon icon--sm"><path d="M12 16V4M6 10l6-6 6 6"/><path d="M4 20h16"/></svg>
+                                            Upload
+                                        </button>
+                                        <button class="panel-btn" type="button" id="imageRemove">
+                                            <svg viewBox="0 0 24 24" class="icon icon--sm"><path d="M6 6l12 12M18 6L6 18"/></svg>
+                                            Remove
+                                        </button>
+                                    </div>
+
+                                    <div class="ctrl">
+                                        <label class="ctrl__label" for="imageAlt">Alt text</label>
+                                        <input class="input" type="text" id="imageAlt" placeholder="Describe the image">
+                                    </div>
+                                </section>
+
+                                <!-- SIZE -->
+                                <section class="panel-group">
+                                    <h3 class="panel-group__title">Size</h3>
+
+                                    <div class="ctrl">
+                                        <label class="ctrl__label" for="imageWidth">Width</label>
+                                        <div class="ctrl__row">
+                                            <input class="input" type="number" id="imageWidth" step="1" inputmode="decimal" placeholder="auto">
+                                            <select class="select select--unit" id="imageWidthUnit" aria-label="Width unit">
+                                                <option value="px">px</option>
+                                                <option value="rem">rem</option>
+                                                <option value="%">%</option>
+                                                <option value="vh">vh</option>
+                                            </select>
+                                        </div>
+                                    </div>
+
+                                    <div class="ctrl">
+                                        <label class="ctrl__label" for="imageHeight">Height</label>
+                                        <div class="ctrl__row">
+                                            <input class="input" type="number" id="imageHeight" step="1" inputmode="decimal" placeholder="auto">
+                                            <select class="select select--unit" id="imageHeightUnit" aria-label="Height unit">
+                                                <option value="px">px</option>
+                                                <option value="rem">rem</option>
+                                                <option value="%">%</option>
+                                                <option value="vh">vh</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                </section>
+
+                                <!-- FIT — hidden while the node is an empty
+                                     placeholder: object-fit needs an <img> to
+                                     act on, and there isn't one yet. -->
+                                <section class="panel-group" id="imageFitGroup" hidden>
+                                    <h3 class="panel-group__title">Fit</h3>
+
+                                    <div class="ctrl">
+                                        <label class="ctrl__label" for="imageFit">Fill mode</label>
+                                        <select class="select" id="imageFit">
+                                            <option value="cover">Cover — fill, crop the rest</option>
+                                            <option value="contain">Contain — fit inside</option>
+                                            <option value="fill">Stretch — distort to fill</option>
+                                            <option value="none">None — original size</option>
+                                            <option value="scale-down">Scale down</option>
+                                        </select>
+                                    </div>
+
+                                    <div class="ctrl">
+                                        <label class="ctrl__label" for="imagePosition">Position</label>
+                                        <!-- The values are what getComputedStyle
+                                             reports back, so syncing this is a
+                                             string match with no lookup table
+                                             in between. -->
+                                        <select class="select" id="imagePosition">
+                                            <option value="50% 50%">Center</option>
+                                            <option value="50% 0%">Top</option>
+                                            <option value="50% 100%">Bottom</option>
+                                            <option value="0% 50%">Left</option>
+                                            <option value="100% 50%">Right</option>
+                                        </select>
+                                    </div>
+                                </section>
+
+                                <!-- BORDER -->
+                                <section class="panel-group">
+                                    <h3 class="panel-group__title">Border</h3>
+
+                                    <div class="ctrl" id="imageBorderCtrl">
+                                        <div class="ctrl__head">
+                                            <label class="ctrl__label" for="imageBorderWidth">Border</label>
+                                            <button class="switch" type="button" id="imageBorderToggle" role="switch" aria-checked="false" aria-label="Border"></button>
+                                        </div>
+                                        <div class="ctrl__body">
+                                            <div class="ctrl__row">
+                                                <input class="input" type="number" id="imageBorderWidth" min="0" step="1" inputmode="decimal" value="1" aria-label="Border width">
+                                                <select class="select select--unit" id="imageBorderStyle" aria-label="Border style">
+                                                    <option value="solid">solid</option>
+                                                    <option value="dashed">dashed</option>
+                                                    <option value="dotted">dotted</option>
+                                                </select>
+                                            </div>
+                                            <div class="color-field">
+                                                <input class="color-field__swatch" type="color" id="imageBorderSwatch" aria-label="Border color">
+                                                <input class="input color-field__hex" type="text" id="imageBorderHex" spellcheck="false" maxlength="7" placeholder="#000000">
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- No switch: the wrapper already carries
+                                         a radius from style.css, so "off"
+                                         isn't a state — only a value is. -->
+                                    <div class="ctrl">
+                                        <label class="ctrl__label" for="imageRadius">Roundness</label>
+                                        <div class="ctrl__row">
+                                            <input class="input" type="number" id="imageRadius" min="0" step="1" inputmode="decimal" value="0">
+                                            <span class="unit-tag">px</span>
+                                        </div>
+                                    </div>
+                                </section>
+
+                                <!-- SHADOW -->
+                                <section class="panel-group">
+                                    <h3 class="panel-group__title">Shadow</h3>
+
+                                    <div class="ctrl" id="imageShadowCtrl">
+                                        <div class="ctrl__head">
+                                            <label class="ctrl__label" for="imageShadowX">Shadow</label>
+                                            <button class="switch" type="button" id="imageShadowToggle" role="switch" aria-checked="false" aria-label="Shadow"></button>
+                                        </div>
+                                        <div class="ctrl__body">
+                                            <div class="ctrl__row ctrl__row--quad">
+                                                <input class="input" type="number" id="imageShadowX" step="1" inputmode="decimal" value="0" title="Offset X" aria-label="Shadow offset X">
+                                                <input class="input" type="number" id="imageShadowY" step="1" inputmode="decimal" value="4" title="Offset Y" aria-label="Shadow offset Y">
+                                                <input class="input" type="number" id="imageShadowBlur" min="0" step="1" inputmode="decimal" value="12" title="Blur" aria-label="Shadow blur">
+                                                <input class="input" type="number" id="imageShadowSpread" step="1" inputmode="decimal" value="0" title="Spread" aria-label="Shadow spread">
+                                            </div>
+                                            <div class="color-field">
+                                                <input class="color-field__swatch" type="color" id="imageShadowSwatch" aria-label="Shadow color">
+                                                <input class="input color-field__hex" type="text" id="imageShadowHex" spellcheck="false" maxlength="7" placeholder="#000000">
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <p class="ctrl__note">Offset X, offset Y, blur and spread — all in pixels.</p>
+                                </section>
+
+                                <!-- APPEARANCE -->
+                                <section class="panel-group">
+                                    <h3 class="panel-group__title">Appearance</h3>
+
+                                    <div class="ctrl">
+                                        <label class="ctrl__label" for="imageOpacity">Opacity</label>
+                                        <input class="range" type="range" id="imageOpacity" min="0" max="100" step="1" value="100">
+                                    </div>
+                                </section>
+
+                            </div>
                         </div>
 
                         <!--
@@ -431,19 +602,17 @@
 
                             <!-- ASSETS -->
                             <div class="panel__pane" data-pane="assets">
-                                <p class="panel__hint">Images, icons and files for your site.</p>
-                                <div class="asset-upload">
+                                <p class="panel__hint">Images for your site.</p>
+                                <!-- Clicking opens the upload window; dropping
+                                     files straight on it skips that window
+                                     and uploads them where they land. Both
+                                     are wired in assets-panel.js. -->
+                                <button class="asset-upload" type="button" id="assetUpload">
                                     <svg viewBox="0 0 24 24" class="icon"><path d="M12 16V4M6 10l6-6 6 6"/><path d="M4 20h16"/></svg>
                                     <span>Drop files or click to upload</span>
-                                </div>
-                                <div class="asset-grid">
-                                    <div class="asset-thumb"></div>
-                                    <div class="asset-thumb"></div>
-                                    <div class="asset-thumb"></div>
-                                    <div class="asset-thumb"></div>
-                                    <div class="asset-thumb"></div>
-                                    <div class="asset-thumb"></div>
-                                </div>
+                                </button>
+                                <!-- Filled from asset-store.js — see asset-grid.js -->
+                                <div class="asset-grid" id="assetGrid"></div>
                             </div>
 
                             <!-- SETTINGS -->
@@ -480,6 +649,35 @@
 
             </div>
         </div>
+
+        <!--
+            The upload window, opened by the Assets tab's upload button and by
+            the Image pane's Upload. A native <dialog>, so the backdrop,
+            Escape-to-close, the focus trap and making the rest of the page
+            inert all come for free rather than being code in upload-modal.js.
+
+            It sits outside .app because showModal() promotes it to the top
+            layer anyway; nesting it inside the workspace grid would only make
+            it inherit layout it then has to fight.
+        -->
+        <dialog class="upload-dialog" id="uploadDialog" aria-labelledby="uploadDialogTitle">
+            <div class="upload-dialog__head">
+                <h2 class="upload-dialog__title" id="uploadDialogTitle">Upload images</h2>
+                <button class="icon-btn icon-btn--sm" type="button" id="uploadDialogClose" title="Close" aria-label="Close">
+                    <svg viewBox="0 0 24 24" class="icon"><path d="M6 6l12 12M18 6L6 18"/></svg>
+                </button>
+            </div>
+
+            <button class="upload-zone" type="button" id="uploadDropZone">
+                <svg viewBox="0 0 24 24" class="upload-zone__icon"><path d="M12 16V4M6 10l6-6 6 6"/><path d="M4 20h16"/></svg>
+                <span class="upload-zone__title">Drop images here</span>
+                <span class="upload-zone__hint">or click to choose them from your files</span>
+            </button>
+
+            <!-- The file picker can only be opened by a gesture on a real
+                 file input, so the zone above clicks this one. -->
+            <input type="file" id="uploadFileInput" accept="image/*" multiple hidden>
+        </dialog>
 
         <!--
             One entry point. Everything else is an ES module main.js imports,

@@ -54,6 +54,9 @@ export function fallbackPlaceholder(nodeType) {
     return DEFAULT_PLACEHOLDER[nodeType] || 'Empty text';
 }
 
+// The same answer for an image node, which has no copy to fall back to.
+const DEFAULT_IMAGE_PLACEHOLDER = 'Add an image';
+
 // Whitelisted style props from Node.style.base -> el.style.<jsProp>.
 // Keep this in sync with the StyleProps whitelist in docs/DATA_MODEL.md.
 const STYLE_PROP_TO_JS = {
@@ -224,22 +227,50 @@ function renderCopyLeaf(el, node) {
 }
 
 function renderImageLeaf(el, node) {
-    const hasSrc = !!node.src;
+    // Stamped like data-node-id/type/role, and on every image node rather than
+    // only the empty ones — the same reason renderCopyLeaf() stamps it for
+    // text. Once the Image pane can remove a filled image, the node's own
+    // wording is the only thing that can be restored underneath it, and by
+    // then `node` is long gone.
+    el.dataset.placeholder = node.placeholder || DEFAULT_IMAGE_PLACEHOLDER;
+
+    setImageLeafSrc(el, node.src, node.alt);
+}
+
+/**
+ * Move an image node between its two states: showing an image, or showing the
+ * dashed "click to add image" placeholder. `src` of null (or '') is the
+ * placeholder.
+ *
+ * Three callers need this — the renderer above, the Image pane's asset picker
+ * and Remove button, and asset deletion resetting the images that used a
+ * deleted asset. It lives here so the placeholder's markup and the `is-empty`
+ * class have exactly one definition; a copy in the panel would drift the first
+ * time either changed.
+ */
+export function setImageLeafSrc(el, src, alt) {
+    const hasSrc = !!src;
     el.classList.toggle('is-empty', !hasSrc);
 
     if (hasSrc) {
-        const img = document.createElement('img');
-        img.src = node.src;
-        img.alt = node.alt || '';
-        el.appendChild(img);
-    } else {
-        el.innerHTML =
-            '<svg viewBox="0 0 24 24" class="node-image__icon">' +
-            '<rect x="3" y="4" width="18" height="16" rx="2"/>' +
-            '<circle cx="8.5" cy="9.5" r="1.5"/>' +
-            '<path d="M21 16l-5.5-5.5L4 21"/></svg>' +
-            `<span>${escapeHtml(node.placeholder || 'Add an image')}</span>`;
+        // An existing <img> is reused rather than rebuilt, so the object-fit
+        // and object-position the Image pane wrote on it survive swapping
+        // which asset it shows.
+        const img = el.querySelector('img') || document.createElement('img');
+        img.src = src;
+        img.alt = alt || '';
+
+        // Also clears the placeholder's svg + span when coming from empty.
+        el.replaceChildren(img);
+        return;
     }
+
+    el.innerHTML =
+        '<svg viewBox="0 0 24 24" class="node-image__icon">' +
+        '<rect x="3" y="4" width="18" height="16" rx="2"/>' +
+        '<circle cx="8.5" cy="9.5" r="1.5"/>' +
+        '<path d="M21 16l-5.5-5.5L4 21"/></svg>' +
+        `<span>${escapeHtml(el.dataset.placeholder || DEFAULT_IMAGE_PLACEHOLDER)}</span>`;
 }
 
 function renderEmbedLeaf(el, node) {

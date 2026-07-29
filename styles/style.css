@@ -536,6 +536,25 @@ button {
     gap: 8px;
 }
 
+/* four equal number fields on one line — the shadow's x/y/blur/spread */
+.ctrl__row--quad {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 6px;
+}
+
+/* two whole actions side by side, e.g. the Image pane's Upload / Remove */
+.btn-row {
+    display: flex;
+    gap: 8px;
+}
+
+/* `.ctrl + .ctrl` can't reach across this, so the row carries the gap to
+   whatever control follows it. */
+.btn-row + .ctrl {
+    margin-top: 12px;
+}
+
 /* ---- text / number inputs and selects ---- */
 
 .input,
@@ -599,6 +618,53 @@ button {
     flex-shrink: 0;
     font-size: 11.5px;
     color: var(--text-muted);
+}
+
+/* ---- range slider (Image pane -> Opacity) ---- */
+
+.range {
+    width: 100%;
+    appearance: none;
+    background: transparent;
+    cursor: pointer;
+}
+
+/* The two vendors' track pseudo-elements must be separate rules: a selector
+   list is dropped whole if a browser doesn't recognise one of its selectors,
+   so grouping these two means neither browser draws a track. */
+.range::-webkit-slider-runnable-track {
+    height: 4px;
+    border-radius: 2px;
+    background: var(--border-strong);
+}
+
+.range::-moz-range-track {
+    height: 4px;
+    border-radius: 2px;
+    background: var(--border-strong);
+}
+
+.range::-webkit-slider-thumb {
+    appearance: none;
+    width: 14px;
+    height: 14px;
+    margin-top: -5px;   /* centres the thumb on the 4px track */
+    border-radius: 50%;
+    background: var(--accent);
+    border: none;
+}
+
+.range::-moz-range-thumb {
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    background: var(--accent);
+    border: none;
+}
+
+.range:focus-visible {
+    outline: 2px solid var(--accent-line);
+    outline-offset: 4px;
 }
 
 /* ---- the rich-text content box ---- */
@@ -1597,25 +1663,40 @@ button {
 
 /* assets tab */
 
+/* Both a button (click to open the upload window) and a drop target
+   (drop files to skip that window). */
 .asset-upload {
+    width: 100%;
     display: flex;
     flex-direction: column;
     align-items: center;
     gap: 8px;
     text-align: center;
+    font-family: inherit;
     color: var(--text-muted);
     font-size: 12px;
+    background: none;
     border: 1px dashed var(--border-strong);
     border-radius: var(--radius-md);
     padding: 26px 12px;
     margin-bottom: 16px;
-    transition: border-color 0.15s ease, color 0.15s ease;
+    cursor: pointer;
+    transition: border-color 0.15s ease, color 0.15s ease, background 0.15s ease;
 }
 
-.asset-upload:hover {
+.asset-upload:hover,
+.asset-upload.is-dragging {
     border-color: var(--accent);
     color: var(--text-secondary);
 }
+
+.asset-upload.is-dragging {
+    background: var(--accent-soft);
+}
+
+/* ---- the library grid ----
+   Rendered in two places from the same builder (asset-grid.js): here, and
+   narrower inside the Image pane's Source group. */
 
 .asset-grid {
     display: grid;
@@ -1623,11 +1704,163 @@ button {
     gap: 10px;
 }
 
-.asset-thumb {
+.asset-grid--panel {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 6px;
+    margin-bottom: 10px;
+    max-height: 168px;
+    overflow-y: auto;
+}
+
+/* The empty line has to span the grid or it sits in the first cell. */
+.asset-grid__empty {
+    grid-column: 1 / -1;
+    font-size: 11.5px;
+    color: var(--text-muted);
+}
+
+.asset-tile {
+    position: relative;
     aspect-ratio: 1;
-    border-radius: var(--radius-sm);
-    background: linear-gradient(135deg, #2a2a30, #35353c);
+}
+
+.asset-tile__pick {
+    width: 100%;
+    height: 100%;
+    padding: 0;
+    background: var(--bg-app);
     border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-sm);
+    overflow: hidden;
+    cursor: pointer;
+}
+
+.asset-tile__pick img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+}
+
+.asset-tile__pick:hover {
+    border-color: var(--border-strong);
+}
+
+.asset-tile.is-active .asset-tile__pick {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 1px var(--accent);
+}
+
+/* Sits over the tile it removes, so its click has to stop propagating —
+   see buildRemoveButton() in asset-grid.js. */
+.asset-tile__remove {
+    position: absolute;
+    top: 3px;
+    right: 3px;
+    width: 18px;
+    height: 18px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    color: var(--text-primary);
+    background: rgba(14, 14, 17, 0.72);
+    border: none;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    opacity: 0;
+    transition: opacity 0.12s ease, background 0.12s ease;
+}
+
+.asset-tile__remove .icon {
+    width: 11px;
+    height: 11px;
+}
+
+/* Revealed on hover, but always reachable by keyboard. */
+.asset-tile:hover .asset-tile__remove,
+.asset-tile__remove:focus-visible {
+    opacity: 1;
+}
+
+.asset-tile__remove:hover {
+    background: #b91c1c;
+}
+
+/* ---- the upload window ---- */
+
+.upload-dialog {
+    width: min(520px, calc(100vw - 48px));
+    /* A <dialog> is centred by the UA's own `margin: auto`, which the reset at
+       the top of this file zeroes along with everything else's. Restored here,
+       with `inset: 0` to give the auto margins a box to centre inside. */
+    inset: 0;
+    margin: auto;
+    padding: 18px;
+    color: var(--text-primary);
+    background: var(--bg-panel);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-lg);
+}
+
+.upload-dialog::backdrop {
+    background: rgba(8, 8, 10, 0.62);
+}
+
+.upload-dialog__head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 14px;
+}
+
+.upload-dialog__title {
+    font-size: 14px;
+    font-weight: 500;
+}
+
+.upload-zone {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    text-align: center;
+    font-family: inherit;
+    background: var(--bg-app);
+    border: 1px dashed var(--border-strong);
+    border-radius: var(--radius-md);
+    padding: 52px 20px;
+    cursor: pointer;
+    transition: border-color 0.15s ease, background 0.15s ease;
+}
+
+.upload-zone:hover,
+.upload-zone.is-dragging {
+    border-color: var(--accent);
+    background: var(--accent-soft);
+}
+
+.upload-zone__icon {
+    width: 30px;
+    height: 30px;
+    fill: none;
+    stroke: var(--text-secondary);
+    stroke-width: 1.6;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    margin-bottom: 4px;
+}
+
+.upload-zone__title {
+    font-size: 13px;
+    color: var(--text-primary);
+}
+
+.upload-zone__hint {
+    font-size: 11.5px;
+    color: var(--text-muted);
 }
 
 /* settings tab */

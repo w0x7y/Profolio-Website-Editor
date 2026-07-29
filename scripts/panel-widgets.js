@@ -170,6 +170,39 @@ export function rgbToHex(value) {
     }).join('');
 }
 
+// ---- length units -----------------------------------------------------
+
+/**
+ * How many pixels one `unit` is worth, for the element it would be written on.
+ *
+ * This is what lets a unit picker *convert* rather than relabel: a 32px
+ * heading switched to rem becomes 2rem, not 32rem. Relabelling would blow the
+ * value up by a factor of 16 and read as broken. Both the Text pane's font
+ * size and the Image pane's width/height need the same answer.
+ *
+ * `em` is always the parent's font size. `%` is not — what it is a percentage
+ * *of* depends on the property, so the caller passes it: a font size is a
+ * percentage of the parent's font size, a width is a percentage of the
+ * parent's content width. Omitting `percentBasisPx` falls back to the font
+ * size, which is the font-size meaning.
+ *
+ * `vh` resolves against the real viewport because that is what the browser
+ * does here — the canvas frame is a div on this page, not an iframe.
+ */
+export function pxPerUnit(unit, el, percentBasisPx) {
+    if (unit === 'px') return 1;
+    if (unit === 'rem') return parseFloat(getComputedStyle(document.documentElement).fontSize) || 16;
+    if (unit === 'vh') return window.innerHeight / 100;
+
+    const parent = (el && el.parentElement) || document.documentElement;
+    const parentFontSize = parseFloat(getComputedStyle(parent).fontSize) || 16;
+
+    if (unit === 'em') return parentFontSize;
+
+    const basis = isFinite(percentBasisPx) && percentBasisPx > 0 ? percentBasisPx : parentFontSize;
+    return basis / 100;
+}
+
 // ---- misc -------------------------------------------------------------
 
 export function round3(value) {

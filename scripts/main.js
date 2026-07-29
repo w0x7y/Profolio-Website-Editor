@@ -12,6 +12,9 @@ import { renderSectionsIntoCanvas } from './renderer.js';
 import { initThemePanel } from './theme.js';
 import { initTextPanel } from './text-panel.js';
 import { initButtonPanel } from './button-panel.js';
+import { initImagePanel } from './image-panel.js';
+import { initUploadModal } from './upload-modal.js';
+import { initAssetsPanel } from './assets-panel.js';
 import { initSectionDragAndDrop } from './section-dnd.js';
 import { initCanvasSelection, setActiveTool, activeTool } from './selection.js';
 import { closeToolPanel, toggleToolPanel } from './tool-panel.js';
@@ -79,9 +82,16 @@ function boot() {
     // ---- Canvas: drag sections to reorder them, or onto the trash to delete ----
     initSectionDragAndDrop();
 
-    // ---- Left tool panel: the Text and Button panes' controls ----
+    // ---- Assets: the upload window, then the Assets tab that opens it ----
+    // The modal first: the Assets tab wires its own drop zone with helpers
+    // from it, and the Image pane's Upload button opens the same dialog.
+    initUploadModal();
+    initAssetsPanel();
+
+    // ---- Left tool panel: the Text, Button and Image panes' controls ----
     initTextPanel();
     initButtonPanel();
+    initImagePanel();
 
     // ---- Canvas: click content to select it (Select tool) ----
     setActiveTool('select');

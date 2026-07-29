@@ -15,20 +15,21 @@
 // than needing a hand-picked grey per theme.
 //
 // The one thing that does reach individual nodes is the deliberate wipe:
-// applying a theme drops the per-node color overrides the Text pane wrote,
+// applying a theme drops the per-node color overrides a tool panel wrote,
 // and picking a font drops its per-node font-family overrides, so the
 // canvas ends up uniformly on the new theme instead of keeping islands of
-// the old one. The Text pane owns those writes and owns undoing them
-// (clearTextStyleOverrides in text-panel.js) — this file only names the
-// properties to drop. Nothing else on the canvas is touched, so a
-// section's `background: var(--color-surface)` from a layout file survives.
+// the old one. node-style.js owns the ledger of those writes and owns
+// undoing them — this file only names the properties to drop. Nothing else
+// on the canvas is touched, so a section's `background: var(--color-surface)`
+// from a layout file survives, and so do the Image pane's borders and
+// shadows, which are per-element intent rather than theme-derived.
 //
 // Like the rest of the editor, none of this persists across a reload yet
 // (TODO.md: "Persist selected theme/font with the project data").
 // ============================================================
 
 import { canvasFrame, activateOne } from './dom.js';
-import { clearTextStyleOverrides } from './text-panel.js';
+import { clearNodeStyleOverrides } from './node-style.js';
 
 const THEMES = [
     {
@@ -239,7 +240,7 @@ function applyTheme(themeId, options) {
     activateOne(themeEls.list.querySelectorAll('.theme-card'), card => card.dataset.theme === theme.id);
 
     if (!options || options.wipeOverrides !== false) {
-        clearTextStyleOverrides(THEME_OVERRIDE_PROPS);
+        clearNodeStyleOverrides(THEME_OVERRIDE_PROPS);
     }
 }
 
@@ -307,6 +308,6 @@ function applyFonts(options) {
     themeEls.previewBody.style.fontFamily = body;
 
     if (!options || options.wipeOverrides !== false) {
-        clearTextStyleOverrides(FONT_OVERRIDE_PROPS);
+        clearNodeStyleOverrides(FONT_OVERRIDE_PROPS);
     }
 }
