@@ -38,12 +38,18 @@ Profolio Editor/
 ├── index.html          Editor shell markup (top bar, toolbar, canvas, right panel)
 ├── styles/
 │   └── style.css        All styling (dark editor chrome + light canvas page + rendered node styles)
-├── scripts/
-│   ├── script.js         UI interactions (tab/tool switching, page accordion, layout loader/insertion, section drag & drop, canvas selection)
+├── scripts/              ES modules, all reached through main.js
+│   ├── main.js           The one entry point index.html loads; wires everything up on DOMContentLoaded
+│   ├── dom.js            The app's singleton elements, and the shared is-active toggle
 │   ├── renderer.js       Renders a sections node tree onto the canvas (see docs/DATA_MODEL.md)
+│   ├── layouts-panel.js  The Layouts accordion: loads /layout and inserts a card's sections
+│   ├── selection.js      Click-to-select on the canvas, and which tool is active
+│   ├── section-dnd.js    Drag sections to reorder them, or onto the trash to delete
+│   ├── tool-panel.js     Opening and closing the left tool panel on the right pane
 │   ├── text-panel.js     Text tool panel: content, typography and color for the selected node
 │   ├── button-panel.js   Button tool panel: link/button type, target and stored on-click
 │   ├── link-controls.js  The link action model plus the shared link-target controls
+│   ├── panel-widgets.js  Generic panel controls: segmented switches, toggles, color fields
 │   └── theme.js          Themes tab: the color presets, the font list, and applying either to the canvas
 ├── TODO.md               Full task list + a prioritized, dependency-ordered plan
 ├── docs/

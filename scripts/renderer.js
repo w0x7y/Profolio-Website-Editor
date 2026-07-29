@@ -181,11 +181,11 @@ function renderLeafContent(el, node) {
  *   placeholder copy, never markup. textContent, so there is no sink at all.
  *
  * @param {Element} el
- * @param {string}  content
+ * @param {string}  html        already sanitized — see renderCopyLeaf
  * @param {boolean} hasContent  false -> fall back to el.dataset.placeholder
  */
-function setLeafCopy(el, content, hasContent) {
-    if (hasContent) el.innerHTML = sanitizeInlineHtml(content).html;
+function setLeafCopy(el, html, hasContent) {
+    if (hasContent) el.innerHTML = html;
     else el.textContent = el.dataset.placeholder;
 }
 
@@ -211,7 +211,9 @@ function renderCopyLeaf(el, node) {
     el.dataset.placeholder = node.placeholder || fallbackPlaceholder(node.type);
 
     el.classList.toggle('is-empty', !hasContent);
-    setLeafCopy(el, node.content, hasContent);
+    // `clean` from above, not node.content — sanitizing once per leaf rather
+    // than twice. Each pass builds a whole inert document.
+    setLeafCopy(el, clean.html, hasContent);
 
     // Leaves that can point somewhere stamp their target here — buttons, and
     // the navbar/footer `nav-link` text nodes. A nav-link's target is stored
