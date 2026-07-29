@@ -16,7 +16,7 @@
 // Two conventions the panes rely on:
 //
 //   `is-active` marks the chosen item in a group (segmented buttons, tabs,
-//   panes, cards). activateOne() in renderer.js is the shared writer.
+//   panes, cards). activateOne() in dom.js is the shared writer.
 //
 //   A switch keeps its state in `aria-checked`, not in a JS variable, so
 //   the accessible state and the visual state cannot drift apart.
