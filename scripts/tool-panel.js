@@ -15,13 +15,14 @@
 // panel leaves the tool active and the selection intact, so it never
 // silently changes what clicking on the canvas does.
 //
-// Every pane holds placeholder text for now; the real per-tool controls go
-// into the markup later.
+// The Section and Embed panes still hold placeholder text; their real
+// controls go into the markup later.
 // ============================================================
 
 import { toolPanel, activateOne } from './dom.js';
 import { syncTextPanel } from './text-panel.js';
 import { syncButtonPanel } from './button-panel.js';
+import { syncImagePanel } from './image-panel.js';
 import { selectedEl } from './selection.js';
 
 export const TOOL_PANEL_TOOLS = new Set(['text', 'image', 'button', 'section', 'embed']);
@@ -44,6 +45,7 @@ export function openToolPanel(tool) {
     // re-selecting a node after the panel was dismissed with ✕.
     if (tool === 'text') syncTextPanel(selectedEl);
     if (tool === 'button') syncButtonPanel(selectedEl);
+    if (tool === 'image') syncImagePanel(selectedEl);
 
     panel.hidden = false;
 }
@@ -57,6 +59,7 @@ export function closeToolPanel() {
     // has since been trashed off the canvas.
     syncTextPanel(null);
     syncButtonPanel(null);
+    syncImagePanel(null);
 }
 
 /** Re-clicking the active tool: hide its panel, or bring it back if hidden. */

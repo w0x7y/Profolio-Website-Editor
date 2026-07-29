@@ -51,8 +51,14 @@ Profolio Editor/
 │   ├── tool-panel.js     Opening and closing the left tool panel on the right pane
 │   ├── text-panel.js     Text tool panel: content, typography and color for the selected node
 │   ├── button-panel.js   Button tool panel: link/button type, target and stored on-click
+│   ├── image-panel.js    Image tool panel: source, size, fit, border, shadow and opacity
 │   ├── link-controls.js  The link action model plus the shared link-target controls
 │   ├── panel-widgets.js  Generic panel controls: segmented switches, toggles, color fields
+│   ├── node-style.js     How a pane writes a per-node style override, and how the Themes tab undoes it
+│   ├── asset-store.js    The uploaded images, in memory
+│   ├── upload-modal.js   The upload window, and the shared drop-zone wiring
+│   ├── asset-grid.js     The thumbnail grid, rendered in both the Assets tab and the Image pane
+│   ├── assets-panel.js   Assets tab: the upload button and the library
 │   └── theme.js          Themes tab: the color presets, the font list, and applying either to the canvas
 ├── TODO.md               Full task list + a prioritized, dependency-ordered plan
 ├── docs/
@@ -140,8 +146,10 @@ npx serve .
 - [x] Unfilled slots render as real placeholders (dashed/muted text, upload-icon image boxes) rather than empty space
 - [x] Top-level sections can be dragged to reorder, and dropped on the right panel's trash zone to delete (DOM-only, no undo yet)
 - [x] Click-to-select content on the canvas with the Select tool — images, text and buttons/links get a selection outline; clicking a container or the page background deselects, as does Escape or picking another tool
-- [x] Selecting content opens the left tool panel on the pane for what you picked (Image for images/icons, Text for headings/text, Button for buttons); deselecting closes it. The Text and Button panes have real controls; the Image pane is still a placeholder
+- [x] Selecting content opens the left tool panel on the pane for what you picked (Image for images/icons, Text for headings/text, Button for buttons); deselecting closes it. The Text, Button and Image panes all have real controls
 - [x] Themes tab applies colors and fonts to the canvas (`theme.js`) — four color presets plus separate heading and body font pickers (web-safe stacks and Google families). Both write custom properties on `.canvas-frame`, which every canvas style rule reads, so one write restyles what's on the canvas *and* whatever is added later. Applying a preset clears the per-node colors set in the Text panel, and picking a font clears its per-node fonts, so the canvas ends up uniformly on the new theme
-- [ ] Everything else, including editing what's selected (see [TODO.md](./TODO.md))
+- [x] Assets tab is a real image library — the upload box opens a centered window that takes images by drag-and-drop or through the file picker, and everything uploaded shows as a thumbnail under it. Uploads are held **in memory only** (`asset-store.js`): there is no backend yet, so they don't survive a reload any more than the canvas does. Deleting an asset resets the canvas images that were using it, since removing it releases the blob the browser was showing them from
+- [x] Image tool panel edits the selected image (`image-panel.js`): which uploaded asset it shows, alt text, width/height in px/rem/%/vh, how the image fits its box (cover/contain/stretch/none plus a position), border width/style/color, corner roundness, box shadow and opacity. Switching a size unit converts the number rather than relabelling it. Each declaration lands on the wrapper or on the inner `<img>` depending on which one the property means anything on
+- [ ] Everything else, including placing a *new* image on the canvas with the Image tool (see [TODO.md](./TODO.md))
 
 See [TODO.md](./TODO.md) for the full task list and a prioritized, dependency-ordered implementation plan.

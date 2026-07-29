@@ -170,6 +170,70 @@ export function rgbToHex(value) {
     }).join('');
 }
 
+// ---- length units -----------------------------------------------------
+
+/**
+ * How many pixels one `unit` is worth, for the element it would be written on.
+ *
+ * This is what lets a unit picker *convert* rather than relabel: a 32px
+ * heading switched to rem becomes 2rem, not 32rem. Relabelling would blow the
+ * value up by a factor of 16 and read as broken. Both the Text pane's font
+ * size and the Image pane's width/height need the same answer.
+ *
+ * `em` is always the parent's font size. `%` is not — what it is a percentage
+ * *of* depends on the property, so the caller passes it: a font size is a
+ * percentage of the parent's font size, a width is a percentage of the
+ * parent's content width. Omitting `percentBasisPx` falls back to the font
+ * size, which is the font-size meaning.
+ *
+ * `vh` resolves against the real viewport because that is what the browser
+ * does here — the canvas frame is a div on this page, not an iframe.
+ */
+/**
+ * Move a number field to a new unit without changing what it means: read the
+ * unit it was in, convert through px, write the equivalent value back, and
+ * record the new unit for next time.
+ *
+ * The "convert, don't relabel" rule has one definition here because both
+ * panes that offer a unit picker need it and both would read as broken
+ * without it — a 32px heading relabelled to rem is 512px of text, a 260px
+ * image is 4160px wide.
+ *
+ * Call it from the select's `change` handler, then apply the field as usual;
+ * this only touches the field and `dataset.unit`, never the canvas.
+ *
+ * @param {HTMLInputElement}  input           the number field
+ * @param {HTMLSelectElement} unitSelect      the unit picker, already on its new value
+ * @param {Element}           el              what `em`/`%` resolve against
+ * @param {number}           [percentBasisPx] see pxPerUnit(); omit for font-size
+ */
+export function convertFieldUnit(input, unitSelect, el, percentBasisPx) {
+    const next = unitSelect.value;
+    const previous = unitSelect.dataset.unit || 'px';
+    const value = parseFloat(input.value);
+
+    if (isFinite(value) && next !== previous) {
+        const px = value * pxPerUnit(previous, el, percentBasisPx);
+        input.value = round3(px / pxPerUnit(next, el, percentBasisPx));
+    }
+
+    unitSelect.dataset.unit = next;
+}
+
+export function pxPerUnit(unit, el, percentBasisPx) {
+    if (unit === 'px') return 1;
+    if (unit === 'rem') return parseFloat(getComputedStyle(document.documentElement).fontSize) || 16;
+    if (unit === 'vh') return window.innerHeight / 100;
+
+    const parent = (el && el.parentElement) || document.documentElement;
+    const parentFontSize = parseFloat(getComputedStyle(parent).fontSize) || 16;
+
+    if (unit === 'em') return parentFontSize;
+
+    const basis = isFinite(percentBasisPx) && percentBasisPx > 0 ? percentBasisPx : parentFontSize;
+    return basis / 100;
+}
+
 // ---- misc -------------------------------------------------------------
 
 export function round3(value) {
