@@ -39,7 +39,7 @@ Profolio Editor/
 ├── styles/
 │   └── style.css        All styling (dark editor chrome + light canvas page + rendered node styles)
 ├── scripts/              ES modules, all reached through main.js
-│   ├── main.js           The one entry point index.html loads; wires everything up on DOMContentLoaded
+│   ├── main.js           The one entry point index.html loads; wires everything up as soon as the DOM is parsed
 │   ├── dom.js            The app's singleton elements, and the shared is-active toggle
 │   ├── renderer.js       Renders a sections node tree onto the canvas (see docs/DATA_MODEL.md)
 │   ├── layouts-panel.js  The Layouts accordion: loads /layout and inserts a card's sections
