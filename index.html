@@ -3,26 +3,39 @@
     <head>
         <meta charset='UTF-8'>
         <meta name='viewport' content='width=device-width, initial-scale=1.0'>
-        <!-- Warm the two third-party origins before anything below needs
-             them. Both are declared first so the connections are opening
-             while style.css is still on the wire. -->
-        <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+        <!-- Warm the Google Fonts origins before the stylesheet below needs
+             them. Declared first so the connections open while style.css is
+             still on the wire. -->
         <link rel="preconnect" href="https://fonts.googleapis.com">
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 
-        <!-- The editor chrome's own typeface, fetched directly rather than
-             through @fontsource's index.css. That stylesheet declared exactly
-             one @font-face (latin / 400 / normal) pointing at this file, so
-             linking it cost an extra blocking round trip to learn a URL we
-             can just write down. Pinned to an exact version for the same
-             reason it always was: the bytes at this path are immutable.
+        <!-- The editor chrome's own typeface, served from our own origin
+             (see fonts/, vendored from @fontsource/maple-mono@5.2.6 under
+             the OFL — fonts/LICENSE). It used to come from a CDN via that
+             package's index.css, which declared exactly one @font-face
+             (latin / 400 / normal) pointing at this file: a blocking round
+             trip to learn a URL, plus a third party we had to trust for the
+             bytes.
 
-             This replaces the stylesheet's integrity hash with something
-             stricter — the URL itself is now fixed in our own markup, so the
-             CDN cannot redirect us to a different face by changing the CSS.
-             The font file is a passive resource: it cannot execute. -->
+             Self-hosting settles both. There is no `integrity` syntax for a
+             CSS @font-face `src`, so a CDN-hosted font can only be verified
+             where a preload hash happens to cover the stylesheet's fetch —
+             browser-dependent, and silently unverified where it isn't. A
+             same-origin font needs no hash to keep in sync at all.
+
+             Preloaded because the @font-face that uses it lives inside
+             style.css: without this the download could not start until that
+             stylesheet had been fetched and parsed.
+
+             The `crossorigin` attribute is still required — font fetches are
+             always CORS-mode, even same-origin ones — and without it the
+             preload would not be reused and the font would be fetched twice.
+
+             To update: replace the file, keep the name, refresh fonts/LICENSE.
+             Upstream sha384 of the current file, for auditing against npm:
+               LLadd2S+M6BwmLX6m/xrocmEWGORFSkar3YTuVg1wUqmHC+Rr9HGCrjdGUX6NuNJ -->
         <link rel="preload" as="font" type="font/woff2"
-              href="https://cdn.jsdelivr.net/npm/@fontsource/maple-mono@5.2.6/files/maple-mono-latin-400-normal.woff2"
+              href="fonts/maple-mono-latin-400-normal.woff2"
               crossorigin="anonymous">
 
         <link rel='stylesheet' href='styles/style.css'>
