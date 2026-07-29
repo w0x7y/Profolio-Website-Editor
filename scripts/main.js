@@ -2,8 +2,9 @@
 // BOOT
 //
 // The one entry point index.html loads. Everything else is a module this
-// file wires together on DOMContentLoaded; the order of the init calls
-// below is the order the app expects, and is the only place it is stated.
+// file wires together as soon as the DOM is parsed (see the bottom of this
+// file); the order of the init calls below is the order the app expects,
+// and is the only place it is stated.
 // ============================================================
 
 import { canvasFrame, activateOne } from './dom.js';
@@ -16,7 +17,7 @@ import { initCanvasSelection, setActiveTool, activeTool } from './selection.js';
 import { closeToolPanel, toggleToolPanel } from './tool-panel.js';
 import { loadPages } from './layouts-panel.js';
 
-document.addEventListener('DOMContentLoaded', () => {
+function boot() {
 
     // ---- Left toolbar: tool selection ----
     const tools = document.querySelectorAll('.tool');
@@ -89,4 +90,17 @@ document.addEventListener('DOMContentLoaded', () => {
     // ---- Layouts: load automatically from /layout, then wire up selection ----
     loadPages();
 
-});
+}
+
+// `type="module"` scripts are deferred, so the document is already parsed by
+// the time this file runs and every element boot() reaches for exists.
+// Waiting for DOMContentLoaded on top of that bought nothing and cost a lot:
+// that event also waits on any stylesheet still in flight, which put the
+// whole editor behind a third-party font request. Boot as soon as the DOM is
+// there; the readyState check is only for the case where this module is ever
+// loaded in a way that isn't deferred.
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', boot, { once: true });
+} else {
+    boot();
+}

@@ -1,3 +1,24 @@
+/* The editor chrome's typeface. This is the single @font-face that
+   @fontsource/maple-mono@5.2.6's index.css declared, pointed at our own
+   vendored copy of the same file (fonts/, OFL — see fonts/LICENSE) so the
+   browser can start downloading it from the preload in index.html instead
+   of first fetching a stylesheet to learn the URL.
+
+   The path below is relative to this file; index.html's preload spells the
+   same file relative to itself. The two resolve to one URL and have to stay
+   that way, or the font is fetched twice.
+
+   Only weight 400 is published for this family, so the bold weights used
+   around the chrome are synthesized by the browser — that was equally true
+   of the stylesheet this replaces. */
+@font-face {
+    font-family: 'Maple Mono';
+    font-style: normal;
+    font-weight: 400;
+    font-display: swap;
+    src: url(../fonts/maple-mono-latin-400-normal.woff2) format('woff2');
+}
+
 * {
     margin: 0;
     padding: 0;

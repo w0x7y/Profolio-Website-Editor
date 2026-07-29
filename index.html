@@ -3,16 +3,42 @@
     <head>
         <meta charset='UTF-8'>
         <meta name='viewport' content='width=device-width, initial-scale=1.0'>
+        <!-- Warm the Google Fonts origins before the stylesheet below needs
+             them. Declared first so the connections open while style.css is
+             still on the wire. -->
+        <link rel="preconnect" href="https://fonts.googleapis.com">
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+
+        <!-- The editor chrome's own typeface, served from our own origin
+             (see fonts/, vendored from @fontsource/maple-mono@5.2.6 under
+             the OFL — fonts/LICENSE). It used to come from a CDN via that
+             package's index.css, which declared exactly one @font-face
+             (latin / 400 / normal) pointing at this file: a blocking round
+             trip to learn a URL, plus a third party we had to trust for the
+             bytes.
+
+             Self-hosting settles both. There is no `integrity` syntax for a
+             CSS @font-face `src`, so a CDN-hosted font can only be verified
+             where a preload hash happens to cover the stylesheet's fetch —
+             browser-dependent, and silently unverified where it isn't. A
+             same-origin font needs no hash to keep in sync at all.
+
+             Preloaded because the @font-face that uses it lives inside
+             style.css: without this the download could not start until that
+             stylesheet had been fetched and parsed.
+
+             The `crossorigin` attribute is still required — font fetches are
+             always CORS-mode, even same-origin ones — and without it the
+             preload would not be reused and the font would be fetched twice.
+
+             To update: replace the file, keep the name, refresh fonts/LICENSE.
+             Upstream sha384 of the current file, for auditing against npm:
+               LLadd2S+M6BwmLX6m/xrocmEWGORFSkar3YTuVg1wUqmHC+Rr9HGCrjdGUX6NuNJ -->
+        <link rel="preload" as="font" type="font/woff2"
+              href="fonts/maple-mono-latin-400-normal.woff2"
+              crossorigin="anonymous">
+
         <link rel='stylesheet' href='styles/style.css'>
-        <!-- The editor chrome's own typeface. Pinned to an exact version, so
-             its bytes are stable and can carry an integrity hash: if the CDN
-             ever serves something else, the browser refuses it rather than
-             applying it. Regenerate the hash if the version is bumped:
-               curl -sL <url> | openssl dgst -sha384 -binary | openssl base64 -A -->
-        <link rel="stylesheet"
-              href="https://cdn.jsdelivr.net/npm/@fontsource/maple-mono@5.2.6/index.css"
-              integrity="sha384-HzXKwXVo3BQHLsczQefCtvLbpN+qN6UKKO4FqcJOBxGBwxjjys9+39ISJR8dz7df"
-              crossorigin="anonymous" />
 
         <!-- The canvas font families offered in the Themes tab (see
              FONT_GROUPS in theme.js — the two lists have to stay in step).
@@ -20,16 +46,26 @@
              only downloaded once something on the page is actually set in
              it, so the whole list costs one request until fonts get used.
              If this request fails the canvas falls back to the generic
-             family at the end of each stack. -->
+             family at the end of each stack.
+
+             Loaded non-blocking on purpose. Nothing on first paint is set in
+             any of these families — the canvas defaults to System Sans and
+             the chrome uses Maple Mono — so this is only needed once the
+             Themes tab is opened. As a render-blocking <link> it gated the
+             whole boot: module scripts wait on pending stylesheets, so the
+             app did not start until Google Fonts replied. media=print keeps
+             it off the critical path; onload promotes it to all. -->
         <!-- No integrity hash here, deliberately: the css2 endpoint serves a
              different @font-face block per browser by design, so there is no
              stable set of bytes to pin. Accepted because it is a stylesheet
              rather than a script — a compromised response could restyle the
              canvas, but not execute anything. Vendoring the families actually
              used is the fix if that trade stops being acceptable. -->
-        <link rel="preconnect" href="https://fonts.googleapis.com">
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-        <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;700&family=Fraunces:wght@400;700&family=IBM+Plex+Mono:wght@400;700&family=Inter:wght@400;700&family=JetBrains+Mono:wght@400;700&family=Libre+Baskerville:wght@400;700&family=Lora:wght@400;700&family=Manrope:wght@400;700&family=Merriweather:wght@400;700&family=Montserrat:wght@400;700&family=Outfit:wght@400;700&family=Playfair+Display:wght@400;700&family=Poppins:wght@400;700&family=Source+Serif+4:wght@400;700&family=Space+Grotesk:wght@400;700&family=Space+Mono:wght@400;700&family=Work+Sans:wght@400;700&display=swap">
+        <link rel="stylesheet" media="print" onload="this.media='all';this.onload=null"
+              href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;700&family=Fraunces:wght@400;700&family=IBM+Plex+Mono:wght@400;700&family=Inter:wght@400;700&family=JetBrains+Mono:wght@400;700&family=Libre+Baskerville:wght@400;700&family=Lora:wght@400;700&family=Manrope:wght@400;700&family=Merriweather:wght@400;700&family=Montserrat:wght@400;700&family=Outfit:wght@400;700&family=Playfair+Display:wght@400;700&family=Poppins:wght@400;700&family=Source+Serif+4:wght@400;700&family=Space+Grotesk:wght@400;700&family=Space+Mono:wght@400;700&family=Work+Sans:wght@400;700&display=swap">
+        <noscript>
+            <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;700&family=Fraunces:wght@400;700&family=IBM+Plex+Mono:wght@400;700&family=Inter:wght@400;700&family=JetBrains+Mono:wght@400;700&family=Libre+Baskerville:wght@400;700&family=Lora:wght@400;700&family=Manrope:wght@400;700&family=Merriweather:wght@400;700&family=Montserrat:wght@400;700&family=Outfit:wght@400;700&family=Playfair+Display:wght@400;700&family=Poppins:wght@400;700&family=Source+Serif+4:wght@400;700&family=Space+Grotesk:wght@400;700&family=Space+Mono:wght@400;700&family=Work+Sans:wght@400;700&display=swap">
+        </noscript>
         <title>Profolio Editor</title>
     </head>
     <body>

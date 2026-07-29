@@ -38,8 +38,11 @@ Profolio Editor/
 ├── index.html          Editor shell markup (top bar, toolbar, canvas, right panel)
 ├── styles/
 │   └── style.css        All styling (dark editor chrome + light canvas page + rendered node styles)
+├── fonts/                The editor chrome's typeface, self-hosted
+│   ├── maple-mono-latin-400-normal.woff2   Vendored from @fontsource/maple-mono@5.2.6
+│   └── LICENSE           SIL Open Font License 1.1, as the font's license requires
 ├── scripts/              ES modules, all reached through main.js
-│   ├── main.js           The one entry point index.html loads; wires everything up on DOMContentLoaded
+│   ├── main.js           The one entry point index.html loads; wires everything up as soon as the DOM is parsed
 │   ├── dom.js            The app's singleton elements, and the shared is-active toggle
 │   ├── renderer.js       Renders a sections node tree onto the canvas (see docs/DATA_MODEL.md)
 │   ├── layouts-panel.js  The Layouts accordion: loads /layout and inserts a card's sections
