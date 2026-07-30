@@ -125,8 +125,16 @@ def check_node(node, path, errors, where):
                 f'{rel(path)}: {label} is a container but also carries leaf '
                 f'content ({", ".join(mixed)}) — a node never mixes the two'
             )
-    elif children is not None:
-        errors.append(f'{rel(path)}: {label} is a leaf ("{node_type}") but has "children"')
+    else:
+        # `layout` is container-only too: renderer.js only reads it inside
+        # applyNodeLayout(), which returns early for a leaf, so a layout on a
+        # leaf is silently ignored rather than rejected.
+        container_only = [key for key in ('children', 'layout') if node.get(key) is not None]
+        if container_only:
+            errors.append(
+                f'{rel(path)}: {label} is a leaf ("{node_type}") but carries '
+                f'container field(s) ({", ".join(container_only)})'
+            )
 
     style_base = (node.get('style') or {}).get('base')
     if style_base is not None:
@@ -197,12 +205,44 @@ def check_layout_file(path, errors):
             check_node(section, path, errors, f'sections[{index}]')
 
     # The quiet failure: present on disk, absent from the manifest, never fetched.
-    manifest_path = Path(path).parent / 'manifest.json'
-    manifest = load_json(manifest_path, errors) if manifest_path.exists() else None
-    if isinstance(manifest, list) and Path(path).name not in manifest:
+    folder = Path(path).parent
+    manifest_path = folder / 'manifest.json'
+    if not manifest_path.exists():
         errors.append(
-            f'{rel(path)}: not listed in {rel(manifest_path)}, so the browser never '
-            f'fetches it and no card appears. Add "{Path(path).name}" to that manifest'
+            f'{rel(path)}: {rel(folder)} has no manifest.json, so nothing in it is '
+            f'ever fetched. Create one listing "{Path(path).name}"'
+        )
+    else:
+        manifest = load_json(manifest_path, errors)
+        if isinstance(manifest, list) and Path(path).name not in manifest:
+            errors.append(
+                f'{rel(path)}: not listed in {rel(manifest_path)}, so the browser never '
+                f'fetches it and no card appears. Add "{Path(path).name}" to that manifest'
+            )
+    check_page_registered(folder, errors)
+
+
+def declared_page_ids():
+    """The page ids pages.json actually declares, or None if it can't be read."""
+    try:
+        data = json.loads((LAYOUT_DIR / 'pages.json').read_text(encoding='utf-8'))
+    except (OSError, json.JSONDecodeError):
+        return None  # pages.json has its own checker; don't report it twice
+    if not isinstance(data, list):
+        return None
+    return {page['id'] for page in data if isinstance(page, dict) and isinstance(page.get('id'), str)}
+
+
+def check_page_registered(folder, errors):
+    """A page folder missing from pages.json is never walked, so never rendered."""
+    folder = Path(folder).resolve()
+    if folder == LAYOUT_DIR.resolve():
+        return
+    declared = declared_page_ids()
+    if declared is not None and folder.name not in declared:
+        errors.append(
+            f'{rel(folder)}: not listed in layout/pages.json, so the accordion never '
+            f'shows it. Add {{ "id": "{folder.name}", "name": "..." }} to pages.json'
         )
 
 
@@ -215,6 +255,7 @@ def check_manifest(path, errors):
         return
 
     folder = Path(path).parent
+    check_page_registered(folder, errors)
     for entry in data:
         if not isinstance(entry, str):
             errors.append(f'{rel(path)}: entry {entry!r} is not a filename string')
@@ -240,8 +281,11 @@ def check_pages(path, errors):
         errors.append(f'{rel(path)}: pages.json must be an array of {{ "id", "name" }} objects')
         return
     for index, page in enumerate(data):
-        if not isinstance(page, dict) or 'id' not in page or 'name' not in page:
-            errors.append(f'{rel(path)}: entry[{index}] needs both "id" and "name"')
+        # Both must be *strings*, not merely present: `LAYOUT_DIR / 1` raises
+        # a TypeError, which would crash the hook instead of reporting the file.
+        if not isinstance(page, dict) or not isinstance(page.get('id'), str) \
+                or not isinstance(page.get('name'), str):
+            errors.append(f'{rel(path)}: entry[{index}] needs both "id" and "name" as strings')
             continue
         manifest = LAYOUT_DIR / page['id'] / 'manifest.json'
         if not manifest.exists():
@@ -250,6 +294,10 @@ def check_pages(path, errors):
                 f'a browser cannot list a folder, so the manifest is required '
                 f'even when it is empty ([])'
             )
+
+    # And the other direction: a folder nobody declared is never rendered.
+    for folder in sorted(item for item in LAYOUT_DIR.iterdir() if item.is_dir()):
+        check_page_registered(folder, errors)
 
 
 def check_path(path, errors):

@@ -27,12 +27,13 @@ applied through custom properties on the canvas frame. Saving and publishing
 are not wired yet.
 
 Content-wise: `home/example.json` and `about/example.json` are the only cards
-filled in with real copy. Every page ships a `blank-test.json` card that inserts
-that page's real section structure with all of its slots unfilled (placeholder
-text, empty image boxes) — useful both as a test fixture and as a preview of
-the placeholder system. `minimal.json`, `split-bio.json` and
-`photo-first.json` still have empty `sections` arrays, so clicking them does
-nothing.
+filled in with real copy. Every page ships a `blank-test.json` card that
+inserts that page's real section structure with its content slots unfilled
+(placeholder text, empty image boxes) — anything that *is* filled in one is a
+structural label, like the heading naming the section or the nav link names.
+Useful both as a test fixture and as a preview of the placeholder system.
+`minimal.json`, `split-bio.json` and `photo-first.json` still have empty
+`sections` arrays, so clicking them does nothing.
 
 ## Project structure
 
@@ -84,7 +85,7 @@ Profolio Editor/
     │   ├── split-bio.json   `sections: []` — not built yet
     │   ├── photo-first.json `sections: []` — not built yet
     │   ├── example.json     Filled-in hero section (eyebrow, title, subtitle, two CTAs, portrait)
-    │   └── blank-test.json  One empty Home section: title + body slot
+    │   └── blank-test.json  One Home section, its body slot unfilled
     ├── about/
     │   ├── manifest.json
     │   ├── example.json     Filled-in About section (title + portrait + bio)
