@@ -66,8 +66,8 @@ export function initSectionDragAndDrop() {
 }
 
 /**
- * Give every top-level section on the canvas a grab handle. Safe to call
- * after each insert — sections that already have one are skipped.
+ * Add drag handles to each committed top-level section in the canvas.
+ * @param {Element} frameEl - The canvas frame containing the sections.
  */
 export function addSectionDragHandles(frameEl) {
     if (!frameEl) return;
@@ -136,9 +136,10 @@ function onCanvasDrop(e) {
 }
 
 /**
- * The section a drop at `y` should land above — i.e. the first one whose
- * vertical midpoint is still below the pointer. null means "past the last
- * section", which insertBefore() reads as "append at the end".
+ * Determines which committed section should precede a drop position.
+ * @param {Element} frameEl - The canvas frame containing the sections.
+ * @param {number} y - The pointer's vertical coordinate.
+ * @return {Element|null} The section or draft element to insert before, or `null` when no insertion target exists.
  */
 function sectionAfterPoint(frameEl, y) {
     const sections = Array.from(frameEl.querySelectorAll(':scope > .node--section:not([data-draft])'))
@@ -157,6 +158,11 @@ function sectionAfterPoint(frameEl, y) {
     return draftElementIn(frameEl);
 }
 
+/**
+ * Displays the insertion indicator at the prospective section drop position.
+ * @param {HTMLElement} frameEl - The canvas frame containing the indicator.
+ * @param {Element|null} before - The element before which to place the indicator.
+ */
 function showDropIndicator(frameEl, before) {
     if (!dropIndicator) {
         dropIndicator = document.createElement('div');

@@ -89,7 +89,9 @@ export function renderSections(sections) {
 }
 
 /**
- * Render a single node (and, recursively, its children) into a DOM element.
+ * Render a node and its descendants into a DOM element.
+ * @param {Object} node - The node definition to render.
+ * @returns {HTMLElement} The rendered DOM element.
  */
 export function renderNode(node) {
     const tag = NODE_TAG_BY_TYPE[node.type] || 'div';
@@ -128,12 +130,10 @@ const LAYOUT_PROP_TO_JS = {
 };
 
 /**
- * The one writer of a layout value onto the DOM.
- *
- * applyNodeLayout() below renders a whole node through this, and the Section
- * builder's live edits write single properties through the same function, so a
- * container the builder just edited and the same container re-rendered from its
- * node cannot end up with different CSS.
+ * Applies a supported layout property to an element.
+ * @param {HTMLElement} el - The element whose layout style to update.
+ * @param {string} prop - The model layout property name.
+ * @param {*} value - The property value; falsy values clear the corresponding style.
  */
 export function applyLayoutProp(el, prop, value) {
     const jsProp = LAYOUT_PROP_TO_JS[prop];
@@ -150,9 +150,10 @@ export function applyLayoutProp(el, prop, value) {
 }
 
 /**
- * The same, for a whitelisted style prop. Unknown props are ignored, which is
- * what keeps StyleProps a whitelist rather than free-form CSS — see the
- * StyleProps block in docs/DATA_MODEL.md.
+ * Apply a whitelisted style property to a DOM element.
+ * @param {HTMLElement} el - The element to style.
+ * @param {string} prop - The model style property name.
+ * @param {*} value - The style value, or nullish to clear the property.
  */
 export function applyStyleProp(el, prop, value) {
     const jsProp = STYLE_PROP_TO_JS[prop];
@@ -175,9 +176,7 @@ function applyNodeLayout(el, node) {
 }
 
 /**
- * node.style.tablet / node.style.mobile are intentionally unused for now —
- * they'll come into play once the device switcher drives real per-breakpoint
- * rendering instead of just resizing the frame.
+ * Applies base style overrides defined on a node to its DOM element.
  */
 function applyNodeStyle(el, node) {
     const props = node.style && node.style.base;
@@ -345,19 +344,11 @@ export function renderSectionsIntoCanvas(sections, frameEl) {
 }
 
 /**
- * Append a sections tree to the bottom of the canvas, keeping whatever is
- * already there. This is how layout cards insert content: every layout is
- * additive, so picking Home then About stacks the About sections under the
- * Home ones instead of replacing them.
- *
- * The incoming tree is cloned and its node ids are rewritten so they stay
- * unique against what's already on the canvas — the same layout can be
- * added twice, and some layout files reuse ids internally (repeated project
- * cards, say). data-node-id is the handle later features will use to map a
- * DOM node back to the tree, so duplicates can't be allowed to reach it.
- *
- * Returns the first appended element, or null when the layout had no
- * sections to add.
+ * Append sections to the canvas while preserving existing committed content.
+ * New node IDs are made unique, and sections are inserted before any draft element.
+ * @param {Array} sections - The section nodes to append.
+ * @param {HTMLElement} frameEl - The canvas frame receiving the sections.
+ * @return {HTMLElement|null} The first inserted element, or `null` when no sections are added.
  */
 export function appendSectionsToCanvas(sections, frameEl) {
     if (!frameEl || !sections || sections.length === 0) return null;
@@ -377,9 +368,9 @@ export function appendSectionsToCanvas(sections, frameEl) {
 }
 
 /**
- * Put the blank-canvas placeholder back once the last section is gone (e.g.
- * every section has been dragged onto the trash), so an emptied canvas reads
- * as "start here" instead of as a broken, zero-height page.
+ * Restores the blank-canvas placeholder when the frame has no committed content.
+ * Preserves draft content and inserts the placeholder at the beginning of the frame.
+ * @param {HTMLElement} frameEl - The canvas frame to update.
  */
 export function refreshCanvasEmptyState(frameEl) {
     if (!frameEl) return;
@@ -410,6 +401,11 @@ export function draftElementIn(frameEl) {
     return frameEl ? frameEl.querySelector(':scope > [data-draft]') : null;
 }
 
+/**
+ * Collects identifiers from committed nodes within a canvas frame.
+ * @param {HTMLElement} frameEl - The canvas frame to inspect.
+ * @returns {Set<string>} The set of committed node identifiers.
+ */
 function collectNodeIds(frameEl) {
     const ids = new Set();
     frameEl.querySelectorAll(COMMITTED_NODE_SELECTOR).forEach(el => ids.add(el.dataset.nodeId));

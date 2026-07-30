@@ -28,6 +28,10 @@ import { selectedEl } from './selection.js';
 
 export const TOOL_PANEL_TOOLS = new Set(['text', 'image', 'button', 'section', 'embed']);
 
+/**
+ * Opens the pane associated with a tool and synchronizes its controls with the current selection.
+ * @param {string} tool - The identifier of the tool whose pane should be opened.
+ */
 export function openToolPanel(tool) {
     const panel = toolPanel();
     if (!panel) return;

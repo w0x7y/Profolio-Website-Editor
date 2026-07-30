@@ -59,6 +59,9 @@ const CONTENT_LABELS = {
 
 const DEFAULT_WIDTH_PCT = 50;
 
+/**
+ * Initializes the section panel controls and subscribes it to draft changes.
+ */
 export function initSectionPanel() {
     const addRow = document.getElementById('sectionAddRow');
     if (addRow) addRow.addEventListener('click', commandAddRow);
@@ -74,9 +77,10 @@ export function initSectionPanel() {
 }
 
 /**
- * Point the pane at the current draft and pick. Called on every draft change,
- * and by openToolPanel() when the pane is revealed — the same funnel the Text,
- * Button and Image panes use.
+ * Synchronizes the section panel with the current draft and selected node.
+ *
+ * Updates panel visibility and insertion controls, and rebuilds the inspector
+ * for the selected node when the draft contains rows.
  */
 export function syncSectionPanel() {
     const empty = document.getElementById('sectionEmpty');
@@ -109,9 +113,10 @@ export function syncSectionPanel() {
 }
 
 /**
- * What the picked node is called in the header. Rows and columns are named
- * positionally rather than from `node.name`, which nothing in the editor
- * surfaces yet (docs/DATA_MODEL.md).
+ * Formats the header label for a picked section, row, or column.
+ * @param {Object} draft - The section draft containing the picked node.
+ * @param {Object} node - The picked section, row, or column node.
+ * @returns {string} The node label with positional row and column numbers where applicable.
  */
 function labelFor(draft, node) {
     if (node.type === 'section') return 'Section';
@@ -125,6 +130,11 @@ function labelFor(draft, node) {
     return `Row ${rowIndex} · Column ${row.children.indexOf(node) + 1}`;
 }
 
+/**
+ * Builds the inspector controls for the selected section, row, or column node.
+ * @param {Object} node - The selected node whose type determines the controls to include.
+ * @returns {DocumentFragment} The inspector controls.
+ */
 function buildInspectorBody(node) {
     const body = document.createDocumentFragment();
 
@@ -150,8 +160,10 @@ function buildInspectorBody(node) {
 }
 
 /**
- * Gap, in px. Stored as a CSS length string because that is what `layout.gap`
- * is; the field edits the number and this owns the unit.
+ * Create a numeric control for editing a node's gap in pixels.
+ * @param {Object} node - The layout node whose gap is edited.
+ * @param {string} label - The control and input label.
+ * @returns {HTMLElement} The gap control element.
  */
 function buildGapCtrl(node, label) {
     const ctrl = buildCtrl(label);
@@ -179,13 +191,22 @@ function buildGapCtrl(node, label) {
     return ctrl;
 }
 
+/**
+ * Extracts the numeric gap value from a node's layout.
+ * @param {Object} node - The node whose layout gap is read.
+ * @returns {number} The gap value, or `0` when no numeric value is present.
+ */
 function parseGapPx(node) {
     const gap = node.layout && node.layout.gap;
     const match = /(\d+(?:\.\d+)?)/.exec(gap || '');
     return match ? Number(match[1]) : 0;
 }
 
-/** A gap in px, or null when the field does not hold a usable number. */
+/**
+ * Clamps a gap value to zero or greater.
+ * @param {*} raw - The value to parse as a gap.
+ * @return {number|null} The clamped gap, or `null` when the value is empty or not finite.
+ */
 function clampGap(raw) {
     if (String(raw).trim() === '') return null;
     const n = Number(raw);
@@ -193,6 +214,15 @@ function clampGap(raw) {
     return Math.max(0, n);
 }
 
+/**
+ * Build a segmented control for a node layout property.
+ * @param {Object} node - The node whose layout property is controlled.
+ * @param {string} label - The control label.
+ * @param {string} prop - The layout property to update.
+ * @param {Array} options - The available segmented control options.
+ * @param {*} fallback - The value displayed when the property is unset.
+ * @return {HTMLElement} The configured control element.
+ */
 function buildSegmentedCtrl(node, label, prop, options, fallback) {
     const ctrl = buildCtrl(label);
     const group = buildSegmented(options, label, value => setLayoutProp(node.id, prop, value));
@@ -202,6 +232,11 @@ function buildSegmentedCtrl(node, label, prop, options, fallback) {
     return ctrl;
 }
 
+/**
+ * Build a control for toggling row content wrapping.
+ * @param {Object} node - The row node whose wrapping setting is controlled.
+ * @returns {HTMLElement} The wrapping toggle control.
+ */
 function buildWrapCtrl(node) {
     const ctrl = buildCtrl('Wrap');
     ctrl.classList.add('ctrl--inline');
@@ -223,6 +258,11 @@ function buildWrapCtrl(node) {
     return ctrl;
 }
 
+/**
+ * Creates row action buttons for adding a column or deleting the row.
+ * @param {Object} row - The row whose identifier is used by the action handlers.
+ * @return {HTMLDivElement} The container holding the row action buttons.
+ */
 function buildRowActions(row) {
     const wrap = document.createElement('div');
     wrap.className = 'btn-row';
@@ -244,9 +284,9 @@ function buildRowActions(row) {
 }
 
 /**
- * Column width. The percentage field only exists in `percent` mode — an
- * inactive number box next to an Auto/Equal choice reads as though it still
- * applies.
+ * Build controls for selecting a column's width mode and percentage.
+ * @param {Object} column - The column whose width settings are edited.
+ * @returns {HTMLElement} The assembled width control.
  */
 function buildWidthCtrl(column) {
     const ctrl = buildCtrl('Width');
@@ -282,7 +322,11 @@ function buildWidthCtrl(column) {
     return ctrl;
 }
 
-/** A width percentage in 1–100, or null when the field holds no usable number. */
+/**
+ * Constrain a column width percentage to the supported range.
+ * @param {*} raw - The value to convert and clamp.
+ * @returns {number|null} A value from 1 through 100, or `null` when the input is empty or not a finite number.
+ */
 function clampPct(raw) {
     if (String(raw).trim() === '') return null;
     const n = Number(raw);
@@ -328,6 +372,11 @@ function buildSlotList(column) {
     return ctrl;
 }
 
+/**
+ * Build controls for adding content slots to a column.
+ * @param {Object} column - The column to receive the selected content slot.
+ * @return {HTMLElement} The assembled add-content control.
+ */
 function buildAddContent(column) {
     const ctrl = buildCtrl('Add content');
     const wrap = document.createElement('div');
@@ -347,11 +396,9 @@ function buildAddContent(column) {
 }
 
 /**
- * Delete column, disabled at a row's last column.
- *
- * deleteColumn() refuses that case anyway — an empty row is an invisible
- * zero-height strip that must not reach the page — so the control says so
- * rather than looking broken when clicking it does nothing.
+ * Build controls for deleting a column.
+ * @param {Object} column - The column to delete.
+ * @return {HTMLDivElement} A container with the delete-column control.
  */
 function buildColumnActions(column) {
     const wrap = document.createElement('div');
