@@ -10,8 +10,9 @@
 //
 // Structure is fixed at two levels — section > row[] > column[] > content —
 // which is narrower than the model allows, on purpose: it keeps the pane a
-// flat inspector rather than a tree editor. See
-// docs/specs/2026-07-30-section-builder-design.md.
+// flat inspector rather than a tree editor. There are no layout presets for
+// the same reason a builder exists at all: it answers "what shape do you
+// want", not "which of these five".
 //
 // This file is the tree and the operations on it. Rendering the draft, picking
 // a node in it, and Insert/Cancel land here too — the pane itself lives in

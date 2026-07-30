@@ -29,6 +29,7 @@
 // them. SELECTABLE_NODE_TYPES derives from this map rather than repeating it,
 // so a type cannot become selectable without declaring a pane to show for it.
 import { openToolPanel, closeToolPanel, TOOL_PANEL_TOOLS } from './tool-panel.js';
+import { activateOne } from './dom.js';
 
 const NODE_TYPE_PANES = {
     image: 'image',
@@ -82,9 +83,7 @@ export function initCanvasSelection() {
 export function setActiveTool(tool) {
     activeTool = tool || 'select';
 
-    document.querySelectorAll('.tool').forEach(btn => {
-        btn.classList.toggle('is-active', btn.dataset.tool === activeTool);
-    });
+    activateOne(document.querySelectorAll('.tool'), btn => btn.dataset.tool === activeTool);
 
     // Drives the hover affordance in CSS — content only looks clickable
     // while the Select tool is the active one.

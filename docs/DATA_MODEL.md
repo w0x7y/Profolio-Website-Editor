@@ -2,14 +2,18 @@
 
 Status: **decided and partially implemented**. This is the answer to TODO
 Phase 1, item 1 ("Decide on a data model for a site/page"). The canvas now
-renders layout `sections` through `renderer.js`; selection, editing, saving,
-and publishing are still future work.
+renders layout `sections` through `renderer.js`, and selection and the tool
+panes edit what it produced; saving and publishing are still future work.
 
 One important caveat: there is **no in-memory project object yet**. Layout JSON
 is fetched, rendered to DOM, and then the DOM is the only copy — section
-reordering and trash-deletion in `script.js` move and remove DOM nodes, not
-model nodes. The shapes below describe where the model is going; only `Node`
-(and only the fields `renderer.js` reads) exists in running code today.
+reordering and trash-deletion in `section-dnd.js` move and remove DOM nodes,
+not model nodes, and the panes that edit committed content — Text, Button,
+Image — write straight to the element. The Section pane is the exception: it
+edits the Section builder's draft `Node` tree and renders that to the canvas,
+so the tree is the source of truth until Insert commits it. The shapes below
+describe where the model is going; only `Node` (and only the fields
+`renderer.js` reads) exists in running code today.
 
 ## Goals
 
@@ -239,7 +243,7 @@ the right panel. The current tone meanings are:
 - `" "` (a single space) = blank spacer
 
 These tones are thumbnail-only hints; the actual canvas content is driven by
-the `sections` tree. `script.js` also still supports a `preview: { "blank":
+the `sections` tree. `layouts-panel.js` also still supports a `preview: { "blank":
 true }` card that draws a plus icon instead of blocks; no layout file uses it
 since `home/blank.json` was removed.
 
@@ -383,7 +387,7 @@ the canvas DOM with `data-node-id` (plus `data-node-type` and, when set,
 `data-node-role`) on every rendered element. Ids are rewritten on insert
 (`withUniqueIds()`) so the same layout can be added twice without colliding.
 
-Click-to-select (Phase 2) is now wired in `script.js`: clicking canvas content
+Click-to-select (Phase 2) is now wired in `selection.js`: clicking canvas content
 walks up from the click target to the nearest selectable node and marks it
 `.is-selected`. Only content nodes are selectable — `image`/`icon`,
 `heading`/`text`, `button` — since those are the ones a user edits; containers

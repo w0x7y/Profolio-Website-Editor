@@ -27,8 +27,8 @@ applied through custom properties on the canvas frame. Saving and publishing
 are not wired yet.
 
 Content-wise: `home/example.json` and `about/example.json` are the only cards
-filled in with real copy. Every page also ships a `blank-test.json` card that
-inserts that page's real section structure with all of its slots left unfilled
+filled in with real copy. Every page except Home also ships a `blank-test.json`
+card that inserts that page's real section structure with all of its slots unfilled
 (placeholder text, empty image boxes) — useful both as a test fixture and as a
 preview of the placeholder system. `minimal.json`, `split-bio.json` and
 `photo-first.json` still have empty `sections` arrays, so clicking them does
@@ -111,7 +111,7 @@ Clicking a layout card appends its `sections` to the bottom of the canvas via
 `renderer.js` — nothing already on the canvas is replaced, and the same card
 can be used more than once (node ids are rewritten on insert to stay unique).
 Each page's `manifest.json` exists because a browser can't list
-a folder's contents on its own — it just tells `script.js` which files to
+a folder's contents on its own — it just tells `layouts-panel.js` which files to
 fetch. A page with an empty manifest (`[]`) still gets its accordion row; the
 row just says it has no layouts yet.
 

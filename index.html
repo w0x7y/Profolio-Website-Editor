@@ -158,18 +158,19 @@
                 <!-- ============ LEFT TOOL PANEL ============ -->
                 <!--
                     The extended panel for the active left-toolbar tool. One
-                    pane per tool; script.js (openToolPanel()) reveals the
+                    pane per tool; tool-panel.js (openToolPanel()) reveals the
                     matching one and fills in the title.
 
                     Selecting content on the canvas with the Select tool also
                     opens a pane — the one matching the selected node's type
-                    (see NODE_TYPE_PANES in script.js). Settings has no pane,
+                    (see NODE_TYPE_PANES in selection.js). Settings has no pane,
                     so choosing it closes the panel.
 
-                    The Text and Button panes have real controls (see
-                    text-panel.js / button-panel.js); the rest are still
-                    placeholders — their controls land here later (see
-                    TODO.md, "Left toolbar").
+                    The Text, Button, Image and Section panes have real
+                    controls (see text-panel.js / button-panel.js /
+                    image-panel.js / section-panel.js); Embed is still a
+                    placeholder — its controls land here later (see TODO.md,
+                    "Left toolbar").
                 -->
                 <aside class="tool-panel" id="toolPanel" hidden>
                     <div class="tool-panel__header">
@@ -565,7 +566,7 @@
                     </div>
 
                     <div class="canvas-scroll">
-                        <div class="canvas-frame" data-frame="desktop"><!-- populated by renderer.js: renderPageIntoCanvas() --></div>
+                        <div class="canvas-frame" data-frame="desktop"><!-- populated by renderer.js: renderSectionsIntoCanvas() --></div>
                     </div>
                 </main>
 
