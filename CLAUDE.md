@@ -259,16 +259,12 @@ cross-linked. When you land a feature:
 - update `docs/DATA_MODEL.md` if you changed the node shape, the style
   whitelist, roles, or the content-sanitizing rules.
 
-### Known stale references
-
-Some docs predate the split of `script.js` into `scripts/*.js` and still name
-`script.js` (`README.md`, `TODO.md`, `docs/DATA_MODEL.md`); the real files are
-`selection.js`, `section-dnd.js`, `layouts-panel.js`, etc. Separately, commit
-`714f1f2` removed `docs/specs/` and `docs/plans/` from the repo, but `TODO.md`
-and the banner in `section-builder.js` still point at
-`docs/specs/2026-07-30-section-builder-design.md`. Fix these opportunistically
-when you're editing nearby; don't treat the references as evidence those files
-exist.
+Docs name the module that actually implements a thing (`selection.js`,
+`section-dnd.js`, `layouts-panel.js`, …). The pre-split `script.js` no longer
+exists — don't reintroduce references to it. Likewise `docs/` holds only
+`DATA_MODEL.md`; `docs/specs/` and `docs/plans/` were removed deliberately in
+`714f1f2`, so design rationale belongs in a module's banner comment, not in a
+new file under `docs/`.
 
 ## Git workflow
 

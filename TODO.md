@@ -10,12 +10,12 @@ can wait a long time).
 
 ### Core canvas & editing engine
 - [x] Decide on a data model for a "site"/"page" (JSON tree of sections → blocks → elements) that the canvas renders from, instead of static HTML `Hard` `P0` — see [docs/DATA_MODEL.md](./docs/DATA_MODEL.md)
-- [x] Render the canvas from that data model instead of hardcoded markup `Hard` `P0` — see `renderer.js` (`renderNode`/`renderSections`/`renderPageIntoCanvas`)
-- [x] Click-to-select an element on the canvas `Medium` `P0` — wired in `script.js` (`initCanvasSelection()`); content nodes only (image/icon, heading/text, button), tracked as a DOM reference, and nothing acts on the selection yet
+- [x] Render the canvas from that data model instead of hardcoded markup `Hard` `P0` — see `renderer.js` (`renderNode`/`renderSections`/`renderSectionsIntoCanvas`)
+- [x] Click-to-select an element on the canvas `Medium` `P0` — wired in `selection.js` (`initCanvasSelection()`); content nodes only (image/icon, heading/text, button), tracked as a DOM reference, and nothing acts on the selection yet
 - [ ] Show a selection outline + resize/move handles around the selected element `Hard` `P0` — the outline (plus a hover hint) is done in `style.css`; resize/move handles are not
 - [ ] A floating/contextual toolbar for the selected element (font size, color, alignment, spacing, etc.) `Medium` `P1` — the Text panel now covers these for text nodes; decide whether the floating toolbar duplicates it or replaces it
 - [ ] Inline text editing (contenteditable or similar) for text elements `Medium` `P0` — partly addressed: text is editable in the Text panel's Content box, but not by typing directly on the canvas
-- [x] Drag-and-drop reordering of sections within the canvas `Hard` `P0` — grab handle per section, wired in `script.js` (`initSectionDragAndDrop()`). Reorders the DOM only; it needs to move the node in a real project tree once one exists
+- [x] Drag-and-drop reordering of sections within the canvas `Hard` `P0` — grab handle per section, wired in `section-dnd.js` (`initSectionDragAndDrop()`). Reorders the DOM only; it needs to move the node in a real project tree once one exists
 - [ ] Drag-and-drop reordering of *elements* inside a section (the section-level case above is done) `Hard` `P0`
 - [ ] Drag elements from the left toolbar onto the canvas to insert them `Medium` `P1`
 - [ ] `renderer.js` only renders `href` on `button` nodes, so a `nav-link` text node's target still renders as nothing — the Text pane's Link group now *edits* that target (stored on the element, see `link-controls.js`), but these need to render as real links for it to do anything `Easy` `P2`
@@ -32,20 +32,20 @@ can wait a long time).
 - [ ] Manual "Save" state indicator (saved / saving / unsaved changes) `Easy` `P2`
 
 ### Left toolbar (tools)
-- [x] Select tool: real selection behavior `Medium` `P0` — click-to-select is live only while this tool is active; switching tools drops the selection (`setActiveTool()` in `script.js`). Selecting opens the tool panel on that node type's pane via `NODE_TYPE_PANES`, and deselecting closes it
+- [x] Select tool: real selection behavior `Medium` `P0` — click-to-select is live only while this tool is active; switching tools drops the selection (`setActiveTool()` in `selection.js`). Selecting opens the tool panel on that node type's pane via `NODE_TYPE_PANES`, and deselecting closes it
 - [x] Text tool panel: real controls for the selected text node `Medium` `P0` — see `text-panel.js`; content (with per-word bold/italic/underline/strikethrough), font family, size with unit conversion, letter spacing, uppercase, and text/background/outline colors. Writes to the canvas DOM, so nothing persists across a reload until there's a project object
 - [ ] Text tool: click-to-place a new text block on canvas `Easy` `P0` — the pane's controls exist, but the tool itself still places nothing, so it always shows the "select text" empty state
 - [ ] Image tool: click-to-place an image placeholder `Medium` `P0` — the pane itself is built (`image-panel.js`); what's left is inserting a new image node from the toolbar
 - [x] Button tool panel: real controls for the selected button `Easy` `P0` — see `button-panel.js` / `link-controls.js`; "Edit Text" hands the label off to the Text pane, a Link/Button toggle picks what it does, and a link points at a section on the canvas or at an address. On-click JS is stored (`data-on-click`) and never executed inside the editor. Writes to the canvas DOM, so nothing persists across a reload
 - [ ] Button tool: click-to-place a new button on canvas `Easy` `P0` — the pane's controls exist, but the tool itself still places nothing, so it always shows the "select a button" empty state
 - [ ] Button styling controls (fill, radius, padding, size) — color and typography currently reach a button only via the Button pane's "Edit Text" `Easy` `P1`
-- [x] Section tool: GUI section builder `Medium` `P1` — see `section-builder.js` / `section-panel.js` and [docs/specs/2026-07-30-section-builder-design.md](./docs/specs/2026-07-30-section-builder-design.md). Compose a section as rows → columns → unfilled content slots, with a live draft on the canvas you click into to pick what the pane edits, then Insert. Layout presets were dropped: every section starts empty, since a builder answers "what shape do you want" rather than "which of these five". Structure can't be re-edited after Insert — that needs the project object (item 3) — but content is editable through the Text/Image/Button panes
+- [x] Section tool: GUI section builder `Medium` `P1` — see `section-builder.js` / `section-panel.js`. Compose a section as rows → columns → unfilled content slots, with a live draft on the canvas you click into to pick what the pane edits, then Insert. Layout presets were dropped: every section starts empty, since a builder answers "what shape do you want" rather than "which of these five". Structure can't be re-edited after Insert — that needs the project object (item 3) — but content is editable through the Text/Image/Button panes
 - [ ] Embed tool: insert custom HTML/embed blocks (e.g. YouTube, Spotify, custom code) `Medium` `P2`
 - [ ] Settings tool (left toolbar): decide what this opens (currently duplicates the right panel's Settings tab — clarify UX) `Easy` `P3`
 - [ ] Tooltips are static — verify they stay correct as tools gain real behavior `Easy` `P3`
 
 ### Right panel — Layouts tab
-- [x] Clicking a layout card actually applies it to the canvas `Hard` `P0` — wired in `script.js` via `appendSectionsToCanvas()`
+- [x] Clicking a layout card actually applies it to the canvas `Hard` `P0` — wired in `layouts-panel.js` via `appendSectionsToCanvas()`
 - [x] Decide whether "layout" means a whole starter page, or a single section users can insert `Medium` `P1` — both, and every card is additive: it appends its sections to the bottom of the canvas rather than replacing it. Home's cards are page shells, the other pages' cards are sections that stack underneath.
 - [x] Each page's folder loads its own layouts (Navbar / About / Showcase / Blog / Contact / Links / Footer, not just Home) `Easy` `P1` — every manifest is populated; only `home/example.json` and `about/example.json` carry real copy, the rest are `blank-test.json` cards whose sections are structurally real but have every slot unfilled
 - [ ] Fill in the `sections` field for `minimal.json`, `split-bio.json`, and `photo-first.json` (currently empty arrays — clicking them is a no-op now that cards append instead of replace) `Easy` `P1`
@@ -133,14 +133,14 @@ can wait a long time).
 
 ### Quality, polish & infra
 - [ ] Split `style.css` into smaller files as it grows (currently one large stylesheet) `Easy` `P2`
-- [ ] Split `script.js` into modules as real functionality gets added (currently one file) `Easy` `P2`
+- [x] Split `script.js` into modules as real functionality gets added `Easy` `P2` — done: `scripts/*.js`, one module per subsystem, all wired together by `main.js`
 - [ ] Decide on a build step (bundler) if the project outgrows plain HTML/CSS/JS — note this would also fix the "must run a local server" limitation mentioned above `Medium` `P2`
 - [ ] Accessibility pass: keyboard navigation through the editor, ARIA labels on icon-only buttons, focus states, color contrast `Medium` `P1`
 - [ ] Empty/loading/error states throughout (most panels currently assume happy-path data) `Easy` `P1`
 - [ ] Responsive support for the editor UI itself on smaller screens (currently desktop-only layout) `Hard` `P3`
 - [ ] Cross-browser testing `Medium` `P2`
 - [ ] Basic automated tests once there's real logic to test (currently pure UI, nothing to test) `Medium` `P2`
-- [ ] Error boundary / handling for failed `fetch` calls beyond the current `console.error` in `loadLayouts()` `Easy` `P2`
+- [ ] Error boundary / handling for failed `fetch` calls beyond the current `console.error` in `loadPages()` `Easy` `P2`
 - [ ] Performance check once the canvas holds real, larger pages (virtualization if needed) `Medium` `P3`
 - [ ] Write proper in-app help/onboarding (empty-state canvas currently just says "Blank canvas" with no next-step guidance) `Medium` `P2`
 
@@ -163,14 +163,14 @@ Nothing else can be built until there's a data model and a place to store it.
 
 ### Phase 2 — Core selection & direct editing
 The minimum interaction loop: select something, change it, remove it.
-7. ~~Select tool: real selection behavior~~ `Medium` `P0` — done, see `script.js` (`setActiveTool()`)
-8. ~~Click-to-select an element on the canvas~~ `Medium` `P0` — done, see `script.js` (`initCanvasSelection()`); selectable = content nodes (image/icon, heading/text, button), held as a DOM reference until there's a project tree to hold a node id instead
+7. ~~Select tool: real selection behavior~~ `Medium` `P0` — done, see `selection.js` (`setActiveTool()`)
+8. ~~Click-to-select an element on the canvas~~ `Medium` `P0` — done, see `selection.js` (`initCanvasSelection()`); selectable = content nodes (image/icon, heading/text, button), held as a DOM reference until there's a project tree to hold a node id instead
 9. Selection outline + resize/move handles around the selected element `Hard` `P0` — outline done; resize/move handles still open
 10. Delete elements (with confirmation or undo safety net) `Easy` `P0` — sections are deletable via the trash zone; elements and the undo safety net are not
 11. Inline text editing (contenteditable) for text elements `Medium` `P0` — partly done: editable in the Text panel (`text-panel.js`), not yet directly on the canvas
 12. Text tool: click-to-place a new text block `Easy` `P0`
 13. Image tool: click-to-place an image placeholder `Medium` `P0` — the Image *pane* is done; this is the insert-into-canvas half
-14. ~~Drag-and-drop reordering of sections within the canvas~~ `Hard` `P0` — done, see `script.js`; reordering elements *inside* a section is still open
+14. ~~Drag-and-drop reordering of sections within the canvas~~ `Hard` `P0` — done, see `section-dnd.js`; reordering elements *inside* a section is still open
 
 ### Phase 3 — Layouts, themes & basic settings
 Makes the existing UI shell actually do something.
@@ -264,7 +264,7 @@ Needed before real publishing/multi-user use is possible.
 82. 404 page for published sites `Easy` `P2`
 83. Custom domain DNS instructions/flow `Hard` `P2`
 84. Split `style.css` into smaller files `Easy` `P2`
-85. Split `script.js` into modules `Easy` `P2`
+85. ~~Split `script.js` into modules~~ `Easy` `P2` — done, see `scripts/*.js` and `main.js`
 86. Decide on a build step / bundler `Medium` `P2`
 87. Cross-browser testing `Medium` `P2`
 88. Basic automated tests once there's real logic to test `Medium` `P2`
