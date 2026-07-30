@@ -43,6 +43,17 @@ an image, build and insert a section). Check the browser console for errors.
 There is no automated check that will catch a regression for you — do not claim
 a change works without having actually loaded it.
 
+The one exception is the layout library, which has a mechanical checker:
+
+```bash
+python3 .claude/hooks/check-layout-json.py          # the whole layout/ tree
+python3 .claude/hooks/check-layout-json.py <file>   # one file
+```
+
+It runs automatically on every write under `layout/` (see `.claude/` below). It
+checks structure, not behavior — a layout that passes can still look wrong on
+the canvas, so it does not replace opening the app.
+
 ## Layout of the repo
 
 ```text
@@ -56,7 +67,36 @@ layout/             The layout library: pages.json + one folder per page
 docs/DATA_MODEL.md  The data model (sections → blocks → elements)
 README.md           User-facing overview and current status
 TODO.md             Task list + phased implementation plan
+.claude/            Claude Code configuration — see below
 ```
+
+### `.claude/` vs this file
+
+This file is prose: it is loaded into an assistant's context every session and
+is only as binding as the reader's attention. `.claude/` is configuration the
+harness executes, so it holds the rules that must not depend on someone
+remembering them.
+
+| Path | What it does |
+|---|---|
+| `.claude/launch.json` | The `editor` run configuration (`python3 -m http.server 4173`) |
+| `.claude/settings.json` | Shared permissions, plus the hook registration below |
+| `.claude/hooks/check-layout-json.py` | Validates `layout/` JSON after every write |
+
+`settings.json` is checked in and shared; personal overrides go in
+`settings.local.json`, which is gitignored. Anything phrased as "always do X"
+belongs in `settings.json` as a hook rather than as a sentence here.
+
+The layout hook exists because the failure it catches is invisible. A layout
+file that is missing from its folder's `manifest.json` is never fetched — no
+error, no card, just a lower count in the accordion header. And a malformed
+one is worse than local: `loadPageLayouts()` fetches every manifest and layout
+inside one `Promise.all`, so a single bad file rejects the whole chain and all
+eight pages collapse into "Couldn't load pages." The hook also checks node
+types and `style.base` keys, which it *parses out of `renderer.js`* rather than
+duplicating — the style whitelist already lives in two places (see
+"Cross-file couplings"), and a third copy hidden in a hook would be the one
+nobody updates.
 
 ### The modules
 
@@ -213,7 +253,9 @@ to undo.
 
 **To add a layout:** drop the JSON in the page folder *and* add its filename to
 that folder's `manifest.json`. **To add a page:** create the folder with an
-empty `manifest.json` and add an entry to `pages.json`.
+empty `manifest.json` and add an entry to `pages.json`. The `layout/` write hook
+catches a forgotten manifest entry either way — but the point is that it is
+forgettable, so do both in the same change.
 
 Every layout card is **additive** — clicking appends its `sections` to the
 bottom of the canvas; nothing is replaced. Preview block tones are semantic:
@@ -221,8 +263,7 @@ bottom of the canvas; nothing is replaced. Preview block tones are semantic:
 `neutral` = other, `" "` = blank spacer.
 
 Content status: only `home/example.json` and `about/example.json` carry real
-copy. Every page except `home` has a `blank-test.json` with real structure and
-unfilled slots.
+copy. Every page has a `blank-test.json` with real structure and unfilled slots.
 `minimal.json`, `split-bio.json` and `photo-first.json` have empty `sections`
 arrays, so clicking them does nothing.
 
