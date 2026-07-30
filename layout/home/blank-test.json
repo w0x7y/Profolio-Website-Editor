@@ -1,0 +1,26 @@
+{
+  "id": "blank-test",
+  "name": "Blank (test)",
+  "description": "Test fixture: appends one empty Home section to the canvas.",
+  "preview": {
+    "direction": "column",
+    "blocks": [
+      { "width": "35%", "height": "16%", "tone": "neutral" },
+      { "width": "100%", "height": "60%", "tone": "neutral" }
+    ]
+  },
+  "sections": [
+    {
+      "id": "sec_home_blank",
+      "type": "section",
+      "role": "hero",
+      "name": "Home (blank)",
+      "layout": { "direction": "column" },
+      "style": { "base": { "background": "var(--color-surface)" } },
+      "children": [
+        { "id": "el_home_blank_title", "type": "heading", "role": "title", "content": "Home", "placeholder": "Add a section title" },
+        { "id": "el_home_blank_body", "type": "text", "role": "body", "content": "", "placeholder": "Empty Home section — drop your content here" }
+      ]
+    }
+  ]
+}

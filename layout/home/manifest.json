@@ -2,5 +2,6 @@
   "minimal.json",
   "split-bio.json",
   "photo-first.json",
-  "example.json"
+  "example.json",
+  "blank-test.json"
 ]
