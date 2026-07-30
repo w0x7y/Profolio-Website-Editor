@@ -200,6 +200,10 @@ StyleProps = {
   // box model
   padding?: string, margin?: string,
   width?: string, height?: string,
+  flex?: string,             // "1 1 0" | "0 0 40%" — a flex child's size in
+                             // its container. The Section builder writes this
+                             // for column widths; prefer it over `width` for
+                             // children of a row.
   // typography
   fontFamily?: string,
   fontSize?: string, fontWeight?: string, lineHeight?: string,

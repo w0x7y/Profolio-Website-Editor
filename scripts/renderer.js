@@ -64,6 +64,7 @@ const STYLE_PROP_TO_JS = {
     margin: 'margin',
     width: 'width',
     height: 'height',
+    flex: 'flex',
     fontFamily: 'fontFamily',
     fontSize: 'fontSize',
     fontWeight: 'fontWeight',
@@ -116,18 +117,61 @@ export function renderNode(node) {
     return el;
 }
 
+// Layout values are named after the model, not after CSS — the model says
+// `direction` and `wrap`, flexbox says `flex-direction` and `flex-wrap`.
+const LAYOUT_PROP_TO_JS = {
+    direction: 'flexDirection',
+    wrap: 'flexWrap',
+    gap: 'gap',
+    align: 'alignItems',
+    justify: 'justifyContent'
+};
+
+/**
+ * The one writer of a layout value onto the DOM.
+ *
+ * applyNodeLayout() below renders a whole node through this, and the Section
+ * builder's live edits write single properties through the same function, so a
+ * container the builder just edited and the same container re-rendered from its
+ * node cannot end up with different CSS.
+ */
+export function applyLayoutProp(el, prop, value) {
+    const jsProp = LAYOUT_PROP_TO_JS[prop];
+    if (!jsProp) return;
+
+    // `wrap` is a boolean in the model and a keyword in CSS.
+    if (prop === 'wrap') {
+        el.style.flexWrap = value ? 'wrap' : '';
+        return;
+    }
+
+    // '' removes the declaration, which is what an unset layout value means.
+    el.style[jsProp] = value || '';
+}
+
+/**
+ * The same, for a whitelisted style prop. Unknown props are ignored, which is
+ * what keeps StyleProps a whitelist rather than free-form CSS — see the
+ * StyleProps block in docs/DATA_MODEL.md.
+ */
+export function applyStyleProp(el, prop, value) {
+    const jsProp = STYLE_PROP_TO_JS[prop];
+    if (!jsProp) return;
+
+    el.style[jsProp] = value == null ? '' : value;
+}
+
 function applyNodeLayout(el, node) {
     if (!CONTAINER_NODE_TYPES.has(node.type)) return;
 
     const layout = node.layout || {};
-    const direction = layout.direction || (node.type === 'row' ? 'row' : 'column');
 
     el.style.display = 'flex';
-    el.style.flexDirection = direction;
-    if (layout.wrap) el.style.flexWrap = 'wrap';
-    if (layout.gap) el.style.gap = layout.gap;
-    if (layout.align) el.style.alignItems = layout.align;
-    if (layout.justify) el.style.justifyContent = layout.justify;
+    applyLayoutProp(el, 'direction', layout.direction || (node.type === 'row' ? 'row' : 'column'));
+    applyLayoutProp(el, 'wrap', layout.wrap);
+    applyLayoutProp(el, 'gap', layout.gap);
+    applyLayoutProp(el, 'align', layout.align);
+    applyLayoutProp(el, 'justify', layout.justify);
 }
 
 /**
@@ -139,10 +183,7 @@ function applyNodeStyle(el, node) {
     const props = node.style && node.style.base;
     if (!props) return;
 
-    Object.keys(props).forEach(key => {
-        const jsProp = STYLE_PROP_TO_JS[key];
-        if (jsProp) el.style[jsProp] = props[key];
-    });
+    Object.keys(props).forEach(key => applyStyleProp(el, key, props[key]));
 }
 
 function renderLeafContent(el, node) {
