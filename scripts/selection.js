@@ -120,6 +120,11 @@ function onCanvasClick(e) {
  * the canvas background — all of which mean "deselect".
  */
 function selectableTargetFrom(target) {
+    // The Section builder's draft is not content. Nothing inside it is
+    // selectable, including after the user switches back to the Select tool
+    // with a draft still on the canvas.
+    if (target.closest('[data-draft]')) return null;
+
     let el = target.closest('[data-node-id]');
 
     while (el) {

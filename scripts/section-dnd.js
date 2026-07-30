@@ -19,7 +19,7 @@
 // ============================================================
 
 import { canvasFrame, canvasTrash } from './dom.js';
-import { refreshCanvasEmptyState } from './renderer.js';
+import { refreshCanvasEmptyState, draftElementIn } from './renderer.js';
 import { clearSelectionIfDetached } from './selection.js';
 
 let draggedSection = null;
@@ -71,7 +71,7 @@ export function initSectionDragAndDrop() {
  */
 export function addSectionDragHandles(frameEl) {
     if (!frameEl) return;
-    frameEl.querySelectorAll(':scope > .node--section').forEach(section => {
+    frameEl.querySelectorAll(':scope > .node--section:not([data-draft])').forEach(section => {
         if (section.querySelector(':scope > .section-handle')) return;
         section.appendChild(buildSectionHandle());
     });
@@ -141,13 +141,20 @@ function onCanvasDrop(e) {
  * section", which insertBefore() reads as "append at the end".
  */
 function sectionAfterPoint(frameEl, y) {
-    const sections = Array.from(frameEl.querySelectorAll(':scope > .node--section'))
+    const sections = Array.from(frameEl.querySelectorAll(':scope > .node--section:not([data-draft])'))
         .filter(section => section !== draggedSection);
 
-    return sections.find(section => {
+    const before = sections.find(section => {
         const rect = section.getBoundingClientRect();
         return y < rect.top + rect.height / 2;
-    }) || null;
+    });
+    if (before) return before;
+
+    // Past the last committed section. The draft always sits at the end of the
+    // frame, so returning null here would land the drop *after* it; returning
+    // the draft keeps committed sections above it. Null when there is no draft,
+    // which insertBefore() reads as "append" exactly as before.
+    return draftElementIn(frameEl);
 }
 
 function showDropIndicator(frameEl, before) {

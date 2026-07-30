@@ -369,7 +369,10 @@ export function appendSectionsToCanvas(sections, frameEl) {
 
     const fragment = renderSections(withUniqueIds(sections, collectNodeIds(frameEl)));
     const firstAdded = fragment.firstElementChild;
-    frameEl.appendChild(fragment);
+
+    // The draft always sits last in the frame, so committed content lands above
+    // it. With no draft this is a plain append — insertBefore(null) appends.
+    frameEl.insertBefore(fragment, draftElementIn(frameEl));
     return firstAdded;
 }
 
@@ -380,16 +383,36 @@ export function appendSectionsToCanvas(sections, frameEl) {
  */
 export function refreshCanvasEmptyState(frameEl) {
     if (!frameEl) return;
-    if (frameEl.querySelector('[data-node-id]')) return;
+    if (frameEl.querySelector(COMMITTED_NODE_SELECTOR)) return;
     if (frameEl.querySelector('.canvas-frame__empty')) return;
 
-    frameEl.innerHTML = '';
-    frameEl.appendChild(buildCanvasEmptyState());
+    // Clearing by innerHTML would take the builder's draft with it. The draft
+    // renders into this same frame and outlives an emptied canvas — trashing
+    // the last committed section while composing is exactly when this runs.
+    Array.from(frameEl.children)
+        .filter(child => !child.hasAttribute('data-draft'))
+        .forEach(child => child.remove());
+
+    // Above the draft, which always sits last.
+    frameEl.insertBefore(buildCanvasEmptyState(), frameEl.firstChild);
+}
+
+// The Section builder's draft renders into the canvas frame but is not
+// committed content: its ids are temporary, it must not get a drag handle, and
+// it must not keep the blank-canvas placeholder from coming back. Everything
+// that walks the canvas looking for *content* matches this instead of a bare
+// [data-node-id]. The second clause is what excludes the draft's descendants,
+// which carry node ids of their own.
+const COMMITTED_NODE_SELECTOR = '[data-node-id]:not([data-draft]):not([data-draft] *)';
+
+/** The draft section being composed in this frame, or null. */
+export function draftElementIn(frameEl) {
+    return frameEl ? frameEl.querySelector(':scope > [data-draft]') : null;
 }
 
 function collectNodeIds(frameEl) {
     const ids = new Set();
-    frameEl.querySelectorAll('[data-node-id]').forEach(el => ids.add(el.dataset.nodeId));
+    frameEl.querySelectorAll(COMMITTED_NODE_SELECTOR).forEach(el => ids.add(el.dataset.nodeId));
     return ids;
 }
 
