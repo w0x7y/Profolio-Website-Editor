@@ -18,7 +18,8 @@ import {
     onDraftChange, currentDraft, pickedNode, hasRows, canDeleteColumn,
     commandAddRow, commandAddColumn, commandDeleteRow,
     commandAddContentSlot, commandDeleteColumn, commandDeleteContentSlot,
-    setLayoutProp, setColumnWidth, columnWidthMode, columnWidthPct
+    setLayoutProp, setColumnWidth, columnWidthMode, columnWidthPct,
+    insertDraft, cancelDraft
 } from './section-builder.js';
 
 const ALIGN_OPTIONS = [
@@ -62,6 +63,12 @@ export function initSectionPanel() {
     const addRow = document.getElementById('sectionAddRow');
     if (addRow) addRow.addEventListener('click', commandAddRow);
 
+    const insert = document.getElementById('sectionInsert');
+    if (insert) insert.addEventListener('click', insertDraft);
+
+    const cancel = document.getElementById('sectionCancel');
+    if (cancel) cancel.addEventListener('click', cancelDraft);
+
     // The builder calls this after any change to the draft or the pick.
     onDraftChange(syncSectionPanel);
 }
@@ -80,6 +87,15 @@ export function syncSectionPanel() {
     const draft = currentDraft();
     const node = pickedNode();
     const showInspector = hasRows(draft) && !!node;
+
+    // Insert needs a row to commit. A row always has at least one column
+    // (deleteColumn() guarantees it), so this one check is enough — without that
+    // guarantee it would have to scan every row for an empty one.
+    const footer = document.getElementById('sectionFooter');
+    if (footer) footer.hidden = !hasRows(draft);
+
+    const insert = document.getElementById('sectionInsert');
+    if (insert) insert.disabled = !hasRows(draft);
 
     empty.hidden = showInspector;
     inspector.hidden = !showInspector;

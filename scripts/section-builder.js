@@ -19,7 +19,11 @@
 // ============================================================
 
 import { canvasFrame } from './dom.js';
-import { renderNode, applyLayoutProp, applyStyleProp, refreshCanvasEmptyState } from './renderer.js';
+import {
+    renderNode, applyLayoutProp, applyStyleProp, refreshCanvasEmptyState,
+    appendSectionsToCanvas
+} from './renderer.js';
+import { addSectionDragHandles } from './section-dnd.js';
 
 const DRAFT_ID_PREFIX = 'draft_';
 
@@ -380,4 +384,46 @@ export function columnWidthPct(column) {
     const flex = column && column.style && column.style.base && column.style.base.flex;
     const match = /(\d+(?:\.\d+)?)%/.exec(flex || '');
     return match ? Number(match[1]) : null;
+}
+
+// ---- committing the draft ----
+
+/**
+ * Commit the draft to the canvas.
+ *
+ * The tree is cloned and every id deleted, so appendSectionsToCanvas() mints
+ * fresh ones from `node.type` through withUniqueIds() — the inserted section
+ * ends up with the same clean `section` / `row` / `column` ids a layout file
+ * would produce, and no draft_ id or data-draft ever reaches committed content.
+ *
+ * The clone is also why every edit has to write the tree: what is cloned here
+ * is the tree, never the element on screen.
+ */
+export function insertDraft() {
+    if (!hasRows(draft)) return null;
+
+    const committed = stripIds(JSON.parse(JSON.stringify(draft)));
+
+    // Insert first, then drop the draft: appendSectionsToCanvas() inserts above
+    // the draft, so the new section lands exactly where the draft was standing.
+    const frame = canvasFrame();
+    const inserted = appendSectionsToCanvas([committed], frame);
+    removeDraftElement();
+    resetDraft();
+    addSectionDragHandles(frame);
+    notify();
+
+    return inserted;
+}
+
+export function cancelDraft() {
+    removeDraftElement();
+    resetDraft();
+    notify();
+}
+
+function stripIds(node) {
+    delete node.id;
+    (node.children || []).forEach(stripIds);
+    return node;
 }

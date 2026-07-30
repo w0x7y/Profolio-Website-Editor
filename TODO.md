@@ -39,7 +39,7 @@ can wait a long time).
 - [x] Button tool panel: real controls for the selected button `Easy` `P0` — see `button-panel.js` / `link-controls.js`; "Edit Text" hands the label off to the Text pane, a Link/Button toggle picks what it does, and a link points at a section on the canvas or at an address. On-click JS is stored (`data-on-click`) and never executed inside the editor. Writes to the canvas DOM, so nothing persists across a reload
 - [ ] Button tool: click-to-place a new button on canvas `Easy` `P0` — the pane's controls exist, but the tool itself still places nothing, so it always shows the "select a button" empty state
 - [ ] Button styling controls (fill, radius, padding, size) — color and typography currently reach a button only via the Button pane's "Edit Text" `Easy` `P1`
-- [ ] Section tool: insert a new full-width section (with layout presets: 1 col, 2 col, grid, etc.) `Medium` `P1`
+- [x] Section tool: GUI section builder `Medium` `P1` — see `section-builder.js` / `section-panel.js` and [docs/specs/2026-07-30-section-builder-design.md](./docs/specs/2026-07-30-section-builder-design.md). Compose a section as rows → columns → unfilled content slots, with a live draft on the canvas you click into to pick what the pane edits, then Insert. Layout presets were dropped: every section starts empty, since a builder answers "what shape do you want" rather than "which of these five". Structure can't be re-edited after Insert — that needs the project object (item 3) — but content is editable through the Text/Image/Button panes
 - [ ] Embed tool: insert custom HTML/embed blocks (e.g. YouTube, Spotify, custom code) `Medium` `P2`
 - [ ] Settings tool (left toolbar): decide what this opens (currently duplicates the right panel's Settings tab — clarify UX) `Easy` `P3`
 - [ ] Tooltips are static — verify they stay correct as tools gain real behavior `Easy` `P3`
@@ -206,7 +206,7 @@ Needed before real publishing/multi-user use is possible.
 33. Spacing/margin/padding visual editor `Hard` `P1`
 34. Nested elements / grouping `Hard` `P1`
 35. Drag elements from the left toolbar onto the canvas to insert them `Medium` `P1`
-36. Section tool: insert a new full-width section with layout presets `Medium` `P1`
+36. ~~Section tool: insert a new full-width section with layout presets~~ — done as a GUI section builder instead; presets dropped `Medium` `P1`
 37. ~~Layers tool: full layers panel (tree view, reorder/reparent, visibility, lock)~~ — moot: the Layers tool was removed from the left toolbar `Hard` `P1`
 
 ### Phase 9 — Round out layouts, themes & assets (P1)

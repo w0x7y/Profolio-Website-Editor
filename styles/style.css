@@ -1971,3 +1971,13 @@ button {
 .panel-btn--danger:hover {
     background: var(--danger-soft);
 }
+
+/* Section pane's commit row — Cancel beside Insert, Insert carrying the weight */
+.section-footer {
+    display: flex;
+    gap: 8px;
+}
+
+.section-footer .btn {
+    flex: 1 1 0;
+}

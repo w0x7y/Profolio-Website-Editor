@@ -18,7 +18,10 @@ project grid, then Footer. Sections already on the canvas can be dragged by
 their grab handle to reorder them, or dropped on the right panel's trash zone
 to delete them. With the Select tool active, the content inside a section —
 images, text, and buttons/links — can be clicked to select it, which draws a
-selection outline and opens the matching left tool panel. The Themes tab
+selection outline and opens the matching left tool panel. The Section tool
+composes a brand-new section instead of editing an existing one: rows, columns
+and unfilled content slots, drafted live on the canvas and committed with
+Insert. The Themes tab
 restyles the whole canvas: a color preset and a heading/body font pair, both
 applied through custom properties on the canvas frame. Saving and publishing
 are not wired yet.
@@ -52,6 +55,8 @@ Profolio Editor/
 │   ├── text-panel.js     Text tool panel: content, typography and color for the selected node
 │   ├── button-panel.js   Button tool panel: link/button type, target and stored on-click
 │   ├── image-panel.js    Image tool panel: source, size, fit, border, shadow and opacity
+│   ├── section-builder.js The Section tool's draft: the tree, the live draft on canvas, Insert/Cancel
+│   ├── section-panel.js  Section tool panel: the picked row/column's layout and content
 │   ├── link-controls.js  The link action model plus the shared link-target controls
 │   ├── panel-widgets.js  Generic panel controls: segmented switches, toggles, color fields
 │   ├── node-style.js     How a pane writes a per-node style override, and how the Themes tab undoes it
@@ -150,6 +155,7 @@ npx serve .
 - [x] Themes tab applies colors and fonts to the canvas (`theme.js`) — four color presets plus separate heading and body font pickers (web-safe stacks and Google families). Both write custom properties on `.canvas-frame`, which every canvas style rule reads, so one write restyles what's on the canvas *and* whatever is added later. Applying a preset clears the per-node colors set in the Text panel, and picking a font clears its per-node fonts, so the canvas ends up uniformly on the new theme
 - [x] Assets tab is a real image library — the upload box opens a centered window that takes images by drag-and-drop or through the file picker, and everything uploaded shows as a thumbnail under it. Uploads are held **in memory only** (`asset-store.js`): there is no backend yet, so they don't survive a reload any more than the canvas does. Deleting an asset resets the canvas images that were using it, since removing it releases the blob the browser was showing them from
 - [x] Image tool panel edits the selected image (`image-panel.js`): which uploaded asset it shows, alt text, width/height in px/rem/%/vh, how the image fits its box (cover/contain/stretch/none plus a position), border width/style/color, corner roundness, box shadow and opacity. Switching a size unit converts the number rather than relabelling it. Each declaration lands on the wrapper or on the inner `<img>` depending on which one the property means anything on
+- [x] Section tool is a GUI section builder (`section-builder.js` / `section-panel.js`): compose a section as rows → columns → unfilled content slots, watching a live draft on the canvas and clicking into it to pick what the pane edits. Rows carry gap, align, distribute and wrap; columns carry a width (auto / equal / explicit %) and their content slots. Insert commits it as a real section — reorderable, trashable, and editable through the Text/Image/Button panes — and Cancel throws it away. Structure can't be re-edited after Insert yet (see [TODO.md](./TODO.md))
 - [ ] Everything else, including placing a *new* image on the canvas with the Image tool (see [TODO.md](./TODO.md))
 
 See [TODO.md](./TODO.md) for the full task list and a prioritized, dependency-ordered implementation plan.
