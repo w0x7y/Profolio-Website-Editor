@@ -461,7 +461,7 @@ export function setColumnWidth(columnId, mode, pct) {
 export function columnWidthMode(column) {
     const flex = column && column.style && column.style.base && column.style.base.flex;
     if (!flex) return 'auto';
-    if (flex === COLUMN_FLEX_EQUAL) return 'equal';
+    if (flex === COLUMN_FLEX_EQUAL || flex === '1 1 0') return 'equal';
     return 'percent';
 }
 

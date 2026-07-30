@@ -230,7 +230,7 @@ to be understood.
 | `main.js` | `initSectionPanel()` in the boot sequence |
 | `index.html` | real markup for `data-tool-pane="section"`, replacing the placeholder at `:520-521` |
 | `styles/style.css` | draft outline and badge, `.is-picked`, empty-container affordance, pane control styles |
-| `TODO.md` | record that presets were dropped and point the Section tool entry at this spec; leave the item unchecked until the feature ships |
+| `TODO.md` | record that presets were dropped and point the Section tool entry at this spec; item checked off once the feature shipped |
 | `README.md` | feature list and the `scripts/` file tree |
 | `docs/DATA_MODEL.md` | document `flex` in the StyleProps whitelist; note the builder as a producer of node trees |
 

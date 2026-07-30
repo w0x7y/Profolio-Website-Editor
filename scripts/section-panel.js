@@ -96,7 +96,7 @@ export function syncSectionPanel() {
     // (deleteColumn() guarantees it), so this one check is enough — without that
     // guarantee it would have to scan every row for an empty one.
     const footer = document.getElementById('sectionFooter');
-    if (footer) footer.hidden = !hasRows(draft);
+    if (footer) footer.hidden = !draft;
 
     const insert = document.getElementById('sectionInsert');
     if (insert) insert.disabled = !hasRows(draft);
