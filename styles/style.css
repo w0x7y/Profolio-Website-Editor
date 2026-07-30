@@ -1927,13 +1927,21 @@ button {
     letter-spacing: 0.3px;
 }
 
-/* An empty flex container collapses to zero height and cannot be clicked, so
-   inside the draft only, containers announce themselves as pick targets. */
+/* Inside the draft only, containers announce themselves as pick targets. */
 [data-draft] .node--row,
 [data-draft] .node--column {
-    min-height: 48px;
     outline: 1px dashed var(--border-subtle);
     outline-offset: -1px;
+}
+
+/* An empty flex container collapses to nothing and cannot be clicked. Both axes
+   matter: an empty column sitting in a row is zero-*wide*, not merely short, so
+   min-height alone leaves it unpickable the moment it is created. Scoped to
+   :empty so a filled container is still sized by its content. */
+[data-draft] .node--row:empty,
+[data-draft] .node--column:empty {
+    min-height: 48px;
+    min-width: 48px;
 }
 
 /* What the pane is currently editing. Deliberately not .is-selected — that
@@ -1953,4 +1961,13 @@ button {
    draft until the user clicked elsewhere. It keeps the dash and gains a ring. */
 .canvas-frame > .node--section[data-draft].is-picked {
     box-shadow: 0 0 0 3px var(--accent-soft);
+}
+
+/* a destructive action in a pane — deleting a row or a column */
+.panel-btn--danger {
+    color: var(--danger);
+}
+
+.panel-btn--danger:hover {
+    background: var(--danger-soft);
 }

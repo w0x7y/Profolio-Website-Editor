@@ -13,6 +13,8 @@ import { initThemePanel } from './theme.js';
 import { initTextPanel } from './text-panel.js';
 import { initButtonPanel } from './button-panel.js';
 import { initImagePanel } from './image-panel.js';
+import { initSectionBuilder } from './section-builder.js';
+import { initSectionPanel } from './section-panel.js';
 import { initUploadModal } from './upload-modal.js';
 import { initAssetsPanel } from './assets-panel.js';
 import { initSectionDragAndDrop } from './section-dnd.js';
@@ -88,10 +90,16 @@ function boot() {
     initUploadModal();
     initAssetsPanel();
 
-    // ---- Left tool panel: the Text, Button and Image panes' controls ----
+    // ---- Left tool panel: the Text, Button, Image and Section panes ----
     initTextPanel();
     initButtonPanel();
     initImagePanel();
+
+    // The builder owns the draft and the canvas pick; the pane is its controls,
+    // and registers its re-sync callback with the builder, so the builder goes
+    // first.
+    initSectionBuilder();
+    initSectionPanel();
 
     // ---- Canvas: click content to select it (Select tool) ----
     setActiveTool('select');

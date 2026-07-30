@@ -518,7 +518,24 @@
                             </div>
                         </div>
                         <div class="tool-panel__pane" data-tool-pane="section">
-                            <p class="tool-panel__empty">Section controls aren't built yet.</p>
+
+                            <!-- Shown until the draft has a row. -->
+                            <p class="tool-panel__empty" id="sectionEmpty">Add a row to start building a section.</p>
+
+                            <!-- Controls for whatever is picked in the draft on
+                                 the canvas. Built by section-panel.js, which
+                                 swaps the body per picked node type. -->
+                            <section class="panel-group" id="sectionInspector" hidden>
+                                <h3 class="panel-group__title" id="sectionPickedLabel">Section</h3>
+                                <div id="sectionInspectorMount"></div>
+                            </section>
+
+                            <div class="panel-group">
+                                <button class="panel-btn" type="button" id="sectionAddRow">
+                                    <svg viewBox="0 0 24 24" class="icon icon--sm"><path d="M12 5v14M5 12h14"/></svg>
+                                    Add row
+                                </button>
+                            </div>
                         </div>
                         <div class="tool-panel__pane" data-tool-pane="embed">
                             <p class="tool-panel__empty">Embed controls aren't built yet.</p>
