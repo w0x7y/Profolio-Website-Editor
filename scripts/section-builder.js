@@ -35,30 +35,48 @@ const CONTENT_SLOT_TYPES = new Set(['heading', 'text', 'image', 'button']);
 let idSeq = 0;
 
 /**
- * Draft-local node ids. Unique within a draft and never committed — insertDraft()
- * strips them so appendSectionsToCanvas() can mint clean ones from node.type.
- * The prefix is what makes a leak obvious if one ever happens.
+ * Creates a unique draft-local identifier for a node type.
+ * @param {string} type - The node type to include in the identifier.
+ * @return {string} A unique draft-local node identifier.
  */
 function draftId(type) {
     idSeq += 1;
     return `${DRAFT_ID_PREFIX}${type}_${idSeq}`;
 }
 
+/**
+ * Create an empty draft section.
+ * @returns {Object} The new draft section node.
+ */
 export function createDraft() {
     return { id: draftId('section'), type: 'section', children: [] };
 }
 
+/**
+ * Creates an empty draft column.
+ * @returns {Object} The new column node with a draft-local ID.
+ */
 function buildColumn() {
     return { id: draftId('column'), type: 'column', children: [] };
 }
 
-/** A new row, with the one column every row is guaranteed to have. */
+/**
+ * Adds a row with one column to the draft section.
+ * @param {Object} draft - The draft section to update.
+ * @return {Object} The newly added row.
+ */
 export function addRow(draft) {
     const row = { id: draftId('row'), type: 'row', children: [buildColumn()] };
     draft.children.push(row);
     return row;
 }
 
+/**
+ * Adds a column to the specified row.
+ * @param {Object} draft - The draft tree containing the row.
+ * @param {string} rowId - The identifier of the target row.
+ * @returns {Object|null} The created column, or `null` if the row is not found.
+ */
 export function addColumn(draft, rowId) {
     const row = findNode(draft, rowId);
     if (!row || row.type !== 'row') return null;
@@ -69,11 +87,11 @@ export function addColumn(draft, rowId) {
 }
 
 /**
- * An unfilled content slot: no `content`, no `src`, and no `placeholder`.
- *
- * renderLeafContent() already supplies the right placeholder for an empty leaf
- * (fallbackPlaceholder() and DEFAULT_IMAGE_PLACEHOLDER in renderer.js), so a
- * second copy of those strings here would be the thing that drifts from it.
+ * Add an empty content slot to a column in the draft.
+ * @param {Object} draft - The draft tree to modify.
+ * @param {string} columnId - The ID of the target column.
+ * @param {string} type - The content slot type to add.
+ * @return {Object|null} The created slot, or `null` if the type or column is invalid.
  */
 export function addContentSlot(draft, columnId, type) {
     if (!CONTENT_SLOT_TYPES.has(type)) return null;
@@ -86,6 +104,12 @@ export function addContentSlot(draft, columnId, type) {
     return slot;
 }
 
+/**
+ * Remove a row from the draft section.
+ * @param {Object} draft - The draft section containing the row.
+ * @param {string} rowId - The identifier of the row to remove.
+ * @return {boolean} `true` if a row was removed, `false` otherwise.
+ */
 export function deleteRow(draft, rowId) {
     const before = draft.children.length;
     draft.children = draft.children.filter(row => row.id !== rowId);
@@ -93,14 +117,10 @@ export function deleteRow(draft, rowId) {
 }
 
 /**
- * Remove a column, unless it is the last one in its row.
- *
- * A row with no columns renders as a zero-height invisible strip, and
- * committing one would put it on the published page where nobody can see or
- * select it. Deleting the row is the action the user wants there, so the pane
- * disables this control at one column rather than letting the draft reach that
- * state — which is also what lets Insert get away with checking only for zero
- * rows instead of scanning every row.
+ * Remove a column while preserving at least one column in its row.
+ * @param {Object} draft - The draft section tree.
+ * @param {string} columnId - The ID of the column to remove.
+ * @return {boolean} `true` if the column was removed, `false` if it was not found or is the row's only column.
  */
 export function deleteColumn(draft, columnId) {
     const row = findParent(draft, columnId);
@@ -110,12 +130,21 @@ export function deleteColumn(draft, columnId) {
     return true;
 }
 
-/** Whether deleteColumn() would succeed. The pane disables its control on false. */
+/**
+ * Determines whether a column can be deleted.
+ * @returns {boolean} `true` if the column's parent row contains more than one column, `false` otherwise.
+ */
 export function canDeleteColumn(draft, columnId) {
     const row = findParent(draft, columnId);
     return !!row && row.children.length > 1;
 }
 
+/**
+ * Delete a content slot from its parent column.
+ * @param {Object} draft - The draft tree containing the slot.
+ * @param {string} slotId - The identifier of the content slot to delete.
+ * @return {boolean} `true` if the slot was deleted, `false` if its parent column was not found or the slot did not exist.
+ */
 export function deleteContentSlot(draft, slotId) {
     const column = findParent(draft, slotId);
     if (!column) return false;
@@ -125,7 +154,12 @@ export function deleteContentSlot(draft, slotId) {
     return column.children.length < before;
 }
 
-/** Depth-first search by id. A draft is small enough that no index is worth it. */
+/**
+ * Finds a node in the draft tree by its identifier.
+ * @param {Object|null} node - The tree node from which to begin searching.
+ * @param {string} id - The identifier to find.
+ * @return {Object|null} The matching node, or `null` if no match exists.
+ */
 export function findNode(node, id) {
     if (!node || !id) return null;
     if (node.id === id) return node;
@@ -137,7 +171,12 @@ export function findNode(node, id) {
     return null;
 }
 
-/** The node whose `children` array holds `id`. */
+/**
+ * Finds the parent node containing a child with the specified ID.
+ * @param {Object|null} node - The node from which to start searching.
+ * @param {string} id - The child node ID to locate.
+ * @returns {Object|null} The parent node, or `null` if no matching child is found.
+ */
 export function findParent(node, id) {
     if (!node || !node.children) return null;
     if (node.children.some(child => child.id === id)) return node;
@@ -149,6 +188,11 @@ export function findParent(node, id) {
     return null;
 }
 
+/**
+ * Determines whether a draft contains at least one row.
+ * @param {Object|null} draft - The draft section to inspect.
+ * @return {boolean} `true` if the draft contains one or more rows, `false` otherwise.
+ */
 export function hasRows(draft) {
     return !!draft && draft.children.length > 0;
 }
@@ -165,19 +209,33 @@ let draftEl = null;
 let pickedId = null;
 let notifyChange = null;
 
-/** Register the pane's "repopulate your controls" callback. Called at init. */
+/**
+ * Registers the callback invoked when the draft changes.
+ * @param {Function} fn - Callback used to refresh the pane's controls.
+ */
 export function onDraftChange(fn) {
     notifyChange = fn;
 }
 
+/**
+ * Notifies the registered draft-change callback.
+ */
 function notify() {
     if (notifyChange) notifyChange();
 }
 
+/**
+ * Gets the current section draft.
+ * @returns {Object|null} The current draft tree, or `null` when no draft exists.
+ */
 export function currentDraft() {
     return draft;
 }
 
+/**
+ * Retrieves the currently picked node in the draft.
+ * @return {Object|null} The picked node, or `null` when no draft or matching node exists.
+ */
 export function pickedNode() {
     return draft ? findNode(draft, pickedId) : null;
 }
@@ -219,7 +277,9 @@ export function renderDraft() {
     notify();
 }
 
-/** Drop the draft from the canvas. Shared by Insert and Cancel. */
+/**
+ * Removes the rendered draft from the canvas and refreshes the canvas empty state.
+ */
 export function removeDraftElement() {
     const frame = canvasFrame();
     if (draftEl) draftEl.remove();
@@ -227,11 +287,17 @@ export function removeDraftElement() {
     refreshCanvasEmptyState(frame);
 }
 
+/**
+ * Clears the current draft and selected node.
+ */
 export function resetDraft() {
     draft = null;
     pickedId = null;
 }
 
+/**
+ * Applies the picked styling to the currently selected draft node.
+ */
 function markPicked() {
     if (!draftEl) return;
 
@@ -242,6 +308,11 @@ function markPicked() {
     if (el) el.classList.add('is-picked');
 }
 
+/**
+ * Finds the rendered draft element for a node.
+ * @param {string} nodeId - The node identifier to locate.
+ * @return {Element|null} The matching element, or `null` when no element is found.
+ */
 function elementFor(nodeId) {
     if (!draftEl || !nodeId) return null;
     if (draftEl.dataset.nodeId === nodeId) return draftEl;
@@ -249,14 +320,7 @@ function elementFor(nodeId) {
 }
 
 /**
- * Click a row or column in the draft to edit it.
- *
- * This listens on the same scroller as selection.js, and the two never both act
- * on a click: selection.js returns early unless the Select tool is active
- * (selection.js:103), and this returns early unless the Section tool is. The
- * active tool is read off `data-active-tool`, which setActiveTool() already
- * publishes on the canvas area — importing it from selection.js would close an
- * import cycle through tool-panel.js.
+ * Initializes click-to-select behavior for draft container nodes when the Section tool is active.
  */
 export function initSectionBuilder() {
     const scroller = document.querySelector('.canvas-scroll');
@@ -289,29 +353,52 @@ function pickableFrom(target) {
 
 // ---- structural commands ----
 // The pane calls these rather than the tree functions directly, so a structural
-// edit cannot reach the tree without the canvas catching up.
+/**
+ * Adds a row to the current draft section and refreshes its canvas representation.
+ */
 
 export function commandAddRow() {
     addRow(ensureDraft());
     renderDraft();
 }
 
+/**
+ * Adds a column to the specified row in the current draft.
+ * @param {string} rowId - The identifier of the row receiving the column.
+ */
 export function commandAddColumn(rowId) {
     if (addColumn(draft, rowId)) renderDraft();
 }
 
+/**
+ * Adds a content slot to a draft column and refreshes the rendered draft when successful.
+ * @param {string} columnId - The ID of the column that will receive the content slot.
+ * @param {string} type - The content slot type to add.
+ */
 export function commandAddContentSlot(columnId, type) {
     if (addContentSlot(draft, columnId, type)) renderDraft();
 }
 
+/**
+ * Deletes a row from the current draft.
+ * @param {string} rowId - The ID of the row to delete.
+ */
 export function commandDeleteRow(rowId) {
     if (deleteRow(draft, rowId)) renderDraft();
 }
 
+/**
+ * Deletes a column from the draft section.
+ * @param {string} columnId - The identifier of the column to delete.
+ */
 export function commandDeleteColumn(columnId) {
     if (deleteColumn(draft, columnId)) renderDraft();
 }
 
+/**
+ * Deletes a content slot from the draft and re-renders it when successful.
+ * @param {string} slotId - The ID of the content slot to delete.
+ */
 export function commandDeleteContentSlot(slotId) {
     if (deleteContentSlot(draft, slotId)) renderDraft();
 }
@@ -319,12 +406,10 @@ export function commandDeleteContentSlot(slotId) {
 // ---- layout-value edits: tree first, then the element ----
 
 /**
- * Write a layout value to the tree, then catch the element up without
- * rebuilding it.
- *
- * Tree first, always. A value written only to the element would be reverted by
- * the next structural edit — renderDraft() rebuilds from the tree — and dropped
- * entirely by insertDraft(), which clones the tree and throws the element away.
+ * Update a node's layout property and synchronize its rendered element.
+ * @param {string} nodeId - The ID of the node to update.
+ * @param {string} prop - The layout property name.
+ * @param {*} value - The property value; empty, null, undefined, or false removes the property.
  */
 export function setLayoutProp(nodeId, prop, value) {
     const node = draft && findNode(draft, nodeId);
@@ -346,13 +431,10 @@ export function setLayoutProp(nodeId, prop, value) {
 const COLUMN_FLEX_EQUAL = '1 1 0px';
 
 /**
- * Column width, expressed as one `flex` declaration:
- *
- *   auto     no declaration — the column takes its natural width
- *   equal    1 1 0px  — every equal column shares the row evenly
- *   percent  0 0 N%   — a fixed share, for a sidebar or a 70/30 split
- *
- * Tree first, same reason as setLayoutProp().
+ * Set a column's width mode and optional percentage.
+ * @param {string} columnId - The identifier of the column to update.
+ * @param {'auto'|'equal'|'percent'} mode - The width mode to apply.
+ * @param {number} pct - The percentage width used when `mode` is `percent`.
  */
 export function setColumnWidth(columnId, mode, pct) {
     const node = draft && findNode(draft, columnId);
@@ -371,7 +453,11 @@ export function setColumnWidth(columnId, mode, pct) {
     if (el) applyStyleProp(el, 'flex', node.style.base.flex);
 }
 
-/** Which width mode a column's stored flex represents. */
+/**
+ * Determines the width mode represented by a column's stored flex value.
+ * @param {Object} column - The column whose width mode to determine.
+ * @returns {string} `'auto'` when no flex value is stored, `'equal'` for equal-width flex, or `'percent'` otherwise.
+ */
 export function columnWidthMode(column) {
     const flex = column && column.style && column.style.base && column.style.base.flex;
     if (!flex) return 'auto';
@@ -379,7 +465,11 @@ export function columnWidthMode(column) {
     return 'percent';
 }
 
-/** The percentage in a `0 0 N%` flex, or null for the other modes. */
+/**
+ * Extracts the percentage value from a column's flex configuration.
+ * @param {Object} column - The column whose flex configuration is inspected.
+ * @return {number|null} The percentage value, or `null` when the flex configuration does not specify a percentage.
+ */
 export function columnWidthPct(column) {
     const flex = column && column.style && column.style.base && column.style.base.flex;
     const match = /(\d+(?:\.\d+)?)%/.exec(flex || '');
@@ -389,15 +479,8 @@ export function columnWidthPct(column) {
 // ---- committing the draft ----
 
 /**
- * Commit the draft to the canvas.
- *
- * The tree is cloned and every id deleted, so appendSectionsToCanvas() mints
- * fresh ones from `node.type` through withUniqueIds() — the inserted section
- * ends up with the same clean `section` / `row` / `column` ids a layout file
- * would produce, and no draft_ id or data-draft ever reaches committed content.
- *
- * The clone is also why every edit has to write the tree: what is cloned here
- * is the tree, never the element on screen.
+ * Commits the draft section to the canvas.
+ * @return {*} The inserted section, or `null` when the draft has no rows.
  */
 export function insertDraft() {
     if (!hasRows(draft)) return null;
@@ -416,12 +499,20 @@ export function insertDraft() {
     return inserted;
 }
 
+/**
+ * Cancels the current draft section and removes it from the canvas.
+ */
 export function cancelDraft() {
     removeDraftElement();
     resetDraft();
     notify();
 }
 
+/**
+ * Removes identifiers from a node and its descendants.
+ * @param {Object} node - The node whose identifiers should be removed.
+ * @return {Object} The modified node.
+ */
 function stripIds(node) {
     delete node.id;
     (node.children || []).forEach(stripIds);

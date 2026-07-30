@@ -22,6 +22,9 @@ import { initCanvasSelection, setActiveTool, activeTool } from './selection.js';
 import { closeToolPanel, toggleToolPanel } from './tool-panel.js';
 import { loadPages } from './layouts-panel.js';
 
+/**
+ * Initialize the application's UI event handlers and editor subsystems.
+ */
 function boot() {
 
     // ---- Left toolbar: tool selection ----
