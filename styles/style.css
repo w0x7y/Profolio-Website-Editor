@@ -1898,3 +1898,59 @@ button {
     border-radius: 5px;
     background: var(--accent);
 }
+
+/* ---------- Section builder draft (see scripts/section-builder.js) ----------
+   The draft renders into the canvas frame but is not committed content, and has
+   to read that way. Everything here is scoped to [data-draft], so none of it
+   can reach a section once it has been inserted. */
+
+.canvas-frame > .node--section[data-draft] {
+    /* the shadow on a committed section is what makes it look like real page
+       content — the draft trades it for a dashed accent outline */
+    box-shadow: none;
+    outline: 2px dashed var(--accent);
+    outline-offset: -2px;
+}
+
+.canvas-frame > .node--section[data-draft]::after {
+    content: 'Draft';
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    z-index: 5;
+    padding: 2px 8px;
+    border-radius: var(--radius-sm);
+    background: var(--accent);
+    color: #fff;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.3px;
+}
+
+/* An empty flex container collapses to zero height and cannot be clicked, so
+   inside the draft only, containers announce themselves as pick targets. */
+[data-draft] .node--row,
+[data-draft] .node--column {
+    min-height: 48px;
+    outline: 1px dashed var(--border-subtle);
+    outline-offset: -1px;
+}
+
+/* What the pane is currently editing. Deliberately not .is-selected — that
+   belongs to selection.js, and the two must never fight over one element. */
+[data-draft] .is-picked {
+    outline: 2px solid var(--accent);
+    outline-offset: -2px;
+}
+
+[data-draft] .node--row.is-picked,
+[data-draft] .node--column.is-picked {
+    background: var(--accent-soft);
+}
+
+/* The section root is picked by default on a fresh draft, so it can't trade its
+   dashed outline for the solid picked one — the draft would never read as a
+   draft until the user clicked elsewhere. It keeps the dash and gains a ring. */
+.canvas-frame > .node--section[data-draft].is-picked {
+    box-shadow: 0 0 0 3px var(--accent-soft);
+}

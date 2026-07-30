@@ -18,6 +18,9 @@
 // section-panel.js and knows nothing about this tree's shape.
 // ============================================================
 
+import { canvasFrame } from './dom.js';
+import { renderNode, applyLayoutProp, applyStyleProp, refreshCanvasEmptyState } from './renderer.js';
+
 const DRAFT_ID_PREFIX = 'draft_';
 
 // The content types a column can hold. Deliberately narrower than the model's
@@ -144,4 +147,231 @@ export function findParent(node, id) {
 
 export function hasRows(draft) {
     return !!draft && draft.children.length > 0;
+}
+
+// ---- the draft on the canvas ----
+
+// Only containers are pickable. A content slot resolves to its parent column:
+// slots have no properties to edit at this stage, and they are removed from the
+// column's own slot list.
+const PICKABLE_TYPES = new Set(['section', 'row', 'column']);
+
+let draft = null;
+let draftEl = null;
+let pickedId = null;
+let notifyChange = null;
+
+/** Register the pane's "repopulate your controls" callback. Called at init. */
+export function onDraftChange(fn) {
+    notifyChange = fn;
+}
+
+function notify() {
+    if (notifyChange) notifyChange();
+}
+
+export function currentDraft() {
+    return draft;
+}
+
+export function pickedNode() {
+    return draft ? findNode(draft, pickedId) : null;
+}
+
+/** Start a draft if there isn't one already, and return it. */
+export function ensureDraft() {
+    if (!draft) {
+        draft = createDraft();
+        pickedId = draft.id;
+    }
+    return draft;
+}
+
+/**
+ * Rebuild the draft's element from the tree, replacing the previous one.
+ *
+ * Every structural edit goes through here. Layout-value edits deliberately do
+ * not — see setLayoutProp() — so that editing a gap does not destroy the
+ * element the pick points at on every keystroke.
+ */
+export function renderDraft() {
+    const frame = canvasFrame();
+    if (!frame || !draft) return;
+
+    const next = renderNode(draft);
+    // The isolation marker every canvas behavior checks. Root only; descendants
+    // are matched with `[data-draft] *`.
+    next.dataset.draft = '';
+
+    if (draftEl && draftEl.parentElement) draftEl.replaceWith(next);
+    else frame.appendChild(next);
+    draftEl = next;
+
+    // The re-render destroyed whatever the pick pointed at. Re-resolve it by id,
+    // falling back to the section when the picked node is gone — the same
+    // problem clearSelectionIfDetached() solves for real selection.
+    if (!findNode(draft, pickedId)) pickedId = draft.id;
+    markPicked();
+    notify();
+}
+
+/** Drop the draft from the canvas. Shared by Insert and Cancel. */
+export function removeDraftElement() {
+    const frame = canvasFrame();
+    if (draftEl) draftEl.remove();
+    draftEl = null;
+    refreshCanvasEmptyState(frame);
+}
+
+export function resetDraft() {
+    draft = null;
+    pickedId = null;
+}
+
+function markPicked() {
+    if (!draftEl) return;
+
+    draftEl.classList.remove('is-picked');
+    draftEl.querySelectorAll('.is-picked').forEach(el => el.classList.remove('is-picked'));
+
+    const el = elementFor(pickedId);
+    if (el) el.classList.add('is-picked');
+}
+
+function elementFor(nodeId) {
+    if (!draftEl || !nodeId) return null;
+    if (draftEl.dataset.nodeId === nodeId) return draftEl;
+    return draftEl.querySelector(`[data-node-id="${nodeId}"]`);
+}
+
+/**
+ * Click a row or column in the draft to edit it.
+ *
+ * This listens on the same scroller as selection.js, and the two never both act
+ * on a click: selection.js returns early unless the Select tool is active
+ * (selection.js:103), and this returns early unless the Section tool is. The
+ * active tool is read off `data-active-tool`, which setActiveTool() already
+ * publishes on the canvas area — importing it from selection.js would close an
+ * import cycle through tool-panel.js.
+ */
+export function initSectionBuilder() {
+    const scroller = document.querySelector('.canvas-scroll');
+    if (!scroller) return;
+
+    scroller.addEventListener('click', e => {
+        const area = document.querySelector('.canvas-area');
+        if (!area || area.dataset.activeTool !== 'section') return;
+        if (!draftEl || !draftEl.contains(e.target)) return;
+
+        const el = pickableFrom(e.target);
+        if (!el) return;
+
+        pickedId = el.dataset.nodeId;
+        markPicked();
+        notify();
+    });
+}
+
+/** The nearest ancestor-or-self inside the draft that is a pickable container. */
+function pickableFrom(target) {
+    let el = target.closest('[data-node-id]');
+
+    while (el && draftEl.contains(el)) {
+        if (PICKABLE_TYPES.has(el.dataset.nodeType)) return el;
+        el = el.parentElement ? el.parentElement.closest('[data-node-id]') : null;
+    }
+    return null;
+}
+
+// ---- structural commands ----
+// The pane calls these rather than the tree functions directly, so a structural
+// edit cannot reach the tree without the canvas catching up.
+
+export function commandAddRow() {
+    addRow(ensureDraft());
+    renderDraft();
+}
+
+export function commandAddColumn(rowId) {
+    if (addColumn(draft, rowId)) renderDraft();
+}
+
+export function commandAddContentSlot(columnId, type) {
+    if (addContentSlot(draft, columnId, type)) renderDraft();
+}
+
+export function commandDeleteRow(rowId) {
+    if (deleteRow(draft, rowId)) renderDraft();
+}
+
+export function commandDeleteColumn(columnId) {
+    if (deleteColumn(draft, columnId)) renderDraft();
+}
+
+export function commandDeleteContentSlot(slotId) {
+    if (deleteContentSlot(draft, slotId)) renderDraft();
+}
+
+// ---- layout-value edits: tree first, then the element ----
+
+/**
+ * Write a layout value to the tree, then catch the element up without
+ * rebuilding it.
+ *
+ * Tree first, always. A value written only to the element would be reverted by
+ * the next structural edit — renderDraft() rebuilds from the tree — and dropped
+ * entirely by insertDraft(), which clones the tree and throws the element away.
+ */
+export function setLayoutProp(nodeId, prop, value) {
+    const node = draft && findNode(draft, nodeId);
+    if (!node) return;
+
+    node.layout = node.layout || {};
+    const unset = value === '' || value == null || value === false;
+    if (unset) delete node.layout[prop];
+    else node.layout[prop] = value;
+
+    const el = elementFor(nodeId);
+    if (el) applyLayoutProp(el, prop, node.layout[prop]);
+}
+
+/**
+ * Column width, expressed as one `flex` declaration:
+ *
+ *   auto     no declaration — the column takes its natural width
+ *   equal    1 1 0    — every equal column shares the row evenly
+ *   percent  0 0 N%   — a fixed share, for a sidebar or a 70/30 split
+ *
+ * Tree first, same reason as setLayoutProp().
+ */
+export function setColumnWidth(columnId, mode, pct) {
+    const node = draft && findNode(draft, columnId);
+    if (!node || node.type !== 'column') return;
+
+    const flex = mode === 'equal' ? '1 1 0'
+        : mode === 'percent' ? `0 0 ${pct}%`
+        : '';
+
+    node.style = node.style || {};
+    node.style.base = node.style.base || {};
+    if (flex) node.style.base.flex = flex;
+    else delete node.style.base.flex;
+
+    const el = elementFor(columnId);
+    if (el) applyStyleProp(el, 'flex', node.style.base.flex);
+}
+
+/** Which width mode a column's stored flex represents. */
+export function columnWidthMode(column) {
+    const flex = column && column.style && column.style.base && column.style.base.flex;
+    if (!flex) return 'auto';
+    if (flex === '1 1 0') return 'equal';
+    return 'percent';
+}
+
+/** The percentage in a `0 0 N%` flex, or null for the other modes. */
+export function columnWidthPct(column) {
+    const flex = column && column.style && column.style.base && column.style.base.flex;
+    const match = /(\d+(?:\.\d+)?)%/.exec(flex || '');
+    return match ? Number(match[1]) : null;
 }
