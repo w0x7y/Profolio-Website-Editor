@@ -220,11 +220,12 @@ bottom of the canvas; nothing is replaced. Preview block tones are semantic:
 `gradient-accent` = image, `gradient-dark` = text, `accent` = links/navbar,
 `neutral` = other, `" "` = blank spacer.
 
-Content status: only `home/example.json` and `about/example.json` carry real
-copy. Every page except `home` has a `blank-test.json` with real structure and
-unfilled slots.
-`minimal.json`, `split-bio.json` and `photo-first.json` have empty `sections`
-arrays, so clicking them does nothing.
+Content status: every page has a `blank-test.json` — real section structure with
+every slot unfilled. `home/example.json` and `about/example.json` are richer
+structures (hero; title + portrait + bio) but their copy is unfilled too, so
+nothing in the library currently ships real text. `minimal.json`,
+`split-bio.json` and `photo-first.json` have empty `sections` arrays, so
+clicking them does nothing.
 
 ## Cross-file couplings to keep in sync
 

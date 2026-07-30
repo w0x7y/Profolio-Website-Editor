@@ -26,11 +26,12 @@ restyles the whole canvas: a color preset and a heading/body font pair, both
 applied through custom properties on the canvas frame. Saving and publishing
 are not wired yet.
 
-Content-wise: `home/example.json` and `about/example.json` are the only cards
-filled in with real copy. Every page except Home also ships a `blank-test.json`
-card that inserts that page's real section structure with all of its slots unfilled
-(placeholder text, empty image boxes) — useful both as a test fixture and as a
-preview of the placeholder system. `minimal.json`, `split-bio.json` and
+Content-wise: every page ships a `blank-test.json` card that inserts that page's
+real section structure with all of its slots unfilled (placeholder text, empty
+image boxes) — useful both as a test fixture and as a preview of the placeholder
+system. `home/example.json` and `about/example.json` are richer reference
+structures, but their copy is unfilled too, so no card currently inserts real
+text. `minimal.json`, `split-bio.json` and
 `photo-first.json` still have empty `sections` arrays, so clicking them does
 nothing.
 
@@ -78,11 +79,12 @@ Profolio Editor/
     │   ├── minimal.json     `sections: []` — not built yet
     │   ├── split-bio.json   `sections: []` — not built yet
     │   ├── photo-first.json `sections: []` — not built yet
-    │   └── example.json     Filled-in hero section (eyebrow, title, subtitle, two CTAs, portrait)
+    │   ├── example.json     Hero section (eyebrow, title, subtitle, two CTAs, portrait), slots unfilled
+    │   └── blank-test.json  Same hero section as a test fixture
     ├── about/
     │   ├── manifest.json
-    │   ├── example.json     Filled-in About section (title + portrait + bio)
-    │   └── blank-test.json  Same section with its slots unfilled
+    │   ├── example.json     About section (title + portrait + bio), slots unfilled
+    │   └── blank-test.json  Simpler title + body section with its slots unfilled
     ├── showcase/
     │   ├── manifest.json
     │   └── blank-test.json  Project grid: three project cards, slots unfilled

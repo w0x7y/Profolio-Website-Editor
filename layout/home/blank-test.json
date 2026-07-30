@@ -1,0 +1,45 @@
+{
+  "id": "blank-test",
+  "name": "Blank (test)",
+  "description": "Test fixture: appends one empty Hero section to the canvas.",
+  "preview": {
+    "direction": "row",
+    "wrap": true,
+    "blocks": [
+      { "width": "100%", "height": "15%", "tone": " " },
+      { "width": "55%", "height": "55%", "tone": "gradient-dark" },
+      { "width": "40%", "height": "55%", "tone": "gradient-accent" },
+      { "width": "100%", "height": "20%", "tone": " " }
+    ]
+  },
+  "sections": [
+    {
+      "id": "sec_hero_blank",
+      "type": "section",
+      "role": "hero",
+      "name": "Hero (blank)",
+      "layout": { "direction": "row", "align": "center", "justify": "space-between" },
+      "children": [
+        {
+          "id": "col_hero_blank_text",
+          "type": "column",
+          "children": [
+            { "id": "el_hero_blank_tag", "type": "text", "role": "eyebrow", "content": "", "placeholder": "Add a tag" },
+            { "id": "el_hero_blank_title", "type": "heading", "role": "title", "content": "", "placeholder": "Add a title" },
+            { "id": "el_hero_blank_sub", "type": "text", "role": "subtitle", "content": "", "placeholder": "Add a short description" },
+            {
+              "id": "row_hero_blank_actions",
+              "type": "row",
+              "layout": { "direction": "row", "gap": "12px" },
+              "children": [
+                { "id": "btn_hero_blank_primary", "type": "button", "role": "cta", "content": "", "placeholder": "Link/Btn", "href": "#" },
+                { "id": "btn_hero_blank_ghost", "type": "button", "role": "cta-secondary", "content": "", "placeholder": "Link/Btn", "href": "#" }
+              ]
+            }
+          ]
+        },
+        { "id": "el_hero_blank_portrait", "type": "image", "role": "portrait", "src": null, "alt": "Portrait photo" }
+      ]
+    }
+  ]
+}

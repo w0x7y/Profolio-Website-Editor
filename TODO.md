@@ -47,7 +47,7 @@ can wait a long time).
 ### Right panel — Layouts tab
 - [x] Clicking a layout card actually applies it to the canvas `Hard` `P0` — wired in `layouts-panel.js` via `appendSectionsToCanvas()`
 - [x] Decide whether "layout" means a whole starter page, or a single section users can insert `Medium` `P1` — both, and every card is additive: it appends its sections to the bottom of the canvas rather than replacing it. Home's cards are page shells, the other pages' cards are sections that stack underneath.
-- [x] Each page's folder loads its own layouts (Navbar / About / Showcase / Blog / Contact / Links / Footer, not just Home) `Easy` `P1` — every manifest is populated; only `home/example.json` and `about/example.json` carry real copy, the rest are `blank-test.json` cards whose sections are structurally real but have every slot unfilled
+- [x] Each page's folder loads its own layouts (Navbar / About / Showcase / Blog / Contact / Links / Footer, not just Home) `Easy` `P1` — every manifest is populated; `home/example.json` and `about/example.json` are the richest structures, and every page also has a `blank-test.json` card. All of them are structurally real with every slot unfilled — no card ships real copy yet
 - [ ] Fill in the `sections` field for `minimal.json`, `split-bio.json`, and `photo-first.json` (currently empty arrays — clicking them is a no-op now that cards append instead of replace) `Easy` `P1`
 - [ ] Real Navbar / Showcase / Blog / Contact / Links / Footer layouts to replace the `blank-test.json` fixtures `Medium` `P1`
 - [ ] A "clear canvas" / start-over action — sections can now be removed one at a time via the trash zone, but there's still no single "empty the canvas" action, and no undo for a mis-drop `Easy` `P0`
