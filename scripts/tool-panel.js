@@ -15,18 +15,23 @@
 // panel leaves the tool active and the selection intact, so it never
 // silently changes what clicking on the canvas does.
 //
-// The Section and Embed panes still hold placeholder text; their real
-// controls go into the markup later.
+// The Embed pane still holds placeholder text; its real controls go into the
+// markup later.
 // ============================================================
 
 import { toolPanel, activateOne } from './dom.js';
 import { syncTextPanel } from './text-panel.js';
 import { syncButtonPanel } from './button-panel.js';
 import { syncImagePanel } from './image-panel.js';
+import { syncSectionPanel } from './section-panel.js';
 import { selectedEl } from './selection.js';
 
 export const TOOL_PANEL_TOOLS = new Set(['text', 'image', 'button', 'section', 'embed']);
 
+/**
+ * Opens the pane associated with a tool and synchronizes its controls with the current selection.
+ * @param {string} tool - The identifier of the tool whose pane should be opened.
+ */
 export function openToolPanel(tool) {
     const panel = toolPanel();
     if (!panel) return;
@@ -46,6 +51,7 @@ export function openToolPanel(tool) {
     if (tool === 'text') syncTextPanel(selectedEl);
     if (tool === 'button') syncButtonPanel(selectedEl);
     if (tool === 'image') syncImagePanel(selectedEl);
+    if (tool === 'section') syncSectionPanel();
 
     panel.hidden = false;
 }

@@ -109,17 +109,17 @@ function onCanvasClick(e) {
 }
 
 /**
- * Resolve a clicked DOM node to the element that should be selected: the
- * nearest ancestor-or-self that is a selectable node.
+ * Resolves a click target to the nearest selectable canvas node.
  *
- * Walking up matters because a rendered node isn't always the click target
- * — an image node's real target is the inner <img> or the placeholder
- * <svg>/<span>, none of which carry a data-node-id.
- *
- * Returns null when the click landed on a container, a non-content leaf, or
- * the canvas background — all of which mean "deselect".
+ * @param {Element} target - The element that received the click.
+ * @return {Element|null} The nearest selectable node, or `null` when the target is outside selectable content or inside a draft region.
  */
 function selectableTargetFrom(target) {
+    // The Section builder's draft is not content. Nothing inside it is
+    // selectable, including after the user switches back to the Select tool
+    // with a draft still on the canvas.
+    if (target.closest('[data-draft]')) return null;
+
     let el = target.closest('[data-node-id]');
 
     while (el) {
