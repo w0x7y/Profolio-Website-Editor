@@ -70,6 +70,8 @@ a render target for it.
           ▼                                          ▼
   section-panel.js ──calls──► section-builder.js ◄──pick(section|row|column)
                                     │
+                     every edit writes the draft tree first
+                                    │
                     ┌───────────────┴───────────────┐
            structural edit                  layout-value edit
         (add/delete row, column,         (gap, align, justify,
@@ -77,7 +79,8 @@ a render target for it.
                     │                                │
                     ▼                                ▼
           renderNode(draft) →            applyLayoutProp(el, prop, value)
-          swap draft element                 on the existing element
+          swap draft element              to catch the DOM up, without
+                                          rebuilding it
                     └───────────────┬───────────────┘
                                     ▼
                       draft <section data-draft> on canvas
@@ -92,11 +95,22 @@ a render target for it.
 
 ### Hybrid update strategy
 
-Structural edits re-render the draft through `renderNode()`. Layout-value
-edits write straight to the existing element. This mirrors the pattern the
-existing panes already use: `text-panel.js` and `image-panel.js` do not
-re-render, they write styles onto the selected element via `setNodeStyle()` in
-`node-style.js`, and only content changes rebuild markup.
+**Every edit writes the draft tree.** The tree is the single source of truth,
+so no edit is DOM-only. What differs is how the DOM is brought back into
+agreement: structural edits re-render the draft through `renderNode()`,
+while layout-value edits write the one changed property onto the existing
+element instead of rebuilding it.
+
+This ordering is not optional. A layout edit that only touched the DOM would
+be reverted by the next structural edit — which re-renders from the tree —
+and would never reach the canvas at all, because Insert deep-clones the tree
+and discards the draft element. Gap, align, distribute, wrap and column width
+must all land in the tree or they are silently lost.
+
+The DOM-catch-up half mirrors the pattern the existing panes already use:
+`text-panel.js` and `image-panel.js` do not re-render, they write styles onto
+the selected element via `setNodeStyle()` in `node-style.js`, and only content
+changes rebuild markup.
 
 The alternative — full re-render on every change — was rejected because
 typing into the gap field would rebuild the subtree on every keystroke and
@@ -104,11 +118,18 @@ destroy the picked element each time. Pure DOM patching for everything was
 rejected because the structural cases would become a second hand-written
 renderer that drifts from `applyNodeLayout()`.
 
-**One writer per layout value.** `applyLayoutProp(el, prop, value)` is
-extracted from `applyNodeLayout()` (`renderer.js:119-131`) and exported. Both
-the initial render and every live edit go through it, so the two paths cannot
-disagree. This is the same discipline `node-style.js` enforces for styles and
-`link-controls.js` enforces for `href`.
+**One writer per destination.** `applyLayoutProp(el, prop, value)` is
+extracted from `applyNodeLayout()` (`renderer.js:119-131`) and exported; it is
+the only thing that writes a layout value to the DOM, so the initial render
+and every live edit produce identical CSS. `setLayoutProp()` and
+`setColumnWidth()` in `section-builder.js` are the only things that write one
+to the tree.
+
+The pane calls neither directly. It calls the builder operation, and the
+builder updates the tree and then calls `applyLayoutProp()` — so a layout edit
+cannot reach the DOM without also reaching the tree. This is the same
+discipline `node-style.js` enforces for styles and `link-controls.js` enforces
+for `href`.
 
 ### Draft identity and insertion
 
@@ -159,8 +180,7 @@ id, the operations on them, rendering the draft into the canvas, and
 that turns a click on the draft into a pick. Knows nothing about control
 markup.
 
-Operations, all pure functions over the draft object except where they touch
-the canvas:
+Operations:
 
 | Function | Effect |
 |---|---|
@@ -168,10 +188,26 @@ the canvas:
 | `addColumn(draft, rowId)` | appends an empty column to that row |
 | `addContentSlot(draft, columnId, type)` | appends an unfilled leaf, with no `content` / `src` and no explicit `placeholder` |
 | `deleteRow(draft, rowId)` | removes the row and its subtree |
-| `deleteColumn(draft, columnId)` | removes the column and its subtree |
+| `deleteColumn(draft, columnId)` | removes the column and its subtree; refuses to remove a row's last column (see below) |
 | `deleteContentSlot(draft, slotId)` | removes one leaf |
-| `setLayoutProp(draft, nodeId, prop, value)` | writes `node.layout[prop]` |
-| `setColumnWidth(draft, columnId, mode, pct)` | writes `node.style.base.flex` |
+| `setLayoutProp(draft, nodeId, prop, value)` | writes `node.layout[prop]`, then `applyLayoutProp()` on that node's element |
+| `setColumnWidth(draft, columnId, mode, pct)` | writes `node.style.base.flex`, then the same property on that node's element |
+
+`setLayoutProp()` and `setColumnWidth()` are the two that touch the DOM as
+well as the tree, per the update strategy above. The rest are pure functions
+over the draft object; the caller re-renders.
+
+**A row always has at least one column.** `addRow()` creates a row with one
+column, and `deleteColumn()` refuses to remove the last one — the pane
+disables that row's `✕ Delete column` control when only one column remains,
+since `✕ Delete row` is what the user wants at that point. Without this,
+emptying a row and then inserting would commit a zero-height invisible row to
+the canvas.
+
+The alternative — allowing an empty row and blocking Insert until every row
+has a column — was rejected because it lets the user reach an invalid state
+whose only signal is a disabled button, with no indication of which row is at
+fault.
 
 **`scripts/section-panel.js`** — owns the pane. Builds controls with
 `panel-widgets.js`, calls builder operations, re-syncs when the picked node
@@ -194,7 +230,7 @@ to be understood.
 | `main.js` | `initSectionPanel()` in the boot sequence |
 | `index.html` | real markup for `data-tool-pane="section"`, replacing the placeholder at `:520-521` |
 | `styles/style.css` | draft outline and badge, `.is-picked`, empty-container affordance, pane control styles |
-| `TODO.md` | mark the Section tool done; record that presets were dropped |
+| `TODO.md` | record that presets were dropped and point the Section tool entry at this spec; leave the item unchecked until the feature ships |
 | `README.md` | feature list and the `scripts/` file tree |
 | `docs/DATA_MODEL.md` | document `flex` in the StyleProps whitelist; note the builder as a producer of node trees |
 
@@ -315,8 +351,12 @@ to input validation on two number fields:
 `panel-widgets.js` already establishes this idiom with `normalizeHex()` and
 `round3()`.
 
-Insert is disabled while the draft has no rows, which removes the only way to
-commit a meaningless section.
+Insert is disabled while the draft has no rows. That check is sufficient on its
+own only because `deleteColumn()` guarantees every row keeps at least one
+column (see Modules), so "has rows" and "has content-bearing structure" cannot
+diverge. Both rules exist to make a meaningless section uncommittable, and
+neither is safe to drop without the other: an Insert-time scan of every row
+would be needed if the last-column guard were ever removed.
 
 ## Testing
 
@@ -332,21 +372,31 @@ Checklist:
 3. Gap, align, distribute and wrap visibly change the draft without rebuilding
    it (the picked outline stays put).
 4. Column width `auto` / `equal` / `%` behave, and `%` clamps outside `1–100`.
-5. Adding each content type renders the correct placeholder.
-6. Deleting the picked row or column moves the pick to the section.
-7. Insert commits the section, gives it a drag handle, and clears the pane
+5. **Layout edits survive a re-render.** Set a non-default gap, align,
+   distribute, wrap and column width, then make a structural edit (add a
+   column). Every layout value is still applied afterward, not reverted to its
+   default.
+6. **Layout edits survive Insert.** With the same non-default values set,
+   Insert, then confirm the committed section still carries them — this is the
+   path that would silently lose DOM-only edits, since Insert clones the tree
+   rather than the element.
+7. Adding each content type renders the correct placeholder.
+8. Deleting the picked row or column moves the pick to the section.
+9. Insert commits the section, gives it a drag handle, and clears the pane
    back to its empty state; the committed section has no `draft_` ids and no
    `data-draft`.
-8. Cancel removes the draft and leaves the canvas untouched.
-9. Inserted content is selectable and editable via the Text/Image/Button
-   panes.
-10. With a draft present: clicking a layout card inserts above the draft;
+10. Cancel removes the draft and leaves the canvas untouched.
+11. Inserted content is selectable and editable via the Text/Image/Button
+    panes.
+12. With a draft present: clicking a layout card inserts above the draft;
     dragging a section past the last one lands above the draft; the draft
     itself has no drag handle; trashing the last real section still restores
     the empty state.
-11. Switching tools and back resumes the draft; switching to Select and
+13. Switching tools and back resumes the draft; switching to Select and
     clicking inside the draft selects nothing.
-12. Insert is disabled with zero rows.
+14. Insert is disabled with zero rows.
+15. A row's `✕ Delete column` is disabled while that row has one column, so a
+    row can never be emptied and no zero-height row can be committed.
 
 ## Follow-on work this unblocks or defers to
 
