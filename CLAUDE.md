@@ -45,7 +45,7 @@ a change works without having actually loaded it.
 
 ## Layout of the repo
 
-```
+```text
 index.html          The whole editor shell: top bar, left toolbar, left tool
                     panel (Text/Image/Button/Section/Embed panes), canvas,
                     right panel (Layouts/Themes/Assets/Settings), upload dialog
@@ -178,8 +178,10 @@ and rewrites ids (`withUniqueIds()`) so the same card can be inserted twice.
 Layout JSON is fetched once and kept, so the source tree must stay pristine.
 
 **`is-active` + `activateOne()`.** Every mutually-exclusive group — toolbar,
-tabs, panes, device switcher, theme cards, segmented buttons — uses the same
-class and the same writer in `dom.js`.
+tabs, panes, device switcher, theme cards — uses the same class and the same
+writer in `dom.js`. Segmented controls are the one group with their own writer
+(`setSegmentedValue()` in `panel-widgets.js`), because they also carry
+`aria-checked`; they still use `is-active` for the visual half.
 
 **Switches keep state in `aria-checked`,** not in a JS variable, so accessible
 and visual state can't drift.
@@ -219,7 +221,8 @@ bottom of the canvas; nothing is replaced. Preview block tones are semantic:
 `neutral` = other, `" "` = blank spacer.
 
 Content status: only `home/example.json` and `about/example.json` carry real
-copy. Every page has a `blank-test.json` with real structure and unfilled slots.
+copy. Every page except `home` has a `blank-test.json` with real structure and
+unfilled slots.
 `minimal.json`, `split-bio.json` and `photo-first.json` have empty `sections`
 arrays, so clicking them does nothing.
 

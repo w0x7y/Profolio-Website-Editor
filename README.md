@@ -27,8 +27,8 @@ applied through custom properties on the canvas frame. Saving and publishing
 are not wired yet.
 
 Content-wise: `home/example.json` and `about/example.json` are the only cards
-filled in with real copy. Every page also ships a `blank-test.json` card that
-inserts that page's real section structure with all of its slots left unfilled
+filled in with real copy. Every page except Home also ships a `blank-test.json`
+card that inserts that page's real section structure with all of its slots unfilled
 (placeholder text, empty image boxes) — useful both as a test fixture and as a
 preview of the placeholder system. `minimal.json`, `split-bio.json` and
 `photo-first.json` still have empty `sections` arrays, so clicking them does

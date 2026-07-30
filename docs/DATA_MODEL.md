@@ -8,8 +8,12 @@ panes edit what it produced; saving and publishing are still future work.
 One important caveat: there is **no in-memory project object yet**. Layout JSON
 is fetched, rendered to DOM, and then the DOM is the only copy — section
 reordering and trash-deletion in `section-dnd.js` move and remove DOM nodes,
-not model nodes, and every tool pane writes straight to the element. The shapes below describe where the model is going; only `Node`
-(and only the fields `renderer.js` reads) exists in running code today.
+not model nodes, and the panes that edit committed content — Text, Button,
+Image — write straight to the element. The Section pane is the exception: it
+edits the Section builder's draft `Node` tree and renders that to the canvas,
+so the tree is the source of truth until Insert commits it. The shapes below
+describe where the model is going; only `Node` (and only the fields
+`renderer.js` reads) exists in running code today.
 
 ## Goals
 
