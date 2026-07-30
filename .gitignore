@@ -1,1 +1,6 @@
 .DS_Store
+__pycache__/
+
+# Personal Claude Code overrides. .claude/settings.json is shared and checked
+# in; this one is per-machine (it accumulates whatever each person approves).
+.claude/settings.local.json

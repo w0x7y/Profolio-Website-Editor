@@ -238,6 +238,13 @@ arrays, so clicking them does nothing.
 - `role` values in `layout/**/*.json` ↔ the `role--*` rules in `style.css`
 - The roles list in `docs/DATA_MODEL.md` ↔ what layouts actually use
 
+`python3 .claude/check-sync.py` (or `/check-sync`) verifies the first four
+mechanically, plus that every page's `manifest.json` matches the `.json` files
+actually in its folder. It is the only automated check in the repo — it does
+not test behavior, only that files which state the same fact still agree. The
+last two couplings are deliberately not checked: a `role` with no CSS rule is
+valid, so there is no failure to detect.
+
 ## Code style
 
 - **4-space indent**, single quotes in JS, semicolons.
