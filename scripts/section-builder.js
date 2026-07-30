@@ -335,11 +335,17 @@ export function setLayoutProp(nodeId, prop, value) {
     if (el) applyLayoutProp(el, prop, node.layout[prop]);
 }
 
+// `0px` rather than `0`: the browser normalizes the `flex` shorthand's basis to
+// a length when it serializes style.flex, so writing `1 1 0` would leave the
+// tree holding one string and the element another. Keeping them identical is
+// what lets columnWidthMode() read the tree and still describe the element.
+const COLUMN_FLEX_EQUAL = '1 1 0px';
+
 /**
  * Column width, expressed as one `flex` declaration:
  *
  *   auto     no declaration — the column takes its natural width
- *   equal    1 1 0    — every equal column shares the row evenly
+ *   equal    1 1 0px  — every equal column shares the row evenly
  *   percent  0 0 N%   — a fixed share, for a sidebar or a 70/30 split
  *
  * Tree first, same reason as setLayoutProp().
@@ -348,7 +354,7 @@ export function setColumnWidth(columnId, mode, pct) {
     const node = draft && findNode(draft, columnId);
     if (!node || node.type !== 'column') return;
 
-    const flex = mode === 'equal' ? '1 1 0'
+    const flex = mode === 'equal' ? COLUMN_FLEX_EQUAL
         : mode === 'percent' ? `0 0 ${pct}%`
         : '';
 
@@ -365,7 +371,7 @@ export function setColumnWidth(columnId, mode, pct) {
 export function columnWidthMode(column) {
     const flex = column && column.style && column.style.base && column.style.base.flex;
     if (!flex) return 'auto';
-    if (flex === '1 1 0') return 'equal';
+    if (flex === COLUMN_FLEX_EQUAL) return 'equal';
     return 'percent';
 }
 

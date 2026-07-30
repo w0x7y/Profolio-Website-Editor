@@ -15,9 +15,10 @@
 
 import { buildCtrl, buildSegmented, setSegmentedValue, setSwitch, isSwitchOn } from './panel-widgets.js';
 import {
-    onDraftChange, currentDraft, pickedNode, hasRows,
+    onDraftChange, currentDraft, pickedNode, hasRows, canDeleteColumn,
     commandAddRow, commandAddColumn, commandDeleteRow,
-    setLayoutProp
+    commandAddContentSlot, commandDeleteColumn, commandDeleteContentSlot,
+    setLayoutProp, setColumnWidth, columnWidthMode, columnWidthPct
 } from './section-builder.js';
 
 const ALIGN_OPTIONS = [
@@ -32,6 +33,30 @@ const JUSTIFY_OPTIONS = [
     { value: 'flex-end', label: 'Right' },
     { value: 'space-between', label: 'Spread' }
 ];
+
+const WIDTH_OPTIONS = [
+    { value: 'auto', label: 'Auto' },
+    { value: 'equal', label: 'Equal' },
+    { value: 'percent', label: '%' }
+];
+
+// What a column can hold. The values are node types the renderer already knows
+// how to draw as empty placeholders.
+const CONTENT_OPTIONS = [
+    { type: 'heading', label: 'Heading' },
+    { type: 'text', label: 'Text' },
+    { type: 'image', label: 'Image' },
+    { type: 'button', label: 'Button' }
+];
+
+const CONTENT_LABELS = {
+    heading: 'Heading',
+    text: 'Text',
+    image: 'Image',
+    button: 'Button'
+};
+
+const DEFAULT_WIDTH_PCT = 50;
 
 export function initSectionPanel() {
     const addRow = document.getElementById('sectionAddRow');
@@ -101,6 +126,10 @@ function buildInspectorBody(node) {
         return body;
     }
 
+    body.appendChild(buildWidthCtrl(node));
+    body.appendChild(buildSlotList(node));
+    body.appendChild(buildAddContent(node));
+    body.appendChild(buildColumnActions(node));
     return body;
 }
 
@@ -195,5 +224,135 @@ function buildRowActions(row) {
     deleteRow.addEventListener('click', () => commandDeleteRow(row.id));
 
     wrap.append(addColumn, deleteRow);
+    return wrap;
+}
+
+/**
+ * Column width. The percentage field only exists in `percent` mode — an
+ * inactive number box next to an Auto/Equal choice reads as though it still
+ * applies.
+ */
+function buildWidthCtrl(column) {
+    const ctrl = buildCtrl('Width');
+    const mode = columnWidthMode(column);
+
+    const pct = document.createElement('input');
+    pct.className = 'input';
+    pct.type = 'number';
+    pct.min = '1';
+    pct.max = '100';
+    pct.value = String(columnWidthPct(column) || DEFAULT_WIDTH_PCT);
+    pct.setAttribute('aria-label', 'Width percentage');
+    pct.hidden = mode !== 'percent';
+
+    const group = buildSegmented(WIDTH_OPTIONS, 'Width', value => {
+        pct.hidden = value !== 'percent';
+        setColumnWidth(column.id, value, clampPct(pct.value) || DEFAULT_WIDTH_PCT);
+    });
+    setSegmentedValue(group, mode);
+
+    pct.addEventListener('input', () => {
+        const value = clampPct(pct.value);
+        if (value === null) return;
+        setColumnWidth(column.id, 'percent', value);
+    });
+
+    pct.addEventListener('blur', () => {
+        const value = clampPct(pct.value);
+        pct.value = String(value === null ? (columnWidthPct(column) || DEFAULT_WIDTH_PCT) : value);
+    });
+
+    ctrl.append(group, pct);
+    return ctrl;
+}
+
+/** A width percentage in 1–100, or null when the field holds no usable number. */
+function clampPct(raw) {
+    if (String(raw).trim() === '') return null;
+    const n = Number(raw);
+    if (!Number.isFinite(n)) return null;
+    return Math.min(100, Math.max(1, n));
+}
+
+/**
+ * The column's content slots, each removable. Slots are managed from here
+ * rather than by picking one on the canvas: they carry nothing to edit at this
+ * stage, so clicking one picks this column instead.
+ */
+function buildSlotList(column) {
+    const ctrl = buildCtrl('Content');
+
+    if (!column.children.length) {
+        const note = document.createElement('p');
+        note.className = 'ctrl__note';
+        note.textContent = 'Empty. Add content below, or leave it as a spacer.';
+        ctrl.appendChild(note);
+        return ctrl;
+    }
+
+    column.children.forEach(slot => {
+        const row = document.createElement('div');
+        row.className = 'ctrl__row';
+
+        const name = document.createElement('span');
+        name.className = 'ctrl__label';
+        name.textContent = CONTENT_LABELS[slot.type] || slot.type;
+
+        const remove = document.createElement('button');
+        remove.className = 'panel-btn panel-btn--danger';
+        remove.type = 'button';
+        remove.textContent = 'Remove';
+        remove.setAttribute('aria-label', `Remove ${name.textContent}`);
+        remove.addEventListener('click', () => commandDeleteContentSlot(slot.id));
+
+        row.append(name, remove);
+        ctrl.appendChild(row);
+    });
+
+    return ctrl;
+}
+
+function buildAddContent(column) {
+    const ctrl = buildCtrl('Add content');
+    const wrap = document.createElement('div');
+    wrap.className = 'btn-row';
+
+    CONTENT_OPTIONS.forEach(option => {
+        const btn = document.createElement('button');
+        btn.className = 'panel-btn';
+        btn.type = 'button';
+        btn.textContent = option.label;
+        btn.addEventListener('click', () => commandAddContentSlot(column.id, option.type));
+        wrap.appendChild(btn);
+    });
+
+    ctrl.appendChild(wrap);
+    return ctrl;
+}
+
+/**
+ * Delete column, disabled at a row's last column.
+ *
+ * deleteColumn() refuses that case anyway — an empty row is an invisible
+ * zero-height strip that must not reach the page — so the control says so
+ * rather than looking broken when clicking it does nothing.
+ */
+function buildColumnActions(column) {
+    const wrap = document.createElement('div');
+    wrap.className = 'btn-row';
+
+    const remove = document.createElement('button');
+    remove.className = 'panel-btn panel-btn--danger';
+    remove.type = 'button';
+    remove.textContent = 'Delete column';
+
+    if (canDeleteColumn(currentDraft(), column.id)) {
+        remove.addEventListener('click', () => commandDeleteColumn(column.id));
+    } else {
+        remove.disabled = true;
+        remove.title = 'A row keeps at least one column — delete the row instead';
+    }
+
+    wrap.appendChild(remove);
     return wrap;
 }
