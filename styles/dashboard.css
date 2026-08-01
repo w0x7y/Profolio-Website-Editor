@@ -178,6 +178,12 @@
 
 .dash-dialog {
     width: min(380px, calc(100vw - 32px));
+    /* A <dialog> is centred by the UA's own `margin: auto`, which the reset at
+       the top of style.css zeroes along with everything else's. Restored here,
+       with `inset: 0` to give the auto margins a box to centre inside — the
+       same fix .upload-dialog carries, for the same reason. */
+    inset: 0;
+    margin: auto;
     padding: 20px;
     background: var(--bg-panel);
     border: 1px solid var(--border-strong);
