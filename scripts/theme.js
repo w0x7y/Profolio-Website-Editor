@@ -24,8 +24,10 @@
 // from a layout file survives, and so do the Image pane's borders and
 // shadows, which are per-element intent rather than theme-derived.
 //
-// Like the rest of the editor, none of this persists across a reload yet
-// (TODO.md: "Persist selected theme/font with the project data").
+// The active preset and the two font stacks are part of a saved project:
+// getThemeState() hands them to a save, applyThemeState() puts them back on
+// open. That restore is the one path that must *not* wipe per-node overrides
+// — see the note on applyThemeState().
 // ============================================================
 
 import { canvasFrame, activateOne } from './dom.js';
@@ -186,6 +188,53 @@ export function initThemePanel() {
     // defaults in style.css, so there is one source of truth for what is
     // currently applied. Nothing to wipe yet — the canvas is empty.
     applyTheme(activeThemeId, { wipeOverrides: false });
+    applyFonts({ wipeOverrides: false });
+}
+
+/**
+ * What the Themes tab currently has applied, in the shape a Project stores it
+ * in (docs/DATA_MODEL.md, `Project.theme`). The colors are written out
+ * alongside the id rather than left to be looked up: a preset's palette can
+ * be edited or dropped between releases, and a saved project should reopen
+ * looking the way it did when it was saved.
+ *
+ * @returns {{id: string, colors: Object, fonts: {heading: string, body: string}}}
+ */
+export function getThemeState() {
+    const theme = THEMES.find(t => t.id === activeThemeId) || THEMES[0];
+
+    return {
+        id: theme.id,
+        colors: Object.assign({}, theme.colors),
+        fonts: {
+            heading: (themeEls && themeEls.headingFont.value) || DEFAULT_HEADING_FONT,
+            body: (themeEls && themeEls.bodyFont.value) || DEFAULT_BODY_FONT
+        }
+    };
+}
+
+/**
+ * Put a saved theme back on the canvas and back into the tab's controls.
+ *
+ * Nothing is wiped: applyTheme()/applyFonts() normally drop the per-node
+ * overrides a pane wrote, which is right when a *user* picks a new theme and
+ * wrong here — the overrides being restored alongside this are the ones the
+ * saved project is made of, and wiping them would erase the colors and fonts
+ * the user chose the last time they had the project open.
+ *
+ * Falls back to the defaults for anything the saved state doesn't name, so a
+ * project written by an older version still opens.
+ *
+ * @param {Object} state - As returned by getThemeState().
+ */
+export function applyThemeState(state) {
+    if (!themeEls) return;
+
+    const fonts = (state && state.fonts) || {};
+    themeEls.headingFont.value = fonts.heading || DEFAULT_HEADING_FONT;
+    themeEls.bodyFont.value = fonts.body || DEFAULT_BODY_FONT;
+
+    applyTheme((state && state.id) || THEMES[0].id, { wipeOverrides: false });
     applyFonts({ wipeOverrides: false });
 }
 

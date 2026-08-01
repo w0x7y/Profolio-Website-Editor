@@ -153,6 +153,35 @@ export function stampActionFromNode(el, node) {
 }
 
 /**
+ * The inverse of stampActionFromNode(): an element's action state as the
+ * `meta` object a node carries it in, ready to be saved.
+ *
+ * Only fields that were actually set come back. readAction() resolves every
+ * default, which is right for a panel populating its controls and wrong for a
+ * save — writing the resolved defaults out would turn "this button never had
+ * an action chosen" into "this button is explicitly a section link to
+ * nowhere", and that difference is what stampActionFromNode() leans on when it
+ * falls back to the layout's `href`.
+ *
+ * @param {Element} el
+ * @returns {Object|null} The node's `meta`, or null when nothing is set.
+ */
+export function readActionFromEl(el) {
+    if (!el) return null;
+
+    const data = el.dataset;
+    const meta = {};
+
+    if (ACTION_TYPES.has(data.actionType)) meta.actionType = data.actionType;
+    if (LINK_MODES.has(data.linkMode)) meta.linkMode = data.linkMode;
+    if (data.sectionId) meta.sectionId = data.sectionId;
+    if (data.url) meta.url = data.url;
+    if (data.onClick) meta.onClick = data.onClick;
+
+    return Object.keys(meta).length ? meta : null;
+}
+
+/**
  * Read a plain href back into {mode, sectionId, url}. A bare `#` is the stub
  * every layout file ships — a link with no target picked yet, not a link to a
  * section whose id is the empty string.
