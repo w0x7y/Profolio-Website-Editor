@@ -38,6 +38,11 @@ const ASSET_PROJECT_INDEX = 'byProject';
 // of racing two of them.
 let dbPromise = null;
 
+/**
+ * The page's one database connection, opened on first use and shared by every
+ * caller afterwards.
+ * @returns {Promise<IDBDatabase>}
+ */
 function openDb() {
     if (dbPromise) return dbPromise;
 
@@ -59,7 +64,23 @@ function openDb() {
             }
         };
 
-        request.onsuccess = () => resolve(request.result);
+        request.onsuccess = () => {
+            const db = request.result;
+
+            // This connection is cached for the life of the page, which would
+            // block a future DB_VERSION upgrade running in another tab — that
+            // tab's open would hang until this one closed, and its onblocked
+            // below is the only thing it would hear. Letting go here means the
+            // upgrade proceeds and the next call to openDb() reopens on the
+            // new version.
+            db.onversionchange = () => {
+                db.close();
+                dbPromise = null;
+            };
+
+            resolve(db);
+        };
+
         request.onerror = () => reject(request.error);
         // Fires when another tab holds an older version open. Nothing to
         // resolve with, so surface it rather than hanging forever.

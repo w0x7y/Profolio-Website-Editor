@@ -148,6 +148,7 @@ async function boot() {
 // boot() is async now that it opens a project, so its rejection has to be
 // caught here — an unhandled one would leave the editor half-wired with
 // nothing in the console explaining why.
+/** Boot, and make sure a failure says so rather than vanishing. */
 function start() {
     boot().catch(err => console.error('The editor failed to start', err));
 }

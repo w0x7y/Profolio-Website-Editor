@@ -56,7 +56,11 @@
                      database is asynchronous, and flashing "No projects yet"
                      at someone who has ten is worse than a moment of
                      nothing. -->
-                <p class="dashboard__status" id="projectsLoading">Loading your projects…</p>
+                <!-- A live region because dashboard.js reuses this element for
+                     the storage-error message: without it, a screen reader
+                     user hears nothing when "Loading…" becomes an error. -->
+                <p class="dashboard__status" id="projectsLoading"
+                   role="status" aria-live="polite">Loading your projects…</p>
 
                 <div class="dashboard__empty" id="projectsEmpty" hidden>
                     <svg viewBox="0 0 24 24" class="dashboard__empty-icon">

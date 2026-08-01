@@ -198,14 +198,26 @@ function hydrateAssetSrc(sections) {
 
 /**
  * The inverse: replace the object URL on each image node with the id of the
- * asset it came from. A `src` that isn't one of ours is left alone.
+ * asset it came from. A `src` that isn't one of ours — an ordinary URL — is
+ * left alone.
+ *
+ * An unresolvable `blob:` URL is cleared rather than stored. Object URLs mean
+ * nothing outside the session that minted them, so writing one out would save
+ * a node that renders as a broken image next time instead of as the empty slot
+ * hydrateAssetSrc() describes. Deleting an asset already resets the nodes
+ * showing it (`assets-panel.js`), so this is a guard on the invariant rather
+ * than a path with a known way in — but a blob URL is never a correct thing to
+ * persist, whichever edit path produced it.
  */
 function dehydrateAssetSrc(sections) {
     walkNodes(sections, node => {
         if (node.type !== 'image' || !node.src) return;
 
         const asset = findAssetByUrl(node.src);
-        if (!asset) return;
+        if (!asset) {
+            if (String(node.src).startsWith('blob:')) node.src = null;
+            return;
+        }
 
         node.src = null;
         node.meta = Object.assign({}, node.meta, { assetId: asset.id });
@@ -214,6 +226,7 @@ function dehydrateAssetSrc(sections) {
     return sections;
 }
 
+/** Depth-first walk of a sections tree, visiting every node once. */
 function walkNodes(nodes, visit) {
     (nodes || []).forEach(node => {
         visit(node);
@@ -227,6 +240,10 @@ function walkNodes(nodes, visit) {
 // only adds, removes or retargets one of these is not an edit.
 const CHROME_SELECTOR = '.section-handle, .canvas-drop-line, .canvas-frame__empty';
 
+/**
+ * Start marking the project dirty on every real edit to the canvas. Called
+ * once, after the project has rendered, so the load itself isn't an edit.
+ */
 function watchForChanges(frame) {
     if (!frame || observer) return;
 
@@ -266,6 +283,7 @@ function isRealEdit(mutation) {
     return touched.some(node => !isChrome(node));
 }
 
+/** Whether a node is one of the editor's own decorations on the canvas. */
 function isChrome(node) {
     if (!node || node.nodeType !== Node.ELEMENT_NODE) return false;
     return node.matches(CHROME_SELECTOR);
@@ -291,6 +309,7 @@ export function onSaveStateChange(fn) {
     return () => saveStateHandlers.delete(fn);
 }
 
+/** Move to a new save state and tell everyone showing it. */
 function setSaveState(state) {
     if (state === saveState) return;
 

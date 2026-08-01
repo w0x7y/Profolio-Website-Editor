@@ -74,7 +74,13 @@ export async function openProjectAssets(projectId) {
     // Ids are handed out as `asset_<n>`; restarting the counter at 1 would
     // reuse an id that is already in this project's tree and silently point
     // two nodes at the same image.
-    nextId = rows.reduce((max, row) => Math.max(max, idNumber(row.id)), 0) + 1;
+    //
+    // Clamped rather than assigned, because the upload controls are wired
+    // before this resolves (see main.js): a file dropped during the await
+    // above has already taken an id, and lowering the counter back past it
+    // would hand the same one out twice and overwrite a stored row.
+    const highestStored = rows.reduce((max, row) => Math.max(max, idNumber(row.id)), 0);
+    nextId = Math.max(nextId, highestStored + 1);
 
     notify();
 }
@@ -127,6 +133,12 @@ export function listAssets() {
     return Array.from(assets.values());
 }
 
+/**
+ * One asset by id, or null. This is how a saved node's `meta.assetId` becomes
+ * something the renderer can show.
+ * @param {string} id
+ * @returns {Object|null}
+ */
 export function getAsset(id) {
     return assets.get(id) || null;
 }
@@ -179,7 +191,14 @@ export function onStorageError(fn) {
  * something that has no failure the user can act on mid-upload.
  */
 function persist(asset, blob) {
-    if (!currentProjectId) return;
+    // No project yet means the upload landed in the window between the
+    // controls being wired and openProjectAssets() resolving. There is nothing
+    // to file the blob under, and it will be gone by the next open — so this
+    // is reported rather than dropped in silence, the same as a failed write.
+    if (!currentProjectId) {
+        reportStorageError(new Error('No project is open to store this image in'), asset);
+        return;
+    }
 
     putAsset({
         id: asset.id,
@@ -190,6 +209,7 @@ function persist(asset, blob) {
     }).catch(err => reportStorageError(err, asset));
 }
 
+/** Tell every onStorageError() subscriber that a blob didn't reach storage. */
 function reportStorageError(err, asset) {
     storageErrorHandlers.forEach(fn => fn(err, asset));
 }
@@ -215,6 +235,7 @@ function measure(asset) {
     probe.src = asset.url;
 }
 
+/** Re-render every view of the library. */
 function notify() {
     subscribers.forEach(fn => fn());
 }

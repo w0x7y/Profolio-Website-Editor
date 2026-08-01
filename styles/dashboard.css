@@ -7,10 +7,11 @@
    Nothing here restates a color: the tokens are the same ones the editor
    chrome reads, so the two pages can't drift apart visually.
 
-   One addition to the shared set lives here rather than there: .btn--danger.
-   The editor has no destructive button to style yet (its one delete is the
-   trash drop zone), so putting it in style.css would have been a rule with
-   no user on the page that defines it.
+   One addition to the shared set lives here rather than there: the
+   .btn--danger *rule*. The editor has no destructive button to style yet (its
+   one delete is the trash drop zone), so the rule would have had no user on
+   the page that defines it. Its colors are still tokens (`--danger`) declared
+   with the rest in style.css — the rule is page-specific, the color is not.
    ============================================================ */
 
 /* The `hidden` attribute is only a UA-stylesheet `display: none`, so any
@@ -23,7 +24,11 @@
 }
 
 .dashboard {
-    width: 100vw;
+    /* 100% rather than 100vw: vw includes the vertical scrollbar in most
+       engines, so once the project list is long enough to scroll the page
+       would be wider than the viewport and grow a horizontal scrollbar too.
+       (.app in style.css can use vw because the editor never scrolls.) */
+    width: 100%;
     min-height: 100vh;
     display: flex;
     flex-direction: column;
@@ -138,6 +143,16 @@
     color: var(--text-primary);
 }
 
+/* These are reachable by keyboard, and the card's own focus ring belongs to
+   the link behind them — without this the two actions would be the only
+   focusable things on the page with nothing to show for it. */
+.project-card__action:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 3px;
+    border-radius: 2px;
+    color: var(--text-primary);
+}
+
 /* ---- empty state ---- */
 
 .dashboard__empty {
@@ -219,10 +234,10 @@
 }
 
 .btn--danger {
-    background: #dc2626;
+    background: var(--danger);
     color: #fff;
 }
 
 .btn--danger:hover {
-    background: #b91c1c;
+    background: var(--danger-hover);
 }

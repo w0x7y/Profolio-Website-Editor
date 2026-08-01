@@ -61,6 +61,13 @@
     /* accent */
     --accent: #6366f1;
     --accent-hover: #7678f4;
+
+    /* Destructive actions. The only user today is the dashboard's Delete
+       button (.btn--danger in dashboard.css), but the value belongs with the
+       other chrome tokens rather than inside the one sheet that happens to
+       need it first — the editor grows a destructive button eventually. */
+    --danger: #dc2626;
+    --danger-hover: #b91c1c;
     --accent-soft: rgba(99, 102, 241, 0.14);
     /* strong enough to read as a hairline on the white canvas, faint enough
        not to compete with a real selection outline */

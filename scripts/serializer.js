@@ -96,6 +96,7 @@ function isCommittedNode(el) {
 
 // ---- leaves -----------------------------------------------------------
 
+/** Read whatever a leaf carries — copy, image source, or embed label. */
 function readLeafContent(node, el, type) {
     if (COPY_LEAF_TYPES.has(type)) {
         // An empty leaf renders its placeholder *as its text*, so reading the

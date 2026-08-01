@@ -129,6 +129,7 @@ function toModelProp(prop) {
         .replace(/-([a-z])/g, (_, letter) => letter.toUpperCase());
 }
 
+/** Add or remove one property from an element's `data-user-styled` ledger. */
 function recordUserStyle(el, property, isSet) {
     const props = new Set((el.dataset.userStyled || '').split(',').filter(Boolean));
 

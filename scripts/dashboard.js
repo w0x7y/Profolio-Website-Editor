@@ -30,6 +30,7 @@ const EDITOR_URL = 'editor.html';
 
 const els = {};
 
+/** Look up the page's elements, wire every control, then draw the list. */
 function boot() {
     els.grid = document.getElementById('projectGrid');
     els.empty = document.getElementById('projectsEmpty');
@@ -76,6 +77,11 @@ function wireDialog(dialog) {
 
 // ---- the list ---------------------------------------------------------
 
+/**
+ * Draw the whole list from a fresh read of storage. Every action ends by
+ * calling this, so the screen is a function of the database rather than of
+ * what this file believes happened.
+ */
 async function render() {
     let projects;
     try {
@@ -93,6 +99,26 @@ async function render() {
     els.grid.replaceChildren(...projects.map(buildCard));
 }
 
+/**
+ * Tell the user a write didn't happen.
+ *
+ * Every action here ends by closing its dialog and redrawing from storage, so
+ * a failed write looks exactly like a successful one that changed nothing —
+ * the card is simply still there, with its old name. Saying so is the only
+ * thing separating "blocked" from "did nothing".
+ *
+ * @param {string} verb - Past tense, e.g. 'renamed'.
+ * @param {Error} err
+ */
+function reportFailure(verb, err) {
+    console.error(`The project could not be ${verb}`, err);
+    window.alert(`The project couldn’t be ${verb}. The browser may be blocking storage.`);
+}
+
+/**
+ * Replace the whole list area with a single message — used when storage can't
+ * be read at all, where there is no list to draw and no action worth offering.
+ */
 function showStatus(message) {
     els.loading.hidden = false;
     els.loading.textContent = message;
@@ -135,6 +161,7 @@ function buildCard(project) {
     return item;
 }
 
+/** One of a card's text buttons. */
 function buildAction(label, onClick) {
     const button = document.createElement('button');
     button.type = 'button';
@@ -155,6 +182,7 @@ function sectionSummary(project) {
 
 // ---- create -----------------------------------------------------------
 
+/** Open the New project dialog on an empty field. */
 function openNewDialog() {
     els.newName.value = '';
     els.newDialog.showModal();
@@ -187,6 +215,7 @@ async function onCreate(event) {
 
 let renaming = null;
 
+/** Open Rename on a project, with its current name selected for replacing. */
 function openRenameDialog(project) {
     renaming = project;
     els.renameName.value = project.name;
@@ -194,6 +223,7 @@ function openRenameDialog(project) {
     els.renameName.select();
 }
 
+/** Commit a rename, then redraw. */
 async function onRename(event) {
     event.preventDefault();
 
@@ -208,7 +238,7 @@ async function onRename(event) {
         const current = await getProject(renaming.id);
         if (current) await putProject(Object.assign({}, current, { name: name }));
     } catch (err) {
-        console.error('Could not rename the project', err);
+        reportFailure('renamed', err);
     }
 
     renaming = null;
@@ -220,6 +250,7 @@ async function onRename(event) {
 
 let deleting = null;
 
+/** Open the delete confirmation, naming what is about to go. */
 function openDeleteDialog(project) {
     deleting = project;
     els.deleteBody.textContent =
@@ -227,6 +258,7 @@ function openDeleteDialog(project) {
     els.deleteDialog.showModal();
 }
 
+/** Delete the project and its images, then redraw. */
 async function onDelete(event) {
     event.preventDefault();
     if (!deleting) return;
@@ -234,7 +266,7 @@ async function onDelete(event) {
     try {
         await deleteProject(deleting.id);
     } catch (err) {
-        console.error('Could not delete the project', err);
+        reportFailure('deleted', err);
     }
 
     deleting = null;

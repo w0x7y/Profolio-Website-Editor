@@ -51,6 +51,13 @@ const DEFAULT_PLACEHOLDER = {
     button: 'Button'
 };
 
+/**
+ * The placeholder a copy leaf shows when its node names none of its own.
+ * Shared with text-panel.js, which needs the same answer when restoring a
+ * placeholder after the Content box is cleared.
+ * @param {string} nodeType
+ * @returns {string}
+ */
 export function fallbackPlaceholder(nodeType) {
     return DEFAULT_PLACEHOLDER[nodeType] || 'Empty text';
 }
@@ -201,6 +208,7 @@ export function applyStyleProp(el, prop, value) {
     el.style[jsProp] = value == null ? '' : value;
 }
 
+/** Put a container's `layout` onto its element as flex declarations. */
 function applyNodeLayout(el, node) {
     if (!CONTAINER_NODE_TYPES.has(node.type)) return;
 
@@ -245,6 +253,7 @@ function applyImageChildStyle(el, node) {
     });
 }
 
+/** Fill in a leaf, dispatching on the one thing each type carries. */
 function renderLeafContent(el, node) {
     switch (node.type) {
         case 'heading':
@@ -326,6 +335,7 @@ function renderCopyLeaf(el, node) {
     stampActionFromNode(el, node);
 }
 
+/** An image node: its `<img>` or its dashed upload box, plus the child styles. */
 function renderImageLeaf(el, node) {
     // Stamped like data-node-id/type/role, and on every image node rather than
     // only the empty ones — the same reason renderCopyLeaf() stamps it for
@@ -374,11 +384,18 @@ export function setImageLeafSrc(el, src, alt) {
         `<span>${escapeHtml(el.dataset.placeholder || DEFAULT_IMAGE_PLACEHOLDER)}</span>`;
 }
 
+/** Embeds have no renderer yet — they draw as a labelled empty box. */
 function renderEmbedLeaf(el, node) {
     el.classList.add('is-empty');
     el.textContent = node.placeholder || 'Embed';
 }
 
+/**
+ * Escape a string for interpolation into markup. The placeholder inside the
+ * empty-image box is the one caller — copy that is never allowed to be markup.
+ * @param {string} str
+ * @returns {string}
+ */
 export function escapeHtml(str) {
     const div = document.createElement('div');
     div.textContent = str;
@@ -484,12 +501,14 @@ function withUniqueIds(sections, usedIds) {
     return clone;
 }
 
+/** Walk a cloned subtree giving every node an id not already in `usedIds`. */
 function assignUniqueIds(node, usedIds) {
     node.id = nextFreeId(node.id || node.type || 'node', usedIds);
     usedIds.add(node.id);
     (node.children || []).forEach(child => assignUniqueIds(child, usedIds));
 }
 
+/** `base`, or `base_2`, `base_3`… — the first one not already taken. */
 function nextFreeId(base, usedIds) {
     if (!usedIds.has(base)) return base;
 
@@ -498,6 +517,11 @@ function nextFreeId(base, usedIds) {
     return `${base}_${n}`;
 }
 
+/**
+ * The "Blank canvas" placeholder. Chrome, not content: it carries no node id,
+ * so nothing that walks the canvas for content ever sees it.
+ * @returns {HTMLElement}
+ */
 export function buildCanvasEmptyState() {
     const wrap = document.createElement('div');
     wrap.className = 'canvas-frame__empty';
