@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset='UTF-8'>
+        <meta name='viewport' content='width=device-width, initial-scale=1.0'>
+
+        <!-- The chrome's typeface, vendored under fonts/ — see the long note
+             in editor.html for why it is self-hosted and preloaded rather
+             than fetched from a CDN. Both pages share the one file. -->
+        <link rel="preload" as="font" type="font/woff2"
+              href="fonts/maple-mono-latin-400-normal.woff2"
+              crossorigin="anonymous">
+
+        <!-- style.css first: the dashboard reads its custom properties, its
+             resets and the chrome controls it shares with the editor (.btn,
+             .icon-btn, .brand, .avatar). dashboard.css only adds what is
+             specific to this page.
+
+             It does mean the dashboard loads editor rules it never uses.
+             Splitting the shared half into its own stylesheet is the real fix
+             and is already on the list as "split style.css into smaller
+             files" (TODO.md); doing it as part of adding a second page would
+             have buried a whole-stylesheet refactor inside an unrelated
+             change. -->
+        <link rel='stylesheet' href='styles/style.css'>
+        <link rel='stylesheet' href='styles/dashboard.css'>
+
+        <title>Your projects — Profolio</title>
+    </head>
+    <body>
+
+        <div class="dashboard">
+
+            <header class="topbar">
+                <div class="topbar__left">
+                    <div class="brand">
+                        <span class="brand__mark">P</span>
+                        <span class="brand__name">Profolio</span>
+                    </div>
+                </div>
+
+                <div class="topbar__right">
+                    <button class="btn btn--primary" type="button" id="newProject">New project</button>
+                    <div class="avatar">JD</div>
+                </div>
+            </header>
+
+            <main class="dashboard__main">
+                <div class="dashboard__head">
+                    <h1 class="dashboard__title">Your portfolios</h1>
+                    <p class="dashboard__hint">Everything here is stored in this browser.</p>
+                </div>
+
+                <!-- One of these three is shown at a time; dashboard.js owns
+                     which. The list starts hidden because reading the
+                     database is asynchronous, and flashing "No projects yet"
+                     at someone who has ten is worse than a moment of
+                     nothing. -->
+                <p class="dashboard__status" id="projectsLoading">Loading your projects…</p>
+
+                <div class="dashboard__empty" id="projectsEmpty" hidden>
+                    <svg viewBox="0 0 24 24" class="dashboard__empty-icon">
+                        <rect x="3" y="3" width="18" height="18" rx="2"/><path d="M12 8v8M8 12h8"/>
+                    </svg>
+                    <p class="dashboard__empty-title">No projects yet</p>
+                    <p class="dashboard__empty-hint">Create one to start building your portfolio.</p>
+                    <button class="btn btn--primary" type="button" id="newProjectEmpty">New project</button>
+                </div>
+
+                <ul class="project-grid" id="projectGrid" hidden></ul>
+            </main>
+
+        </div>
+
+        <!-- Both dialogs are native <dialog>s, the same choice upload-modal.js
+             made: the backdrop, Escape-to-close, the focus trap and making the
+             page behind inert all come for free. -->
+        <dialog class="dash-dialog" id="newProjectDialog" aria-labelledby="newProjectTitle">
+            <form method="dialog" id="newProjectForm">
+                <h2 class="dash-dialog__title" id="newProjectTitle">Name your project</h2>
+                <input class="input dash-dialog__input" id="newProjectName" type="text"
+                       placeholder="My portfolio" aria-label="Project name"
+                       autocomplete="off" spellcheck="false" maxlength="80">
+                <div class="dash-dialog__actions">
+                    <button class="btn btn--ghost" type="button" data-close>Cancel</button>
+                    <button class="btn btn--primary" type="submit">Create</button>
+                </div>
+            </form>
+        </dialog>
+
+        <dialog class="dash-dialog" id="renameDialog" aria-labelledby="renameTitle">
+            <form method="dialog" id="renameForm">
+                <h2 class="dash-dialog__title" id="renameTitle">Rename project</h2>
+                <input class="input dash-dialog__input" id="renameName" type="text"
+                       aria-label="Project name" autocomplete="off" spellcheck="false" maxlength="80">
+                <div class="dash-dialog__actions">
+                    <button class="btn btn--ghost" type="button" data-close>Cancel</button>
+                    <button class="btn btn--primary" type="submit">Rename</button>
+                </div>
+            </form>
+        </dialog>
+
+        <dialog class="dash-dialog" id="deleteDialog" aria-labelledby="deleteTitle">
+            <form method="dialog" id="deleteForm">
+                <h2 class="dash-dialog__title" id="deleteTitle">Delete project</h2>
+                <p class="dash-dialog__body" id="deleteBody"></p>
+                <div class="dash-dialog__actions">
+                    <button class="btn btn--ghost" type="button" data-close>Cancel</button>
+                    <button class="btn btn--danger" type="submit">Delete</button>
+                </div>
+            </form>
+        </dialog>
+
+        <script type="module" src="scripts/dashboard.js"></script>
+    </body>
+</html>
