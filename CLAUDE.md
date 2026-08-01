@@ -8,9 +8,13 @@ Guidance for AI assistants working in this repository.
 site: pick a starting layout, choose a theme, drag in content, and (eventually)
 publish. Think "Webflow/Framer, scoped to portfolio sites."
 
-Today the repo is the **editor UI**, not the product. There is no backend, no
-persistence, and no publish step. `README.md` describes what works; `TODO.md`
-holds the full task list and a dependency-ordered implementation plan.
+The repo is two pages: a **dashboard** (`index.html`) listing the projects
+stored in this browser, and the **editor** (`editor.html`), which always opens
+on one of them via `editor.html?project=<id>`. There is no backend and no
+publish step. Persistence is local: projects and uploaded images live in
+IndexedDB, saved explicitly with the top bar's Save button. `README.md`
+describes what works; `TODO.md` holds the full task list and a
+dependency-ordered implementation plan.
 
 ## Stack and constraints
 
@@ -18,9 +22,10 @@ holds the full task list and a dependency-ordered implementation plan.
   `package.json`, no `node_modules`, no build step, no test suite, no linter.
 - **Everything is hand-written and hand-verified in a browser.** There is
   nothing to run to prove a change works other than opening the app.
-- Only two external network dependencies: the Google Fonts `css2` stylesheet in
-  `index.html` (non-blocking, `media=print` + `onload`), and nothing else. The
-  editor chrome's own font is vendored under `fonts/`.
+- One external network dependency: the Google Fonts `css2` stylesheet in
+  `editor.html` (non-blocking, `media=print` + `onload`). The editor chrome's
+  own font is vendored under `fonts/`, and the dashboard loads no third party
+  at all.
 - Do not introduce a build step, a dependency, or a framework without being
   asked. `TODO.md` lists "decide on a build step" as an open, deliberate
   question.
@@ -28,11 +33,12 @@ holds the full task list and a dependency-ordered implementation plan.
 ## Running it
 
 The layout loader uses `fetch()`, so the app must be served over `http://` —
-opening `index.html` as a `file://` path silently breaks layout loading.
+opening the files as `file://` paths silently breaks layout loading. Serving
+also gives both pages one origin, which is what lets them share a database.
 
 ```bash
 python3 -m http.server 4173    # matches .claude/launch.json
-# then open http://localhost:4173/
+# then open http://localhost:4173/ — the dashboard; make a project to reach the editor
 ```
 
 `.claude/launch.json` defines an `editor` configuration that does exactly this.
@@ -42,6 +48,13 @@ the path you touched (insert a layout card, select a node, apply a theme, upload
 an image, build and insert a section). Check the browser console for errors.
 There is no automated check that will catch a regression for you — do not claim
 a change works without having actually loaded it.
+
+Anything touching persistence has a second half: **save, reload, and look
+again.** A change that works until the page is refreshed is the characteristic
+failure here, and it is invisible in a single session — a style the whitelist
+doesn't name, a field the serializer doesn't read, an asset stored under a URL
+that won't exist next time. Reloading is the only way to see it. Deleting the
+project afterwards also checks that its images went with it.
 
 The one exception is the layout library, which has a mechanical checker:
 
@@ -57,18 +70,30 @@ the canvas, so it does not replace opening the app.
 ## Layout of the repo
 
 ```text
-index.html          The whole editor shell: top bar, left toolbar, left tool
+index.html          The dashboard: the project list, its cards and its dialogs
+editor.html         The whole editor shell: top bar, left toolbar, left tool
                     panel (Text/Image/Button/Section/Embed panes), canvas,
                     right panel (Layouts/Themes/Assets/Settings), upload dialog
 styles/style.css    All styling — editor chrome + canvas page + rendered nodes
+styles/dashboard.css  The dashboard's own layer, loaded after style.css
 fonts/              Maple Mono, self-hosted (vendored from @fontsource, OFL)
-scripts/*.js        ES modules, all reached through main.js
+scripts/*.js        ES modules; the editor's are all reached through main.js,
+                    the dashboard's through dashboard.js
 layout/             The layout library: pages.json + one folder per page
 docs/DATA_MODEL.md  The data model (sections → blocks → elements)
 README.md           User-facing overview and current status
 TODO.md             Task list + phased implementation plan
 .claude/            Claude Code configuration — see below
 ```
+
+**Two entry points, not one.** `main.js` boots the editor and reaches for a
+canvas, a tool panel and a right-hand panel; none of those exist on the
+dashboard. The two pages share modules, not a boot sequence — specifically
+`storage.js` (the same database) and `project-record.js` (the same record
+shape). Do not import `project.js` from the dashboard: it pulls in the canvas,
+the renderer, the serializer, the theme panel and the asset store, and that
+whole graph would be evaluated on a page with nothing to render into. That
+split is the entire reason `project-record.js` exists separately.
 
 ### `.claude/` vs this file
 
@@ -100,14 +125,19 @@ nobody updates.
 
 ### The modules
 
-`main.js` is the only script `index.html` loads. It imports everything else and
+`main.js` is the only script `editor.html` loads. It imports everything else and
 calls each subsystem's `init*()` in a **specific order** documented at the call
 site — that order is the only place the app's boot sequence is stated. Add new
 init calls there, in the right place, with a comment saying why.
 
 | Module | Owns |
 |---|---|
-| `main.js` | Boot. Toolbar/tab/device wiring, then every `init*()` in order |
+| `main.js` | Editor boot. Toolbar/tab/device wiring, then every `init*()` in order |
+| `dashboard.js` | The dashboard's own boot: the project list, and New/Rename/Delete |
+| `storage.js` | IndexedDB. The `projects` and `assets` stores; knows nothing of node trees |
+| `project-record.js` | What a stored project *is*, and `createProject()`. Imports nothing |
+| `project.js` | The open project: load order, save, change tracking, the top bar's Save |
+| `serializer.js` | Canvas DOM → node tree, for saving. The inverse of `renderer.js` |
 | `dom.js` | Singleton element accessors + `activateOne()` |
 | `renderer.js` | Node tree → canvas DOM. Renders only; wires no interactivity |
 | `layouts-panel.js` | The Layouts accordion: loads `/layout`, inserts a card's sections |
@@ -121,12 +151,12 @@ init calls there, in the right place, with a comment saying why.
 | `section-panel.js` | The Section pane's controls (DOM wiring only) |
 | `link-controls.js` | The link action model + the shared link-target controls |
 | `panel-widgets.js` | Generic pane controls: segmented, switch, color field, units |
-| `node-style.js` | Per-node style overrides and the ledger the Themes tab undoes |
-| `asset-store.js` | Uploaded images, in memory |
+| `node-style.js` | Per-node style overrides, and the ledger the Themes tab undoes and a save carries |
+| `asset-store.js` | Uploaded images: a synchronous in-memory Map over IndexedDB blobs |
 | `upload-modal.js` | The `<dialog>` upload window + shared drop-zone wiring |
 | `asset-grid.js` | The thumbnail grid, rendered in two places |
 | `assets-panel.js` | Assets tab: upload button + library |
-| `theme.js` | Themes tab: color presets, font list, applying either |
+| `theme.js` | Themes tab: color presets, font list, applying either, and its saved state |
 
 ## The data model
 
@@ -155,15 +185,39 @@ node tree. The short version:
 
 ### The single biggest thing to know
 
-**There is no in-memory project object.** Layout JSON is fetched, rendered to
-DOM, and then *the DOM is the only copy*. Selection is a DOM reference; section
-reorder and delete move and remove DOM nodes; every tool pane writes straight to
-the element. Nothing survives a reload.
+**There is still no in-memory project object.** Layout JSON is fetched,
+rendered to DOM, and then *the DOM is the only live copy*. Selection is a DOM
+reference; section reorder and delete move and remove DOM nodes; every tool
+pane writes straight to the element.
 
-This is deliberate and tracked (TODO Phase 1, item 3). When you add editing
-behavior, follow the existing pattern — write the DOM — and leave a comment
-noting it should address the node in the project tree once one exists. Do not
-build a partial parallel model on the side.
+What changed is that the DOM is no longer the *only* copy. `serializer.js`
+walks the canvas back into a `Node` tree when a project is saved, and
+`renderer.js` renders that tree back on open. Work now survives a reload —
+but only across a save, and only because the canvas can be read back.
+
+This is still deliberate and still tracked (TODO Phase 1, item 3, the half
+that remains). When you add editing behavior, follow the existing pattern —
+write the DOM — and leave a comment noting it should address the node in the
+project tree once one exists. Do not build a partial parallel model on the
+side. `serializer.js` is not one: it holds no state, is never consulted while
+editing, and runs only on save. When the real tree lands it is the tree that
+gets saved and `serializer.js` goes away.
+
+**Two consequences worth internalizing:**
+
+*Anything a pane writes must be expressible in the model, or it will not
+survive a save.* The style whitelist (`STYLE_PROP_TO_JS`) is read in both
+directions — the renderer writes through it, the serializer reads through it —
+so a pane writing a CSS property the whitelist doesn't name produces a change
+that works until the user reloads and then silently vanishes. Adding a
+declaration to a pane means adding it to the whitelist and to
+`docs/DATA_MODEL.md` in the same change.
+
+*Editor chrome must stay distinguishable from content.* The serializer walks
+`[data-node-id]` children only, so drag handles, the drop line and the
+blank-canvas placeholder are excluded by construction. The change watcher in
+`project.js` filters the same set by class. If you add chrome inside the canvas
+frame, it needs no `data-node-id` and should be named in `CHROME_SELECTOR`.
 
 The one exception is the Section builder: its **draft is a real `Node` tree**
 and is the single source of truth for the draft, with the canvas as a render
@@ -239,7 +293,7 @@ to borrow a widget — that's exactly the tangle `panel-widgets.js` was extracte
 to undo.
 
 **Controls mounted more than once are built in JS,** not written into
-`index.html` (two copies of markup drift, and two mounts can't share an `id`).
+`editor.html` (two copies of markup drift, and two mounts can't share an `id`).
 `createLinkControls()` and the layout cards follow this.
 
 ## Working with the layout library
@@ -269,13 +323,19 @@ arrays, so clicking them does nothing.
 
 ## Cross-file couplings to keep in sync
 
-- `STYLE_PROP_TO_JS` (`renderer.js`) ↔ `StyleProps` (`docs/DATA_MODEL.md`)
-- `FONT_GROUPS` (`theme.js`) ↔ the Google Fonts `css2` URL in `index.html`
+- `STYLE_PROP_TO_JS` (`renderer.js`) ↔ `StyleProps` (`docs/DATA_MODEL.md`) ↔ every
+  CSS property any pane passes to `setNodeStyle()`. A pane can only write what
+  the whitelist names; anything else is dropped by the next save
+- `FONT_GROUPS` (`theme.js`) ↔ the Google Fonts `css2` URL in `editor.html`
   (both the `<link>` and the `<noscript>` copy)
 - `THEME_COLOR_PROPS` (`theme.js`) ↔ the `--color-*` block on `.canvas-frame`
   in `style.css`
 - `TOOL_PANEL_TOOLS` (`tool-panel.js`) ↔ the `data-tool-pane` panes in
-  `index.html` ↔ `NODE_TYPE_PANES` (`selection.js`)
+  `editor.html` ↔ `NODE_TYPE_PANES` (`selection.js`)
+- `IMAGE_CHILD_STYLE_PROPS` (`renderer.js`) — the props routed to an image's
+  inner `<img>` — is read by both `renderer.js` and `serializer.js`
+- Canvas chrome (`.section-handle`, `.canvas-drop-line`, `.canvas-frame__empty`)
+  ↔ `CHROME_SELECTOR` (`project.js`), which decides what is not an edit
 - `role` values in `layout/**/*.json` ↔ the `role--*` rules in `style.css`
 - The roles list in `docs/DATA_MODEL.md` ↔ what layouts actually use
 
