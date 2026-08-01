@@ -6,22 +6,89 @@
 // pane's Source grid) render from listAssets() and re-render on subscribe(),
 // so neither has to know the other exists.
 //
-// Storage is **in memory only**: a Map of blobs behind URL.createObjectURL.
-// Nothing survives a reload, which is where the rest of the editor is too —
-// there is no project object and no backend yet (docs/DATA_MODEL.md), so the
-// canvas doesn't survive one either. This file is the single seam that
-// changes when there is somewhere real to put them: the four functions below
-// keep their shape and grow a promise.
+// Two layers, on purpose:
 //
-// Object URLs are revoked in removeAsset(). Nothing else may revoke them —
-// a revoked URL is a broken image everywhere it was used, and the caller is
-// responsible for clearing those first (see assets-panel.js).
+//   in memory   a Map of `{ id, name, url, size, width, height }`, where
+//               `url` is an object URL. This is what every reader sees, and
+//               it is synchronous — the panels index into it while rendering
+//               and could not await anything even if they wanted to.
+//
+//   IndexedDB   the blobs themselves, one row per image, tagged with the
+//               project they belong to (storage.js). Object URLs die with the
+//               page, so the blob is the only thing worth keeping.
+//
+// openProjectAssets() bridges them: it reads a project's blobs once when the
+// editor opens and mints a fresh object URL for each. Because an object URL
+// is different every session, a saved image node cannot store one — it stores
+// the asset id, and project.js swaps between the two (see hydrateAssetSrc()).
+//
+// Writes go both ways at once: addFiles() puts the asset in the Map and
+// returns immediately, so the thumbnail appears on the next frame, while the
+// blob is written to IndexedDB in the background. A failed write is reported
+// through onStorageError() rather than thrown at the caller, which is
+// mid-render and has nothing useful to do with it.
+//
+// Object URLs are revoked in removeAsset() and closeProjectAssets(). Nothing
+// else may revoke them — a revoked URL is a broken image everywhere it was
+// used, and the caller is responsible for clearing those first (see
+// assets-panel.js).
 // ============================================================
+
+import { listProjectAssets, putAsset, deleteAsset } from './storage.js';
 
 const assets = new Map();
 const subscribers = new Set();
+const storageErrorHandlers = new Set();
 
 let nextId = 1;
+let currentProjectId = null;
+
+/**
+ * Load a project's stored images and make them the live library.
+ *
+ * Called once, before the canvas renders, so an image node's asset id can be
+ * resolved to a URL by the time the renderer asks for it.
+ *
+ * @param {string} projectId
+ * @returns {Promise<void>}
+ */
+export async function openProjectAssets(projectId) {
+    closeProjectAssets();
+    currentProjectId = projectId || null;
+    if (!currentProjectId) return;
+
+    const rows = await listProjectAssets(currentProjectId);
+
+    rows.forEach(row => {
+        assets.set(row.id, {
+            id: row.id,
+            name: row.name || 'image',
+            url: URL.createObjectURL(row.blob),
+            size: row.size || 0,
+            width: 0,
+            height: 0
+        });
+        measure(assets.get(row.id));
+    });
+
+    // Ids are handed out as `asset_<n>`; restarting the counter at 1 would
+    // reuse an id that is already in this project's tree and silently point
+    // two nodes at the same image.
+    nextId = rows.reduce((max, row) => Math.max(max, idNumber(row.id)), 0) + 1;
+
+    notify();
+}
+
+/**
+ * Drop the in-memory library and release its object URLs. The blobs stay in
+ * IndexedDB — this is closing a project, not deleting one.
+ */
+export function closeProjectAssets() {
+    assets.forEach(asset => URL.revokeObjectURL(asset.url));
+    assets.clear();
+    currentProjectId = null;
+    nextId = 1;
+}
 
 /**
  * Take in files, keep the images, hand back the ones that were accepted.
@@ -48,6 +115,7 @@ export function addFiles(files) {
         assets.set(asset.id, asset);
         added.push(asset);
         measure(asset);
+        persist(asset, file);
     });
 
     if (added.length) notify();
@@ -66,8 +134,8 @@ export function getAsset(id) {
 /**
  * The asset a canvas image is showing, or null if it isn't showing one of
  * ours. This is how a pane syncs its Source grid to the selected element
- * without storing an asset id on the node — there is no model to store it in
- * yet, so the rendered `src` is the only record.
+ * without storing an asset id on the node, and how a save turns the object URL
+ * on the canvas back into the id it will be stored under.
  */
 export function findAssetByUrl(url) {
     if (!url) return null;
@@ -85,12 +153,51 @@ export function removeAsset(id) {
     URL.revokeObjectURL(asset.url);
     assets.delete(id);
     notify();
+
+    deleteAsset(id).catch(err => reportStorageError(err, asset));
 }
 
 /** Re-render me whenever the library changes. Returns an unsubscribe. */
 export function subscribe(fn) {
     subscribers.add(fn);
     return () => subscribers.delete(fn);
+}
+
+/**
+ * Be told when an image could not be written to (or removed from) storage —
+ * the editor shows it as a failed save rather than letting an upload look
+ * like it worked and then vanish on reload. Returns an unsubscribe.
+ */
+export function onStorageError(fn) {
+    storageErrorHandlers.add(fn);
+    return () => storageErrorHandlers.delete(fn);
+}
+
+/**
+ * Write the blob behind an asset. Fire-and-forget: the upload is already on
+ * screen, and making the UI wait on a disk write would only add latency to
+ * something that has no failure the user can act on mid-upload.
+ */
+function persist(asset, blob) {
+    if (!currentProjectId) return;
+
+    putAsset({
+        id: asset.id,
+        projectId: currentProjectId,
+        name: asset.name,
+        size: asset.size,
+        blob: blob
+    }).catch(err => reportStorageError(err, asset));
+}
+
+function reportStorageError(err, asset) {
+    storageErrorHandlers.forEach(fn => fn(err, asset));
+}
+
+/** The numeric half of an `asset_<n>` id, or 0 for anything else. */
+function idNumber(id) {
+    const match = /^asset_(\d+)$/.exec(String(id || ''));
+    return match ? Number(match[1]) : 0;
 }
 
 /**

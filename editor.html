@@ -75,15 +75,22 @@
             <!-- ============ TOP BAR ============ -->
             <header class="topbar">
                 <div class="topbar__left">
-                    <div class="brand">
+                    <!-- Back to the project list. The brand doubles as the way
+                         out of the editor rather than adding a second control
+                         next to it. -->
+                    <a class="brand" href="index.html" title="All projects">
                         <span class="brand__mark">P</span>
                         <span class="brand__name">Profolio</span>
-                    </div>
+                    </a>
                     <div class="topbar__divider"></div>
-                    <button class="project-name" type="button">
-                        <span>Untitled Portfolio</span>
-                        <svg viewBox="0 0 24 24" class="icon icon--sm"><path d="M6 9l6 6 6-6"/></svg>
-                    </button>
+                    <!-- An input rather than the button it used to be: the
+                         project name is editable here as well as from the
+                         dashboard's Rename. project.js fills it and commits
+                         it on blur or Enter. -->
+                    <div class="project-name">
+                        <input class="project-name__input" id="projectName" type="text"
+                               aria-label="Project name" spellcheck="false" autocomplete="off">
+                    </div>
                 </div>
 
                 <div class="topbar__center">
@@ -108,6 +115,10 @@
                         <svg viewBox="0 0 24 24" class="icon"><path d="M15 7l5 5-5 5M20 12H9a5 5 0 0 0 0 10h1"/></svg>
                     </button>
                     <div class="topbar__divider"></div>
+                    <!-- Written by project.js on every save-state change; the
+                         data-state attribute is what style.css colors it by. -->
+                    <span class="save-state" id="saveState" data-state="saved" role="status" aria-live="polite"></span>
+                    <button class="btn btn--ghost" type="button" id="saveProject">Save</button>
                     <button class="btn btn--ghost" type="button">Preview</button>
                     <button class="btn btn--primary" type="button">Publish</button>
                     <div class="avatar">JD</div>
