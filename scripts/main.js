@@ -1,14 +1,22 @@
 // ============================================================
 // BOOT
 //
-// The one entry point index.html loads. Everything else is a module this
+// The one entry point editor.html loads. Everything else is a module this
 // file wires together as soon as the DOM is parsed (see the bottom of this
 // file); the order of the init calls below is the order the app expects,
 // and is the only place it is stated.
+//
+// The editor always opens on a saved project, named by `?project=` in the
+// URL — the dashboard (index.html) is what puts it there. Opening one is the
+// last step of boot rather than the first, because it renders onto a canvas
+// and applies a theme, and both of those need their subsystems already
+// wired. If there is no such project, openProject() sends the browser back to
+// the dashboard and boot stops where it is.
 // ============================================================
 
 import { canvasFrame, activateOne } from './dom.js';
 import { renderSectionsIntoCanvas } from './renderer.js';
+import { openProject, initProjectBar } from './project.js';
 import { initThemePanel } from './theme.js';
 import { initTextPanel } from './text-panel.js';
 import { initButtonPanel } from './button-panel.js';
@@ -24,8 +32,10 @@ import { loadPages } from './layouts-panel.js';
 
 /**
  * Initialize the application's UI event handlers and editor subsystems.
+ * @returns {Promise<void>} Resolves once the project is open, or immediately
+ *   after redirecting to the dashboard when there is no project to open.
  */
-function boot() {
+async function boot() {
 
     // ---- Left toolbar: tool selection ----
     const tools = document.querySelectorAll('.tool');
@@ -81,7 +91,9 @@ function boot() {
     // starting theme on the canvas. See theme.js.
     initThemePanel();
 
-    // ---- Canvas: render the initial (empty) state from the data model ----
+    // ---- Canvas: an empty frame to paint into while the project loads ----
+    // Replaced wholesale by openProject() below. Rendering it here means the
+    // canvas is never a blank rectangle waiting on a database read.
     renderSectionsIntoCanvas([], canvasFrame());
 
     // ---- Canvas: drag sections to reorder them, or onto the trash to delete ----
@@ -108,9 +120,22 @@ function boot() {
     setActiveTool('select');
     initCanvasSelection();
 
+    // ---- The project itself: assets, theme and sections onto the canvas ----
+    // Awaited, and ahead of the Layouts tab: everything above has to exist
+    // before a saved project can be rendered into it, and everything below
+    // only makes sense once one is open. A false here means the URL named no
+    // project and the browser is already on its way to the dashboard — which
+    // is also why the layout library is not fetched until after this point.
+    // Starting eight fetches we are about to navigate away from only produced
+    // a console full of aborted requests.
+    const opened = await openProject();
+    if (!opened) return;
+
+    // ---- Top bar: the project name, the Save button and the save state ----
+    initProjectBar();
+
     // ---- Layouts: load automatically from /layout, then wire up selection ----
     loadPages();
-
 }
 
 // `type="module"` scripts are deferred, so the document is already parsed by
@@ -120,8 +145,16 @@ function boot() {
 // whole editor behind a third-party font request. Boot as soon as the DOM is
 // there; the readyState check is only for the case where this module is ever
 // loaded in a way that isn't deferred.
+// boot() is async now that it opens a project, so its rejection has to be
+// caught here — an unhandled one would leave the editor half-wired with
+// nothing in the console explaining why.
+/** Boot, and make sure a failure says so rather than vanishing. */
+function start() {
+    boot().catch(err => console.error('The editor failed to start', err));
+}
+
 if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', boot, { once: true });
+    document.addEventListener('DOMContentLoaded', start, { once: true });
 } else {
-    boot();
+    start();
 }

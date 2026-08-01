@@ -61,6 +61,13 @@
     /* accent */
     --accent: #6366f1;
     --accent-hover: #7678f4;
+
+    /* Destructive actions. The only user today is the dashboard's Delete
+       button (.btn--danger in dashboard.css), but the value belongs with the
+       other chrome tokens rather than inside the one sheet that happens to
+       need it first — the editor grows a destructive button eventually. */
+    --danger: #dc2626;
+    --danger-hover: #b91c1c;
     --accent-soft: rgba(99, 102, 241, 0.14);
     /* strong enough to read as a hairline on the white canvas, faint enough
        not to compete with a real selection outline */
@@ -173,10 +180,14 @@ button {
     margin: 0 4px;
 }
 
+/* An <a> back to the dashboard in the editor, a plain block on the dashboard
+   itself — styled the same either way, so the anchor resets come first. */
 .brand {
     display: flex;
     align-items: center;
     gap: 8px;
+    color: inherit;
+    text-decoration: none;
 }
 
 .brand__mark {
@@ -212,6 +223,47 @@ button {
 .project-name:hover {
     background: var(--border-subtle);
     color: var(--text-primary);
+}
+
+/* The name is an <input>, but it reads as a label until it's focused: no
+   border, no fill, inheriting the wrapper's type. The wrapper above already
+   supplies the hover affordance. */
+.project-name__input {
+    width: 180px;
+    padding: 0;
+    border: 0;
+    background: none;
+    color: inherit;
+    font: inherit;
+    border-radius: var(--radius-sm);
+}
+
+.project-name__input:focus {
+    outline: none;
+    color: var(--text-primary);
+}
+
+.project-name:focus-within {
+    background: var(--bg-app);
+    box-shadow: 0 0 0 1px var(--accent);
+    color: var(--text-primary);
+}
+
+/* Save state. The text is written by project.js; the color is keyed off
+   data-state so the two can't disagree about what state is showing. */
+.save-state {
+    font-size: 12px;
+    color: var(--text-secondary);
+    white-space: nowrap;
+    transition: color 0.15s ease;
+}
+
+.save-state[data-state='unsaved'] {
+    color: var(--text-primary);
+}
+
+.save-state[data-state='error'] {
+    color: #f87171;
 }
 
 .device-switch {

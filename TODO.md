@@ -28,8 +28,8 @@ can wait a long time).
 - [ ] Nested elements / grouping (containers holding other elements) `Hard` `P1`
 - [ ] Z-index / layer ordering support `Medium` `P2`
 - [ ] Undo/redo history that actually works (top bar buttons are currently decorative) `Hard` `P1`
-- [ ] Autosave (to local storage first, later to backend) `Medium` `P1`
-- [ ] Manual "Save" state indicator (saved / saving / unsaved changes) `Easy` `P2`
+- [ ] Autosave `Medium` `P1` — saving is manual for now (Save button, ⌘/Ctrl+S). The dirty signal autosave needs already exists in `project.js`; what is missing is a debounce and a decision about autosaving with no undo to fall back on
+- [x] Manual "Save" state indicator (saved / saving / unsaved changes) `Easy` `P2` — in the top bar, written by `project.js`; changes are detected with a MutationObserver on the canvas frame rather than a dirty call at each write site
 
 ### Left toolbar (tools)
 - [x] Select tool: real selection behavior `Medium` `P0` — click-to-select is live only while this tool is active; switching tools drops the selection (`setActiveTool()` in `selection.js`). Selecting opens the tool panel on that node type's pane via `NODE_TYPE_PANES`, and deselecting closes it
@@ -69,11 +69,11 @@ can wait a long time).
 - [ ] More theme presets `Easy` `P3`
 - [ ] Custom theme creation + save as a new preset `Hard` `P2`
 - [ ] Dark-mode variant toggle for the published site itself (separate from the editor's own dark UI) `Medium` `P3`
-- [ ] Persist selected theme/font with the project data `Easy` `P1`
+- [x] Persist selected theme/font with the project data `Easy` `P1` — `getThemeState()` / `applyThemeState()` in `theme.js`. Restoring is the one apply that must not wipe per-node overrides, since those are being restored with it
 
 ### Right panel — Assets tab
 - [x] Real file upload (drag-and-drop and click-to-upload) `Medium` `P0` — `upload-modal.js`; the Assets tab's box is both a button that opens it and a drop target of its own
-- [ ] Image storage/hosting (needs a backend or third-party storage — decide on provider) `Hard` `P0` — in-memory blob URLs for now (`asset-store.js`), which is the one file this changes
+- [ ] Image storage/hosting on a *backend* (needs a provider — decide) `Hard` `P0` — images now persist locally as blobs in IndexedDB (`asset-store.js` over `storage.js`), so they survive a reload; they still never leave the browser, so this stays open until there is somewhere real to put them
 - [x] Image thumbnails reflect actual uploaded files `Easy` `P1` — `asset-grid.js`, rendered in both the Assets tab and the Image pane
 - [x] Assign an asset to the selected image element `Medium` `P1` — the Image pane's Source grid. Inserting a *new* image into the canvas still needs click-to-place
 - [x] Delete / replace uploaded assets `Easy` `P1` — deleting one first resets every canvas image using it, since removing it revokes the blob URL
@@ -92,7 +92,7 @@ can wait a long time).
 - [ ] Danger zone: delete project `Easy` `P2`
 
 ### Top bar
-- [ ] Project name is a static button — make it editable / add a rename flow `Easy` `P1`
+- [x] Project name is a static button — make it editable / add a rename flow `Easy` `P1` — an input in the top bar (`project.js`), plus Rename on the dashboard's cards
 - [ ] Project name dropdown should do something (currently just a chevron icon with no menu) `Easy` `P2`
 - [ ] Device switcher: currently only resizes canvas width — should also reflect actual responsive breakpoints defined per element (currently the mock content has no responsive rules at all) `Hard` `P1`
 - [ ] Undo/redo buttons wired to real history stack (engine work tracked above; this is just wiring the UI) `Easy` `P1`
@@ -108,11 +108,11 @@ can wait a long time).
 - [ ] Breadcrumb of currently selected element's parent chain (common in editors like this) `Medium` `P3`
 
 ### Data & persistence
-- [ ] Define how a project is stored (local storage for MVP → backend database later) `Medium` `P0`
-- [ ] Load an existing project into the editor on open `Medium` `P0`
-- [ ] Create new project flow (name it, maybe pick a layout as starting point) `Easy` `P0`
-- [ ] Project list / dashboard page (outside the editor) to see and manage all of a user's portfolios `Hard` `P0`
-- [ ] Duplicate / delete / rename project from the dashboard `Easy` `P1`
+- [x] Define how a project is stored (local storage for MVP → backend database later) `Medium` `P0` — done as IndexedDB rather than local storage, see `storage.js`: one database with a `projects` store and an `assets` store indexed by project. Local storage stores strings, so image blobs would have had to be base64'd into the record and would have blown past its ~5MB cap
+- [x] Load an existing project into the editor on open `Medium` `P0` — `openProject()` in `project.js`; the editor opens on `editor.html?project=<id>` and redirects to the dashboard when that id names nothing
+- [x] Create new project flow (name it, maybe pick a layout as starting point) `Easy` `P0` — the dashboard's New project dialog names it and opens an empty editor (`dashboard.js`). Picking a starting layout was left out: the Layouts tab already does that as the first thing you do in the editor
+- [x] Project list / dashboard page (outside the editor) to see and manage all of a user's portfolios `Hard` `P0` — `index.html` / `dashboard.js`; the editor moved to `editor.html`
+- [ ] Duplicate project from the dashboard `Easy` `P1` — delete and rename are done (`dashboard.js`); duplicate still needs deciding whether the copy shares its source's image blobs or gets its own
 - [ ] Export project data (e.g. download as JSON, or export static HTML/CSS) `Medium` `P2`
 - [ ] Import content (e.g. paste in resume text/LinkedIn data to prefill sections) `Hard` `P3`
 
@@ -156,10 +156,10 @@ into phases; work roughly top-to-bottom within each phase.
 Nothing else can be built until there's a data model and a place to store it.
 1. ~~Decide on a data model for a "site"/"page" (sections → blocks → elements)~~ `Hard` `P0` — done, see [docs/DATA_MODEL.md](./docs/DATA_MODEL.md)
 2. ~~Render the canvas from that data model instead of hardcoded markup~~ `Hard` `P0` — done, see `renderer.js`
-3. Define how a project is stored (local storage for MVP → backend later) `Medium` `P0`
-4. Create new project flow `Easy` `P0`
-5. Load an existing project into the editor on open `Medium` `P0`
-6. Project list / dashboard page to see and manage all projects `Hard` `P0`
+3. ~~Define how a project is stored~~ `Medium` `P0` — done as IndexedDB, see `storage.js`
+4. ~~Create new project flow~~ `Easy` `P0` — done, the dashboard's New project dialog
+5. ~~Load an existing project into the editor on open~~ `Medium` `P0` — done, see `openProject()` in `project.js`
+6. ~~Project list / dashboard page to see and manage all projects~~ `Hard` `P0` — done, `index.html` / `dashboard.js`; the editor moved to `editor.html`
 
 ### Phase 2 — Core selection & direct editing
 The minimum interaction loop: select something, change it, remove it.
@@ -178,15 +178,15 @@ Makes the existing UI shell actually do something.
 16. Fill in the `sections` field for `minimal.json`, `split-bio.json`, and `photo-first.json` (schema migrated from `html` to `sections` — see [docs/DATA_MODEL.md](./docs/DATA_MODEL.md)) `Easy` `P1`
 17. ~~Theme cards actually apply colors to the canvas~~ `Medium` `P0` — done, see `theme.js`
 18. ~~Font cards actually apply the chosen font~~ `Easy` `P0` — done: heading + body dropdowns, see `theme.js`
-19. Site title field editable and persisted `Easy` `P0`
+19. Site title field editable and persisted `Easy` `P0` — the project *name* is editable and saved; `settings.title` is a separate field, stored on every record but not yet wired to the Settings tab
 
 ### Phase 4 — Assets pipeline
 20. ~~Real file upload (drag-and-drop and click-to-upload)~~ `Medium` `P0` — done, see `upload-modal.js`
-21. Image storage/hosting (backend or third-party provider) `Hard` `P0`
+21. Image storage/hosting on a backend (provider still undecided) `Hard` `P0` — images persist locally in IndexedDB now (`asset-store.js`); this is the half that needs somewhere off-device
 
 ### Phase 5 — History & autosave
 22. Undo/redo history that actually works `Hard` `P1`
-23. Autosave (local storage first, later backend) `Medium` `P1`
+23. Autosave `Medium` `P1` — saving is manual (Save button, ⌘/Ctrl+S, state indicator); the dirty signal it needs is already in `project.js`
 
 ### Phase 6 — Accounts & backend
 Needed before real publishing/multi-user use is possible.
@@ -214,7 +214,7 @@ Needed before real publishing/multi-user use is possible.
 39. ~~Decide whether "layout" means a whole page or a single insertable section~~ — done: both, every card appends `Medium` `P1`
 39a. Real Navbar / Showcase / Blog / Contact / Links / Footer layouts, replacing the `blank-test.json` fixtures `Medium` `P1`
 40. ~~Load Google Fonts (or self-hosted fonts) for theme font options~~ `Easy` `P1` — done, see the stylesheet link in `index.html` and `FONT_GROUPS` in `theme.js`
-41. Persist selected theme/font with the project data `Easy` `P1`
+41. ~~Persist selected theme/font with the project data~~ `Easy` `P1` — done, see `getThemeState()` / `applyThemeState()` in `theme.js`
 42. ~~Image thumbnails reflect actual uploaded files~~ `Easy` `P1` — done, see `asset-grid.js`
 43. ~~Assign an asset to the selected image~~ `Medium` `P1` — done, see the Image pane's Source grid; inserting a new one is item 13
 44. ~~Delete / replace uploaded assets~~ `Easy` `P1` — done, see `assets-panel.js`
@@ -222,7 +222,7 @@ Needed before real publishing/multi-user use is possible.
 46. Favicon upload wired to the Assets/upload system `Easy` `P1`
 
 ### Phase 10 — Top bar, pages & UI wiring (P1)
-47. Project name editable / rename flow `Easy` `P1`
+47. ~~Project name editable / rename flow~~ `Easy` `P1` — done: an input in the top bar, plus Rename on the dashboard's cards
 48. Device switcher reflects real responsive breakpoints per element `Hard` `P1`
 49. Undo/redo buttons wired to the real history stack `Easy` `P1`
 50. "Preview" button opens a real, non-editable preview `Medium` `P1`
@@ -231,7 +231,7 @@ Needed before real publishing/multi-user use is possible.
 53. "Add page" / rename / reorder / delete on the Layouts page accordion `Medium` `P1`
 
 ### Phase 11 — Data & quality wrap-up (P1)
-54. Duplicate / delete / rename project from the dashboard `Easy` `P1`
+54. Duplicate project from the dashboard `Easy` `P1` — delete and rename are done; duplicate needs a decision on whether the copy shares its source's image blobs
 55. Accessibility pass (keyboard nav, ARIA labels, focus states, contrast) `Medium` `P1`
 56. Empty/loading/error states throughout the UI `Easy` `P1`
 
@@ -240,7 +240,7 @@ Needed before real publishing/multi-user use is possible.
 58. Keyboard shortcuts (delete, duplicate, nudge, escape) `Easy` `P2`
 59. Snapping / alignment guides while dragging or resizing `Hard` `P2`
 60. Z-index / layer ordering support `Medium` `P2`
-61. Manual "Save" state indicator `Easy` `P2`
+61. ~~Manual "Save" state indicator~~ `Easy` `P2` — done, in the top bar (`project.js`)
 62. ~~Shapes tool (rectangle, circle, line, divider)~~ — moot: the Shapes tool was removed from the left toolbar `Easy` `P2`
 63. Embed tool (custom HTML/embed blocks) `Medium` `P2`
 64. Support applying a layout to a single existing section (replace in place), and choosing where an inserted section lands instead of always appending `Medium` `P2`

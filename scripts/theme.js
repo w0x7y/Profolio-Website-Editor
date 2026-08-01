@@ -24,8 +24,10 @@
 // from a layout file survives, and so do the Image pane's borders and
 // shadows, which are per-element intent rather than theme-derived.
 //
-// Like the rest of the editor, none of this persists across a reload yet
-// (TODO.md: "Persist selected theme/font with the project data").
+// The active preset and the two font stacks are part of a saved project:
+// getThemeState() hands them to a save, applyThemeState() puts them back on
+// open. That restore is the one path that must *not* wipe per-node overrides
+// — see the note on applyThemeState().
 // ============================================================
 
 import { canvasFrame, activateOne } from './dom.js';
@@ -165,6 +167,11 @@ const FONT_OVERRIDE_PROPS = ['font-family'];
 let themeEls = null;         // cached refs, null until initThemePanel()
 let activeThemeId = THEMES[0].id;
 
+/**
+ * Build the Themes tab and put the starting theme on the canvas. Called once,
+ * before a project is opened — applyThemeState() replaces what it applied when
+ * one turns out to have a theme saved.
+ */
 export function initThemePanel() {
     const frame = canvasFrame();
     const list = document.getElementById('themeList');
@@ -189,8 +196,68 @@ export function initThemePanel() {
     applyFonts({ wipeOverrides: false });
 }
 
+/**
+ * What the Themes tab currently has applied, in the shape a Project stores it
+ * in (docs/DATA_MODEL.md, `Project.theme`). The colors are written out
+ * alongside the id rather than left to be looked up: a preset's palette can
+ * be edited or dropped between releases, and a saved project should reopen
+ * looking the way it did when it was saved.
+ *
+ * @returns {{id: string, colors: Object, fonts: {heading: string, body: string}}}
+ */
+export function getThemeState() {
+    const theme = THEMES.find(t => t.id === activeThemeId) || THEMES[0];
+
+    return {
+        id: theme.id,
+        colors: Object.assign({}, theme.colors),
+        fonts: {
+            heading: (themeEls && themeEls.headingFont.value) || DEFAULT_HEADING_FONT,
+            body: (themeEls && themeEls.bodyFont.value) || DEFAULT_BODY_FONT
+        }
+    };
+}
+
+/**
+ * Put a saved theme back on the canvas and back into the tab's controls.
+ *
+ * Nothing is wiped: applyTheme()/applyFonts() normally drop the per-node
+ * overrides a pane wrote, which is right when a *user* picks a new theme and
+ * wrong here — the overrides being restored alongside this are the ones the
+ * saved project is made of, and wiping them would erase the colors and fonts
+ * the user chose the last time they had the project open.
+ *
+ * The saved palette is what gets written, not the preset's current one — that
+ * is the whole reason getThemeState() stores the colors alongside the id. A
+ * preset edited between releases would otherwise repaint every project already
+ * saved under it.
+ *
+ * Falls back to the defaults for anything the saved state doesn't name, so a
+ * project written by an older version still opens. A saved id naming a preset
+ * that no longer ships resolves to the first one rather than to nothing: the
+ * canvas would otherwise keep whatever initThemePanel() put there while
+ * `activeThemeId` still said something else, and the next save would quietly
+ * rewrite the record with a theme the user never picked.
+ *
+ * @param {Object} state - As returned by getThemeState().
+ */
+export function applyThemeState(state) {
+    if (!themeEls) return;
+
+    const fonts = (state && state.fonts) || {};
+    themeEls.headingFont.value = fonts.heading || DEFAULT_HEADING_FONT;
+    themeEls.bodyFont.value = fonts.body || DEFAULT_BODY_FONT;
+
+    const savedId = state && state.id;
+    const theme = THEMES.find(t => t.id === savedId) || THEMES[0];
+
+    applyTheme(theme.id, { wipeOverrides: false, colors: state && state.colors });
+    applyFonts({ wipeOverrides: false });
+}
+
 // ---- color themes -----------------------------------------------------
 
+/** One card per preset, each applying it on click. */
 function buildThemeCards() {
     themeEls.list.innerHTML = '';
 
@@ -223,9 +290,18 @@ function buildThemeCards() {
 }
 
 /**
- * Apply a theme's colors to the canvas. Pass `{ wipeOverrides: false }` to
- * set the properties without discarding per-node color overrides — used for
- * the initial apply at startup.
+ * Apply a theme's colors to the canvas — the one writer of the color custom
+ * properties on the frame.
+ *
+ * @param {string} themeId - Which preset is now active.
+ * @param {Object} [options]
+ * @param {boolean} [options.wipeOverrides] - `false` sets the properties
+ *   without discarding per-node color overrides. Used for the initial apply at
+ *   startup, and when reopening a saved project.
+ * @param {Object} [options.colors] - A palette to write instead of the
+ *   preset's own, for restoring the one a project was saved with. Anything it
+ *   doesn't name falls back to the preset, so a record from before a token was
+ *   added still comes out complete.
  */
 function applyTheme(themeId, options) {
     const theme = THEMES.find(t => t.id === themeId);
@@ -233,8 +309,11 @@ function applyTheme(themeId, options) {
 
     activeThemeId = theme.id;
 
+    const palette = (options && options.colors) || null;
+
     Object.keys(THEME_COLOR_PROPS).forEach(key => {
-        themeEls.frame.style.setProperty(THEME_COLOR_PROPS[key], theme.colors[key]);
+        const value = (palette && palette[key]) || theme.colors[key];
+        themeEls.frame.style.setProperty(THEME_COLOR_PROPS[key], value);
     });
 
     activateOne(themeEls.list.querySelectorAll('.theme-card'), card => card.dataset.theme === theme.id);
@@ -246,6 +325,7 @@ function applyTheme(themeId, options) {
 
 // ---- typography -------------------------------------------------------
 
+/** Fill the heading and body pickers and wire them to applyFonts(). */
 function buildFontSelects() {
     fillFontSelect(themeEls.headingFont, DEFAULT_HEADING_FONT);
     fillFontSelect(themeEls.bodyFont, DEFAULT_BODY_FONT);
@@ -259,6 +339,19 @@ function buildFontSelects() {
     themeEls.bodyFont.addEventListener('change', () => applyFonts());
 }
 
+/**
+ * Fill a `<select>` with every family in FONT_GROUPS, grouped by source.
+ *
+ * Exported because the Text pane's per-node font picker is filled from here
+ * too, rather than keeping a second copy of the list that would drift.
+ *
+ * @param {HTMLSelectElement} select
+ * @param {string} selectedStack - The stack to open on; must match an option's
+ *   value exactly or the select shows blank.
+ * @param {Object} [options]
+ * @param {boolean} [options.themeDefaultOption] - Prepend a "Theme default"
+ *   entry with an empty value, for pickers where unset is meaningful.
+ */
 export function fillFontSelect(select, selectedStack, options) {
     if (!select) return;
     select.innerHTML = '';

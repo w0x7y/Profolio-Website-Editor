@@ -3,715 +3,118 @@
     <head>
         <meta charset='UTF-8'>
         <meta name='viewport' content='width=device-width, initial-scale=1.0'>
-        <!-- Warm the Google Fonts origins before the stylesheet below needs
-             them. Declared first so the connections open while style.css is
-             still on the wire. -->
-        <link rel="preconnect" href="https://fonts.googleapis.com">
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 
-        <!-- The editor chrome's own typeface, served from our own origin
-             (see fonts/, vendored from @fontsource/maple-mono@5.2.6 under
-             the OFL — fonts/LICENSE). It used to come from a CDN via that
-             package's index.css, which declared exactly one @font-face
-             (latin / 400 / normal) pointing at this file: a blocking round
-             trip to learn a URL, plus a third party we had to trust for the
-             bytes.
-
-             Self-hosting settles both. There is no `integrity` syntax for a
-             CSS @font-face `src`, so a CDN-hosted font can only be verified
-             where a preload hash happens to cover the stylesheet's fetch —
-             browser-dependent, and silently unverified where it isn't. A
-             same-origin font needs no hash to keep in sync at all.
-
-             Preloaded because the @font-face that uses it lives inside
-             style.css: without this the download could not start until that
-             stylesheet had been fetched and parsed.
-
-             The `crossorigin` attribute is still required — font fetches are
-             always CORS-mode, even same-origin ones — and without it the
-             preload would not be reused and the font would be fetched twice.
-
-             To update: replace the file, keep the name, refresh fonts/LICENSE.
-             Upstream sha384 of the current file, for auditing against npm:
-               LLadd2S+M6BwmLX6m/xrocmEWGORFSkar3YTuVg1wUqmHC+Rr9HGCrjdGUX6NuNJ -->
+        <!-- The chrome's typeface, vendored under fonts/ — see the long note
+             in editor.html for why it is self-hosted and preloaded rather
+             than fetched from a CDN. Both pages share the one file. -->
         <link rel="preload" as="font" type="font/woff2"
               href="fonts/maple-mono-latin-400-normal.woff2"
               crossorigin="anonymous">
 
+        <!-- style.css first: the dashboard reads its custom properties, its
+             resets and the chrome controls it shares with the editor (.btn,
+             .icon-btn, .brand, .avatar). dashboard.css only adds what is
+             specific to this page.
+
+             It does mean the dashboard loads editor rules it never uses.
+             Splitting the shared half into its own stylesheet is the real fix
+             and is already on the list as "split style.css into smaller
+             files" (TODO.md); doing it as part of adding a second page would
+             have buried a whole-stylesheet refactor inside an unrelated
+             change. -->
         <link rel='stylesheet' href='styles/style.css'>
+        <link rel='stylesheet' href='styles/dashboard.css'>
 
-        <!-- The canvas font families offered in the Themes tab (see
-             FONT_GROUPS in theme.js — the two lists have to stay in step).
-             Regular + bold only: the faces are declared here but each one is
-             only downloaded once something on the page is actually set in
-             it, so the whole list costs one request until fonts get used.
-             If this request fails the canvas falls back to the generic
-             family at the end of each stack.
-
-             Loaded non-blocking on purpose. Nothing on first paint is set in
-             any of these families — the canvas defaults to System Sans and
-             the chrome uses Maple Mono — so this is only needed once the
-             Themes tab is opened. As a render-blocking <link> it gated the
-             whole boot: module scripts wait on pending stylesheets, so the
-             app did not start until Google Fonts replied. media=print keeps
-             it off the critical path; onload promotes it to all. -->
-        <!-- No integrity hash here, deliberately: the css2 endpoint serves a
-             different @font-face block per browser by design, so there is no
-             stable set of bytes to pin. Accepted because it is a stylesheet
-             rather than a script — a compromised response could restyle the
-             canvas, but not execute anything. Vendoring the families actually
-             used is the fix if that trade stops being acceptable. -->
-        <link rel="stylesheet" media="print" onload="this.media='all';this.onload=null"
-              href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;700&family=Fraunces:wght@400;700&family=IBM+Plex+Mono:wght@400;700&family=Inter:wght@400;700&family=JetBrains+Mono:wght@400;700&family=Libre+Baskerville:wght@400;700&family=Lora:wght@400;700&family=Manrope:wght@400;700&family=Merriweather:wght@400;700&family=Montserrat:wght@400;700&family=Outfit:wght@400;700&family=Playfair+Display:wght@400;700&family=Poppins:wght@400;700&family=Source+Serif+4:wght@400;700&family=Space+Grotesk:wght@400;700&family=Space+Mono:wght@400;700&family=Work+Sans:wght@400;700&display=swap">
-        <noscript>
-            <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;700&family=Fraunces:wght@400;700&family=IBM+Plex+Mono:wght@400;700&family=Inter:wght@400;700&family=JetBrains+Mono:wght@400;700&family=Libre+Baskerville:wght@400;700&family=Lora:wght@400;700&family=Manrope:wght@400;700&family=Merriweather:wght@400;700&family=Montserrat:wght@400;700&family=Outfit:wght@400;700&family=Playfair+Display:wght@400;700&family=Poppins:wght@400;700&family=Source+Serif+4:wght@400;700&family=Space+Grotesk:wght@400;700&family=Space+Mono:wght@400;700&family=Work+Sans:wght@400;700&display=swap">
-        </noscript>
-        <title>Profolio Editor</title>
+        <title>Your projects — Profolio</title>
     </head>
     <body>
 
-        <div class="app">
+        <div class="dashboard">
 
-            <!-- ============ TOP BAR ============ -->
             <header class="topbar">
                 <div class="topbar__left">
                     <div class="brand">
                         <span class="brand__mark">P</span>
                         <span class="brand__name">Profolio</span>
                     </div>
-                    <div class="topbar__divider"></div>
-                    <button class="project-name" type="button">
-                        <span>Untitled Portfolio</span>
-                        <svg viewBox="0 0 24 24" class="icon icon--sm"><path d="M6 9l6 6 6-6"/></svg>
-                    </button>
-                </div>
-
-                <div class="topbar__center">
-                    <div class="device-switch">
-                        <button class="device-switch__btn is-active" type="button" data-device="desktop" title="Desktop">
-                            <svg viewBox="0 0 24 24" class="icon"><rect x="3" y="4" width="18" height="12" rx="1.5"/><path d="M8 20h8M12 16v4"/></svg>
-                        </button>
-                        <button class="device-switch__btn" type="button" data-device="tablet" title="Tablet">
-                            <svg viewBox="0 0 24 24" class="icon"><rect x="5" y="2.5" width="14" height="19" rx="2"/><path d="M12 18.5h.01"/></svg>
-                        </button>
-                        <button class="device-switch__btn" type="button" data-device="mobile" title="Mobile">
-                            <svg viewBox="0 0 24 24" class="icon"><rect x="7.5" y="2.5" width="9" height="19" rx="2"/><path d="M12 18h.01"/></svg>
-                        </button>
-                    </div>
                 </div>
 
                 <div class="topbar__right">
-                    <button class="icon-btn" type="button" title="Undo">
-                        <svg viewBox="0 0 24 24" class="icon"><path d="M9 7 4 12l5 5M4 12h11a5 5 0 0 1 0 10h-1"/></svg>
-                    </button>
-                    <button class="icon-btn" type="button" title="Redo">
-                        <svg viewBox="0 0 24 24" class="icon"><path d="M15 7l5 5-5 5M20 12H9a5 5 0 0 0 0 10h1"/></svg>
-                    </button>
-                    <div class="topbar__divider"></div>
-                    <button class="btn btn--ghost" type="button">Preview</button>
-                    <button class="btn btn--primary" type="button">Publish</button>
+                    <button class="btn btn--primary" type="button" id="newProject">New project</button>
                     <div class="avatar">JD</div>
                 </div>
             </header>
 
-            <div class="workspace">
+            <main class="dashboard__main">
+                <div class="dashboard__head">
+                    <h1 class="dashboard__title">Your portfolios</h1>
+                    <p class="dashboard__hint">Everything here is stored in this browser.</p>
+                </div>
 
-                <!-- ============ LEFT TOOLBAR ============ -->
-                <aside class="toolbar">
-                    <nav class="toolbar__group">
-                        <button class="tool is-active" type="button" data-tool="select" title="Select">
-                            <svg viewBox="0 0 24 24" class="icon"><path d="M4 3l6.5 17 2.5-7 7-2.5L4 3z"/></svg>
-                            <span class="tool__label">Select</span>
-                        </button>
-                        <button class="tool" type="button" data-tool="text" title="Text">
-                            <svg viewBox="0 0 24 24" class="icon"><path d="M5 5h14M12 5v14"/></svg>
-                            <span class="tool__label">Text</span>
-                        </button>
-                        <button class="tool" type="button" data-tool="image" title="Image">
-                            <svg viewBox="0 0 24 24" class="icon"><rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="8.5" cy="9.5" r="1.5"/><path d="M21 16l-5.5-5.5L4 21"/></svg>
-                            <span class="tool__label">Image</span>
-                        </button>
-                        <button class="tool" type="button" data-tool="button" title="Button">
-                            <svg viewBox="0 0 24 24" class="icon"><rect x="2.5" y="7" width="19" height="10" rx="5"/><path d="M8 12h8"/></svg>
-                            <span class="tool__label">Button</span>
-                        </button>
-                        <button class="tool" type="button" data-tool="section" title="Section">
-                            <svg viewBox="0 0 24 24" class="icon"><rect x="3" y="4" width="18" height="6" rx="1"/><rect x="3" y="14" width="18" height="6" rx="1"/></svg>
-                            <span class="tool__label">Section</span>
-                        </button>
-                        <button class="tool" type="button" data-tool="embed" title="Embed">
-                            <svg viewBox="0 0 24 24" class="icon"><path d="M9 8 5 12l4 4M15 8l4 4-4 4M13 6l-2 12"/></svg>
-                            <span class="tool__label">Embed</span>
-                        </button>
-                    </nav>
+                <!-- One of these three is shown at a time; dashboard.js owns
+                     which. The list starts hidden because reading the
+                     database is asynchronous, and flashing "No projects yet"
+                     at someone who has ten is worse than a moment of
+                     nothing. -->
+                <!-- A live region because dashboard.js reuses this element for
+                     the storage-error message: without it, a screen reader
+                     user hears nothing when "Loading…" becomes an error. -->
+                <p class="dashboard__status" id="projectsLoading"
+                   role="status" aria-live="polite">Loading your projects…</p>
 
-                    <div class="toolbar__spacer"></div>
+                <div class="dashboard__empty" id="projectsEmpty" hidden>
+                    <svg viewBox="0 0 24 24" class="dashboard__empty-icon">
+                        <rect x="3" y="3" width="18" height="18" rx="2"/><path d="M12 8v8M8 12h8"/>
+                    </svg>
+                    <p class="dashboard__empty-title">No projects yet</p>
+                    <p class="dashboard__empty-hint">Create one to start building your portfolio.</p>
+                    <button class="btn btn--primary" type="button" id="newProjectEmpty">New project</button>
+                </div>
 
-                    <nav class="toolbar__group">
-                        <button class="tool" type="button" data-tool="settings" title="Settings">
-                            <svg viewBox="0 0 24 24" class="icon"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.9l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.9-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1-1.6 1.7 1.7 0 0 0-1.9.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.9 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.6-1 1.7 1.7 0 0 0-.3-1.9l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.9.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.9-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.9V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>
-                            <span class="tool__label">Settings</span>
-                        </button>
-                    </nav>
-                </aside>
+                <ul class="project-grid" id="projectGrid" hidden></ul>
+            </main>
 
-                <!-- ============ LEFT TOOL PANEL ============ -->
-                <!--
-                    The extended panel for the active left-toolbar tool. One
-                    pane per tool; tool-panel.js (openToolPanel()) reveals the
-                    matching one and fills in the title.
-
-                    Selecting content on the canvas with the Select tool also
-                    opens a pane — the one matching the selected node's type
-                    (see NODE_TYPE_PANES in selection.js). Settings has no pane,
-                    so choosing it closes the panel.
-
-                    The Text, Button, Image and Section panes have real
-                    controls (see text-panel.js / button-panel.js /
-                    image-panel.js / section-panel.js); Embed is still a
-                    placeholder — its controls land here later (see TODO.md,
-                    "Left toolbar").
-                -->
-                <aside class="tool-panel" id="toolPanel" hidden>
-                    <div class="tool-panel__header">
-                        <h2 class="tool-panel__title" id="toolPanelTitle"></h2>
-                        <button class="icon-btn icon-btn--sm tool-panel__close" type="button" id="toolPanelClose" title="Close panel" aria-label="Close panel">
-                            <svg viewBox="0 0 24 24" class="icon icon--sm"><path d="M6 6l12 12M18 6L6 18"/></svg>
-                        </button>
-                    </div>
-
-                    <div class="tool-panel__content">
-                        <div class="tool-panel__pane" data-tool-pane="text">
-                            <p class="tool-panel__empty" id="textPanelEmpty">Select text on the canvas to edit it.</p>
-
-                            <div class="tool-panel__body" id="textPanelBody" hidden>
-
-                                <!-- Only shown when the selected node is a
-                                     button, i.e. we got here via the Button
-                                     pane's "Edit Text". -->
-                                <button class="panel-back" type="button" id="textBackToButton" hidden>
-                                    <svg viewBox="0 0 24 24" class="icon icon--sm"><path d="M15 6l-6 6 6 6"/></svg>
-                                    Back to Button options
-                                </button>
-
-                                <!-- CONTENT — the inline toggles act on the
-                                     selection inside the box above them. -->
-                                <section class="panel-group">
-                                    <h3 class="panel-group__title">Content</h3>
-                                    <div class="rich-input" id="textContent" contenteditable="true" role="textbox" aria-multiline="true" aria-label="Content"></div>
-                                    <div class="toggle-row" id="textInlineToggles">
-                                        <button class="toggle-btn toggle-btn--bold" type="button" data-command="bold" title="Bold" aria-label="Bold" aria-pressed="false">B</button>
-                                        <button class="toggle-btn toggle-btn--italic" type="button" data-command="italic" title="Italic" aria-label="Italic" aria-pressed="false">I</button>
-                                        <button class="toggle-btn toggle-btn--underline" type="button" data-command="underline" title="Underline" aria-label="Underline" aria-pressed="false">U</button>
-                                        <button class="toggle-btn toggle-btn--strike" type="button" data-command="strikeThrough" title="Strikethrough" aria-label="Strikethrough" aria-pressed="false">S</button>
-                                    </div>
-                                </section>
-
-                                <!-- TYPOGRAPHY -->
-                                <section class="panel-group">
-                                    <h3 class="panel-group__title">Typography</h3>
-
-                                    <div class="ctrl">
-                                        <label class="ctrl__label" for="textFontFamily">Font family</label>
-                                        <!-- Options are filled in from FONT_GROUPS in
-                                             theme.js, so this offers the same
-                                             families as the Themes tab plus a
-                                             "Theme default" that hands the node
-                                             back to the site font. -->
-                                        <select class="select" id="textFontFamily"></select>
-                                    </div>
-
-                                    <div class="ctrl">
-                                        <label class="ctrl__label" for="textFontSize">Font size</label>
-                                        <div class="ctrl__row">
-                                            <input class="input" type="number" id="textFontSize" min="1" step="1" inputmode="decimal">
-                                            <select class="select select--unit" id="textFontSizeUnit" aria-label="Font size unit">
-                                                <option value="px">px</option>
-                                                <option value="rem">rem</option>
-                                                <option value="em">em</option>
-                                                <option value="%">%</option>
-                                            </select>
-                                        </div>
-                                    </div>
-
-                                    <div class="ctrl">
-                                        <label class="ctrl__label" for="textLetterSpacing">Letter spacing</label>
-                                        <div class="ctrl__row">
-                                            <input class="input" type="number" id="textLetterSpacing" step="0.1" inputmode="decimal">
-                                            <span class="unit-tag">px</span>
-                                        </div>
-                                    </div>
-
-                                    <div class="ctrl ctrl--inline">
-                                        <span class="ctrl__label">Uppercase</span>
-                                        <button class="switch" type="button" id="textUppercase" role="switch" aria-checked="false" aria-label="Uppercase"></button>
-                                    </div>
-                                </section>
-
-                                <!-- COLOR -->
-                                <section class="panel-group">
-                                    <h3 class="panel-group__title">Color</h3>
-
-                                    <div class="ctrl">
-                                        <label class="ctrl__label" for="textColorHex">Text</label>
-                                        <div class="color-field">
-                                            <input class="color-field__swatch" type="color" id="textColorSwatch" aria-label="Text color">
-                                            <input class="input color-field__hex" type="text" id="textColorHex" spellcheck="false" maxlength="7" placeholder="#000000">
-                                        </div>
-                                    </div>
-
-                                    <div class="ctrl" id="textBgCtrl">
-                                        <div class="ctrl__head">
-                                            <label class="ctrl__label" for="textBgHex">Background</label>
-                                            <button class="switch" type="button" id="textBgToggle" role="switch" aria-checked="false" aria-label="Background"></button>
-                                        </div>
-                                        <div class="ctrl__body">
-                                            <div class="color-field">
-                                                <input class="color-field__swatch" type="color" id="textBgSwatch" aria-label="Background color">
-                                                <input class="input color-field__hex" type="text" id="textBgHex" spellcheck="false" maxlength="7" placeholder="#ffffff">
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    <!-- a stroke on the letterforms, not a border round the box -->
-                                    <div class="ctrl" id="textStrokeCtrl">
-                                        <div class="ctrl__head">
-                                            <label class="ctrl__label" for="textStrokeHex">Outline</label>
-                                            <button class="switch" type="button" id="textStrokeToggle" role="switch" aria-checked="false" aria-label="Outline"></button>
-                                        </div>
-                                        <div class="ctrl__body">
-                                            <div class="ctrl__row">
-                                                <input class="input" type="number" id="textStrokeWidth" min="0" step="0.5" inputmode="decimal" aria-label="Outline width">
-                                                <span class="unit-tag">px</span>
-                                            </div>
-                                            <div class="color-field">
-                                                <input class="color-field__swatch" type="color" id="textStrokeSwatch" aria-label="Outline color">
-                                                <input class="input color-field__hex" type="text" id="textStrokeHex" spellcheck="false" maxlength="7" placeholder="#000000">
-                                            </div>
-                                        </div>
-                                    </div>
-                                </section>
-
-                                <!-- LINK — only for text nodes whose role
-                                     means they point somewhere (nav-links).
-                                     The controls are built by
-                                     link-controls.js and mounted here. -->
-                                <section class="panel-group" id="textLinkGroup" hidden>
-                                    <h3 class="panel-group__title">Link</h3>
-                                    <div id="textLinkMount"></div>
-                                </section>
-
-                            </div>
-                        </div>
-                        <!--
-                            The Image pane. Its controls are in
-                            image-panel.js. The Source grid is a second view
-                            of the same library the right panel's Assets tab
-                            shows — both render from asset-store.js through
-                            asset-grid.js.
-                        -->
-                        <div class="tool-panel__pane" data-tool-pane="image">
-                            <p class="tool-panel__empty" id="imagePanelEmpty">Select an image on the canvas to edit it.</p>
-
-                            <div class="tool-panel__body" id="imagePanelBody" hidden>
-
-                                <!-- SOURCE -->
-                                <section class="panel-group">
-                                    <h3 class="panel-group__title">Source</h3>
-
-                                    <div class="asset-grid asset-grid--panel" id="imageSourceGrid"></div>
-
-                                    <div class="btn-row">
-                                        <button class="panel-btn" type="button" id="imageUpload">
-                                            <svg viewBox="0 0 24 24" class="icon icon--sm"><path d="M12 16V4M6 10l6-6 6 6"/><path d="M4 20h16"/></svg>
-                                            Upload
-                                        </button>
-                                        <button class="panel-btn" type="button" id="imageRemove">
-                                            <svg viewBox="0 0 24 24" class="icon icon--sm"><path d="M6 6l12 12M18 6L6 18"/></svg>
-                                            Remove
-                                        </button>
-                                    </div>
-
-                                    <div class="ctrl">
-                                        <label class="ctrl__label" for="imageAlt">Alt text</label>
-                                        <input class="input" type="text" id="imageAlt" placeholder="Describe the image">
-                                    </div>
-                                </section>
-
-                                <!-- SIZE -->
-                                <section class="panel-group">
-                                    <h3 class="panel-group__title">Size</h3>
-
-                                    <div class="ctrl">
-                                        <label class="ctrl__label" for="imageWidth">Width</label>
-                                        <div class="ctrl__row">
-                                            <input class="input" type="number" id="imageWidth" step="1" inputmode="decimal" placeholder="auto">
-                                            <select class="select select--unit" id="imageWidthUnit" aria-label="Width unit">
-                                                <option value="px">px</option>
-                                                <option value="rem">rem</option>
-                                                <option value="%">%</option>
-                                                <option value="vh">vh</option>
-                                            </select>
-                                        </div>
-                                    </div>
-
-                                    <div class="ctrl">
-                                        <label class="ctrl__label" for="imageHeight">Height</label>
-                                        <div class="ctrl__row">
-                                            <input class="input" type="number" id="imageHeight" step="1" inputmode="decimal" placeholder="auto">
-                                            <select class="select select--unit" id="imageHeightUnit" aria-label="Height unit">
-                                                <option value="px">px</option>
-                                                <option value="rem">rem</option>
-                                                <option value="%">%</option>
-                                                <option value="vh">vh</option>
-                                            </select>
-                                        </div>
-                                    </div>
-                                </section>
-
-                                <!-- FIT — hidden while the node is an empty
-                                     placeholder: object-fit needs an <img> to
-                                     act on, and there isn't one yet. -->
-                                <section class="panel-group" id="imageFitGroup" hidden>
-                                    <h3 class="panel-group__title">Fit</h3>
-
-                                    <div class="ctrl">
-                                        <label class="ctrl__label" for="imageFit">Fill mode</label>
-                                        <select class="select" id="imageFit">
-                                            <option value="cover">Cover — fill, crop the rest</option>
-                                            <option value="contain">Contain — fit inside</option>
-                                            <option value="fill">Stretch — distort to fill</option>
-                                            <option value="none">None — original size</option>
-                                            <option value="scale-down">Scale down</option>
-                                        </select>
-                                    </div>
-
-                                    <div class="ctrl">
-                                        <label class="ctrl__label" for="imagePosition">Position</label>
-                                        <!-- The values are what getComputedStyle
-                                             reports back, so syncing this is a
-                                             string match with no lookup table
-                                             in between. -->
-                                        <select class="select" id="imagePosition">
-                                            <option value="50% 50%">Center</option>
-                                            <option value="50% 0%">Top</option>
-                                            <option value="50% 100%">Bottom</option>
-                                            <option value="0% 50%">Left</option>
-                                            <option value="100% 50%">Right</option>
-                                        </select>
-                                    </div>
-                                </section>
-
-                                <!-- BORDER -->
-                                <section class="panel-group">
-                                    <h3 class="panel-group__title">Border</h3>
-
-                                    <div class="ctrl" id="imageBorderCtrl">
-                                        <div class="ctrl__head">
-                                            <label class="ctrl__label" for="imageBorderWidth">Border</label>
-                                            <button class="switch" type="button" id="imageBorderToggle" role="switch" aria-checked="false" aria-label="Border"></button>
-                                        </div>
-                                        <div class="ctrl__body">
-                                            <div class="ctrl__row">
-                                                <input class="input" type="number" id="imageBorderWidth" min="0" step="1" inputmode="decimal" value="1" aria-label="Border width">
-                                                <select class="select select--unit" id="imageBorderStyle" aria-label="Border style">
-                                                    <option value="solid">solid</option>
-                                                    <option value="dashed">dashed</option>
-                                                    <option value="dotted">dotted</option>
-                                                </select>
-                                            </div>
-                                            <div class="color-field">
-                                                <input class="color-field__swatch" type="color" id="imageBorderSwatch" aria-label="Border color">
-                                                <input class="input color-field__hex" type="text" id="imageBorderHex" spellcheck="false" maxlength="7" placeholder="#000000">
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    <!-- No switch: the wrapper already carries
-                                         a radius from style.css, so "off"
-                                         isn't a state — only a value is. -->
-                                    <div class="ctrl">
-                                        <label class="ctrl__label" for="imageRadius">Roundness</label>
-                                        <div class="ctrl__row">
-                                            <input class="input" type="number" id="imageRadius" min="0" step="1" inputmode="decimal" value="0">
-                                            <span class="unit-tag">px</span>
-                                        </div>
-                                    </div>
-                                </section>
-
-                                <!-- SHADOW -->
-                                <section class="panel-group">
-                                    <h3 class="panel-group__title">Shadow</h3>
-
-                                    <div class="ctrl" id="imageShadowCtrl">
-                                        <div class="ctrl__head">
-                                            <label class="ctrl__label" for="imageShadowX">Shadow</label>
-                                            <button class="switch" type="button" id="imageShadowToggle" role="switch" aria-checked="false" aria-label="Shadow"></button>
-                                        </div>
-                                        <div class="ctrl__body">
-                                            <div class="ctrl__row ctrl__row--quad">
-                                                <input class="input" type="number" id="imageShadowX" step="1" inputmode="decimal" value="0" title="Offset X" aria-label="Shadow offset X">
-                                                <input class="input" type="number" id="imageShadowY" step="1" inputmode="decimal" value="4" title="Offset Y" aria-label="Shadow offset Y">
-                                                <input class="input" type="number" id="imageShadowBlur" min="0" step="1" inputmode="decimal" value="12" title="Blur" aria-label="Shadow blur">
-                                                <input class="input" type="number" id="imageShadowSpread" step="1" inputmode="decimal" value="0" title="Spread" aria-label="Shadow spread">
-                                            </div>
-                                            <div class="color-field">
-                                                <input class="color-field__swatch" type="color" id="imageShadowSwatch" aria-label="Shadow color">
-                                                <input class="input color-field__hex" type="text" id="imageShadowHex" spellcheck="false" maxlength="7" placeholder="#000000">
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <p class="ctrl__note">Offset X, offset Y, blur and spread — all in pixels.</p>
-                                </section>
-
-                                <!-- APPEARANCE -->
-                                <section class="panel-group">
-                                    <h3 class="panel-group__title">Appearance</h3>
-
-                                    <div class="ctrl">
-                                        <label class="ctrl__label" for="imageOpacity">Opacity</label>
-                                        <input class="range" type="range" id="imageOpacity" min="0" max="100" step="1" value="100">
-                                    </div>
-                                </section>
-
-                            </div>
-                        </div>
-
-                        <!--
-                            The Button pane. Its controls are in
-                            button-panel.js; the link target group inside it
-                            is built by link-controls.js and shared with the
-                            Text pane above.
-                        -->
-                        <div class="tool-panel__pane" data-tool-pane="button">
-                            <p class="tool-panel__empty" id="buttonPanelEmpty">Select a button on the canvas to edit it.</p>
-
-                            <div class="tool-panel__body" id="buttonPanelBody" hidden>
-
-                                <!-- The label lives in the Text pane — this
-                                     hands off to it rather than duplicating
-                                     content/typography/color controls. -->
-                                <button class="panel-btn" type="button" id="buttonEditText">
-                                    <svg viewBox="0 0 24 24" class="icon icon--sm"><path d="M5 5h14M12 5v14"/></svg>
-                                    Edit Text
-                                </button>
-
-                                <!-- TYPE -->
-                                <section class="panel-group">
-                                    <h3 class="panel-group__title">Type</h3>
-                                    <div id="buttonTypeMount"></div>
-                                </section>
-
-                                <!-- LINK — shown for type "Link" -->
-                                <section class="panel-group" id="buttonLinkGroup" hidden>
-                                    <h3 class="panel-group__title">Link to</h3>
-                                    <div id="buttonLinkMount"></div>
-                                </section>
-
-                                <!-- ON CLICK — shown for type "Button".
-                                     Stored only; the editor never runs it. -->
-                                <section class="panel-group" id="buttonScriptGroup" hidden>
-                                    <h3 class="panel-group__title">On click</h3>
-                                    <textarea class="input code-input" id="buttonOnClick" rows="6" spellcheck="false" placeholder="alert('Hello');" aria-label="On click JavaScript"></textarea>
-                                    <p class="ctrl__note">Runs on the published site. Never runs inside the editor.</p>
-                                </section>
-
-                            </div>
-                        </div>
-                        <div class="tool-panel__pane" data-tool-pane="section">
-
-                            <!-- Shown until the draft has a row. -->
-                            <p class="tool-panel__empty" id="sectionEmpty">Add a row to start building a section.</p>
-
-                            <!-- Controls for whatever is picked in the draft on
-                                 the canvas. Built by section-panel.js, which
-                                 swaps the body per picked node type. -->
-                            <section class="panel-group" id="sectionInspector" hidden>
-                                <h3 class="panel-group__title" id="sectionPickedLabel">Section</h3>
-                                <div id="sectionInspectorMount"></div>
-                            </section>
-
-                            <div class="panel-group">
-                                <button class="panel-btn" type="button" id="sectionAddRow">
-                                    <svg viewBox="0 0 24 24" class="icon icon--sm"><path d="M12 5v14M5 12h14"/></svg>
-                                    Add row
-                                </button>
-                            </div>
-
-                            <!-- Commit the draft, or throw it away. Hidden
-                                 until there is something to commit. -->
-                            <div class="panel-group section-footer" id="sectionFooter" hidden>
-                                <button class="btn btn--ghost" type="button" id="sectionCancel">Cancel</button>
-                                <button class="btn btn--primary" type="button" id="sectionInsert">Insert</button>
-                            </div>
-                        </div>
-                        <div class="tool-panel__pane" data-tool-pane="embed">
-                            <p class="tool-panel__empty">Embed controls aren't built yet.</p>
-                        </div>
-                    </div>
-                </aside>
-
-                <!-- ============ CENTER CANVAS ============ -->
-                <main class="canvas-area">
-                    <div class="canvas-toolbar">
-                        <div class="canvas-toolbar__group canvas-toolbar__zoom">
-                            <button class="icon-btn icon-btn--sm" type="button" title="Zoom out">
-                                <svg viewBox="0 0 24 24" class="icon"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3M8 11h6"/></svg>
-                            </button>
-                            <span class="zoom-value">100%</span>
-                            <button class="icon-btn icon-btn--sm" type="button" title="Zoom in">
-                                <svg viewBox="0 0 24 24" class="icon"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3M11 8v6M8 11h6"/></svg>
-                            </button>
-                        </div>
-                    </div>
-
-                    <div class="canvas-scroll">
-                        <div class="canvas-frame" data-frame="desktop"><!-- populated by renderer.js: renderSectionsIntoCanvas() --></div>
-                    </div>
-                </main>
-
-                <!-- ============ RIGHT PANEL ============ -->
-                <aside class="panel">
-                    <!-- top 3/4: the tabbed panel -->
-                    <div class="panel__main">
-                        <div class="panel__tabs">
-                            <button class="panel__tab is-active" type="button" data-panel="layouts">
-                                <svg viewBox="0 0 24 24" class="icon icon--sm"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
-                                Layouts
-                            </button>
-                            <button class="panel__tab" type="button" data-panel="themes">
-                                <svg viewBox="0 0 24 24" class="icon icon--sm"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 0 0 18z"/></svg>
-                                Themes
-                            </button>
-                            <button class="panel__tab" type="button" data-panel="assets">
-                                <svg viewBox="0 0 24 24" class="icon icon--sm"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="9" r="1.7"/><path d="M21 16l-5-5-9 9"/></svg>
-                                Assets
-                            </button>
-                            <button class="panel__tab" type="button" data-panel="settings">
-                                <svg viewBox="0 0 24 24" class="icon icon--sm"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.9l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.9-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1-1.6 1.7 1.7 0 0 0-1.9.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.9 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.6-1 1.7 1.7 0 0 0-.3-1.9l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.9.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.9-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.9V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>
-                                Settings
-                            </button>
-                        </div>
-
-                        <div class="panel__content">
-
-                            <!-- LAYOUTS -->
-                            <div class="panel__pane is-active" data-pane="layouts">
-                                <p class="panel__hint">Expand a page, then start from a layout.</p>
-                                <div class="page-accordion" id="pageAccordion"><!-- populated automatically from /layout --></div>
-                            </div>
-
-                            <!-- THEMES -->
-                            <div class="panel__pane" data-pane="themes">
-                                <p class="panel__hint">Pick a color and type theme for your site.</p>
-                                <!-- Cards and font options are both built from the
-                                     data in theme.js, so a preset's swatches can't
-                                     drift from the colors it actually applies. -->
-                                <div class="theme-list" id="themeList"></div>
-
-                                <p class="panel__hint panel__hint--tight">Typography</p>
-                                <div class="ctrl">
-                                    <label class="ctrl__label" for="themeHeadingFont">Headings</label>
-                                    <select class="select" id="themeHeadingFont"></select>
-                                </div>
-                                <div class="ctrl">
-                                    <label class="ctrl__label" for="themeBodyFont">Body text</label>
-                                    <select class="select" id="themeBodyFont"></select>
-                                </div>
-                                <div class="type-preview" id="themeFontPreview">
-                                    <span class="type-preview__heading">heading</span>
-                                    <span class="type-preview__body">This is a body text.</span>
-                                </div>
-                            </div>
-
-                            <!-- ASSETS -->
-                            <div class="panel__pane" data-pane="assets">
-                                <p class="panel__hint">Images for your site.</p>
-                                <!-- Clicking opens the upload window; dropping
-                                     files straight on it skips that window
-                                     and uploads them where they land. Both
-                                     are wired in assets-panel.js. -->
-                                <button class="asset-upload" type="button" id="assetUpload">
-                                    <svg viewBox="0 0 24 24" class="icon"><path d="M12 16V4M6 10l6-6 6 6"/><path d="M4 20h16"/></svg>
-                                    <span>Drop files or click to upload</span>
-                                </button>
-                                <!-- Filled from asset-store.js — see asset-grid.js -->
-                                <div class="asset-grid" id="assetGrid"></div>
-                            </div>
-
-                            <!-- SETTINGS -->
-                            <div class="panel__pane" data-pane="settings">
-                                <p class="panel__hint">Site-wide settings.</p>
-                                <div class="field">
-                                    <label>Site title</label>
-                                    <div class="field__input">Jordan Doe — Portfolio</div>
-                                </div>
-                                <div class="field">
-                                    <label>Domain</label>
-                                    <div class="field__input">jordandoe.profolio.site</div>
-                                </div>
-                                <div class="field">
-                                    <label>Favicon</label>
-                                    <div class="field__input field__input--row">
-                                        <div class="favicon-preview"></div>
-                                        <span>Upload icon</span>
-                                    </div>
-                                </div>
-                            </div>
-
-                        </div>
-                    </div>
-
-                    <!-- bottom 1/4: drop a canvas section here to delete it -->
-                    <div class="panel__trash" id="canvasTrash">
-                        <div class="panel__trash-inner">
-                            <svg viewBox="0 0 24 24" class="icon"><path d="M4 7h16M10 7V5a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v2M6 7l1 12a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2l1-12M10 11v6M14 11v6"/></svg>
-                            <span>Drop a section here to delete it</span>
-                        </div>
-                    </div>
-                </aside>
-
-            </div>
         </div>
 
-        <!--
-            The upload window, opened by the Assets tab's upload button and by
-            the Image pane's Upload. A native <dialog>, so the backdrop,
-            Escape-to-close, the focus trap and making the rest of the page
-            inert all come for free rather than being code in upload-modal.js.
-
-            It sits outside .app because showModal() promotes it to the top
-            layer anyway; nesting it inside the workspace grid would only make
-            it inherit layout it then has to fight.
-        -->
-        <dialog class="upload-dialog" id="uploadDialog" aria-labelledby="uploadDialogTitle">
-            <div class="upload-dialog__head">
-                <h2 class="upload-dialog__title" id="uploadDialogTitle">Upload images</h2>
-                <button class="icon-btn icon-btn--sm" type="button" id="uploadDialogClose" title="Close" aria-label="Close">
-                    <svg viewBox="0 0 24 24" class="icon"><path d="M6 6l12 12M18 6L6 18"/></svg>
-                </button>
-            </div>
-
-            <button class="upload-zone" type="button" id="uploadDropZone">
-                <svg viewBox="0 0 24 24" class="upload-zone__icon"><path d="M12 16V4M6 10l6-6 6 6"/><path d="M4 20h16"/></svg>
-                <span class="upload-zone__title">Drop images here</span>
-                <span class="upload-zone__hint">or click to choose them from your files</span>
-            </button>
-
-            <!-- The file picker can only be opened by a gesture on a real
-                 file input, so the zone above clicks this one. -->
-            <input type="file" id="uploadFileInput" accept="image/*" multiple hidden>
+        <!-- Both dialogs are native <dialog>s, the same choice upload-modal.js
+             made: the backdrop, Escape-to-close, the focus trap and making the
+             page behind inert all come for free. -->
+        <dialog class="dash-dialog" id="newProjectDialog" aria-labelledby="newProjectTitle">
+            <form method="dialog" id="newProjectForm">
+                <h2 class="dash-dialog__title" id="newProjectTitle">Name your project</h2>
+                <input class="input dash-dialog__input" id="newProjectName" type="text"
+                       placeholder="My portfolio" aria-label="Project name"
+                       autocomplete="off" spellcheck="false" maxlength="80">
+                <div class="dash-dialog__actions">
+                    <button class="btn btn--ghost" type="button" data-close>Cancel</button>
+                    <button class="btn btn--primary" type="submit">Create</button>
+                </div>
+            </form>
         </dialog>
 
-        <!--
-            One entry point. Everything else is an ES module main.js imports,
-            so the load order that used to live in this list is now declared
-            by the imports themselves.
+        <dialog class="dash-dialog" id="renameDialog" aria-labelledby="renameTitle">
+            <form method="dialog" id="renameForm">
+                <h2 class="dash-dialog__title" id="renameTitle">Rename project</h2>
+                <input class="input dash-dialog__input" id="renameName" type="text"
+                       aria-label="Project name" autocomplete="off" spellcheck="false" maxlength="80">
+                <div class="dash-dialog__actions">
+                    <button class="btn btn--ghost" type="button" data-close>Cancel</button>
+                    <button class="btn btn--primary" type="submit">Rename</button>
+                </div>
+            </form>
+        </dialog>
 
-            Modules mean the editor has to be served over HTTP rather than
-            opened as a file:// path — which was already true, since the
-            Layouts panel loads /layout through fetch(). See agent/NOTES.md.
-        -->
-        <script type="module" src='scripts/main.js'></script>
+        <dialog class="dash-dialog" id="deleteDialog" aria-labelledby="deleteTitle">
+            <form method="dialog" id="deleteForm">
+                <h2 class="dash-dialog__title" id="deleteTitle">Delete project</h2>
+                <p class="dash-dialog__body" id="deleteBody"></p>
+                <div class="dash-dialog__actions">
+                    <button class="btn btn--ghost" type="button" data-close>Cancel</button>
+                    <button class="btn btn--danger" type="submit">Delete</button>
+                </div>
+            </form>
+        </dialog>
+
+        <script type="module" src="scripts/dashboard.js"></script>
     </body>
 </html>

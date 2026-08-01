@@ -25,6 +25,7 @@
 
 import { sanitizeInlineHtml } from './text-panel.js';
 import { stampActionFromNode } from './link-controls.js';
+import { stampUserStyleLedger } from './node-style.js';
 
 const NODE_TAG_BY_TYPE = {
     section: 'section',
@@ -40,7 +41,7 @@ const NODE_TAG_BY_TYPE = {
     embed: 'div'
 };
 
-const CONTAINER_NODE_TYPES = new Set(['section', 'row', 'column', 'group']);
+export const CONTAINER_NODE_TYPES = new Set(['section', 'row', 'column', 'group']);
 
 // What an empty copy leaf says when its node names no placeholder of its own.
 // Shared with text-panel.js, which needs the same answer when the Text pane
@@ -50,6 +51,13 @@ const DEFAULT_PLACEHOLDER = {
     button: 'Button'
 };
 
+/**
+ * The placeholder a copy leaf shows when its node names none of its own.
+ * Shared with text-panel.js, which needs the same answer when restoring a
+ * placeholder after the Content box is cleared.
+ * @param {string} nodeType
+ * @returns {string}
+ */
 export function fallbackPlaceholder(nodeType) {
     return DEFAULT_PLACEHOLDER[nodeType] || 'Empty text';
 }
@@ -59,7 +67,19 @@ const DEFAULT_IMAGE_PLACEHOLDER = 'Add an image';
 
 // Whitelisted style props from Node.style.base -> el.style.<jsProp>.
 // Keep this in sync with the StyleProps whitelist in docs/DATA_MODEL.md.
-const STYLE_PROP_TO_JS = {
+//
+// The list has to cover every declaration a tool pane can write, not just the
+// ones layout files use. Saving a project reads these back off the canvas
+// (serializer.js), so a property a pane writes but this table doesn't name is
+// a property that silently disappears on reload. That is what the longhands
+// below are doing here: the Text pane writes `background-color` and the two
+// `-webkit-text-stroke-*` parts rather than the shorthands, and the Image pane
+// writes the three `border-*` parts, `box-shadow`, and object-fit/position.
+// Exported so serializer.js can read the same properties back off the canvas.
+// A second copy of the list there would be the one that drifts, and the
+// symptom — a style that saves but never comes back — is invisible until a
+// user reopens a project.
+export const STYLE_PROP_TO_JS = {
     padding: 'padding',
     margin: 'margin',
     width: 'width',
@@ -73,11 +93,33 @@ const STYLE_PROP_TO_JS = {
     textAlign: 'textAlign',
     textTransform: 'textTransform',
     webkitTextStroke: 'webkitTextStroke',
+    webkitTextStrokeWidth: 'webkitTextStrokeWidth',
+    webkitTextStrokeColor: 'webkitTextStrokeColor',
     color: 'color',
     background: 'background',
+    backgroundColor: 'backgroundColor',
     borderRadius: 'borderRadius',
+    borderWidth: 'borderWidth',
+    borderStyle: 'borderStyle',
+    borderColor: 'borderColor',
+    boxShadow: 'boxShadow',
+    objectFit: 'objectFit',
+    objectPosition: 'objectPosition',
     opacity: 'opacity'
 };
+
+/**
+ * The two style props that belong to an image node's inner `<img>` rather than
+ * to the node's own element.
+ *
+ * An `image` node renders as a wrapper *plus* an `<img>`, but the model gives
+ * it one style bag — so these two are declared on the node like any other
+ * property and routed to the child on the way out (and read back off it in
+ * serializer.js). object-fit and object-position do nothing on the wrapper;
+ * everything else the Image pane writes — size, border, radius, shadow,
+ * opacity — means something there and stays.
+ */
+export const IMAGE_CHILD_STYLE_PROPS = new Set(['objectFit', 'objectPosition']);
 
 /**
  * Render an array of section nodes into a DocumentFragment.
@@ -109,6 +151,10 @@ export function renderNode(node) {
     }
     applyNodeLayout(el, node);
     applyNodeStyle(el, node);
+    // Which of those declarations were the user's rather than the layout's.
+    // Re-stamped from the model so a reopened project still knows what a
+    // theme change is allowed to wipe — see node-style.js.
+    stampUserStyleLedger(el, node.meta && node.meta.userStyled);
 
     if (CONTAINER_NODE_TYPES.has(node.type)) {
         (node.children || []).forEach(child => el.appendChild(renderNode(child)));
@@ -121,7 +167,7 @@ export function renderNode(node) {
 
 // Layout values are named after the model, not after CSS — the model says
 // `direction` and `wrap`, flexbox says `flex-direction` and `flex-wrap`.
-const LAYOUT_PROP_TO_JS = {
+export const LAYOUT_PROP_TO_JS = {
     direction: 'flexDirection',
     wrap: 'flexWrap',
     gap: 'gap',
@@ -162,6 +208,7 @@ export function applyStyleProp(el, prop, value) {
     el.style[jsProp] = value == null ? '' : value;
 }
 
+/** Put a container's `layout` onto its element as flex declarations. */
 function applyNodeLayout(el, node) {
     if (!CONTAINER_NODE_TYPES.has(node.type)) return;
 
@@ -177,14 +224,36 @@ function applyNodeLayout(el, node) {
 
 /**
  * Applies base style overrides defined on a node to its DOM element.
+ *
+ * The image-only props are held back: their target — the inner `<img>` — does
+ * not exist yet at this point in renderNode(), so renderImageLeaf() applies
+ * them once it has built one.
  */
 function applyNodeStyle(el, node) {
     const props = node.style && node.style.base;
     if (!props) return;
 
-    Object.keys(props).forEach(key => applyStyleProp(el, key, props[key]));
+    Object.keys(props)
+        .filter(key => !IMAGE_CHILD_STYLE_PROPS.has(key))
+        .forEach(key => applyStyleProp(el, key, props[key]));
 }
 
+/**
+ * Apply an image node's inner-`<img>` style props, if it has an `<img>` to
+ * apply them to. An unfilled slot renders the placeholder box instead, and
+ * has nothing for object-fit to act on.
+ */
+function applyImageChildStyle(el, node) {
+    const props = (node.style && node.style.base) || {};
+    const img = el.querySelector('img');
+    if (!img) return;
+
+    IMAGE_CHILD_STYLE_PROPS.forEach(key => {
+        if (props[key] != null) applyStyleProp(img, key, props[key]);
+    });
+}
+
+/** Fill in a leaf, dispatching on the one thing each type carries. */
 function renderLeafContent(el, node) {
     switch (node.type) {
         case 'heading':
@@ -266,6 +335,7 @@ function renderCopyLeaf(el, node) {
     stampActionFromNode(el, node);
 }
 
+/** An image node: its `<img>` or its dashed upload box, plus the child styles. */
 function renderImageLeaf(el, node) {
     // Stamped like data-node-id/type/role, and on every image node rather than
     // only the empty ones — the same reason renderCopyLeaf() stamps it for
@@ -275,6 +345,7 @@ function renderImageLeaf(el, node) {
     el.dataset.placeholder = node.placeholder || DEFAULT_IMAGE_PLACEHOLDER;
 
     setImageLeafSrc(el, node.src, node.alt);
+    applyImageChildStyle(el, node);
 }
 
 /**
@@ -313,11 +384,18 @@ export function setImageLeafSrc(el, src, alt) {
         `<span>${escapeHtml(el.dataset.placeholder || DEFAULT_IMAGE_PLACEHOLDER)}</span>`;
 }
 
+/** Embeds have no renderer yet — they draw as a labelled empty box. */
 function renderEmbedLeaf(el, node) {
     el.classList.add('is-empty');
     el.textContent = node.placeholder || 'Embed';
 }
 
+/**
+ * Escape a string for interpolation into markup. The placeholder inside the
+ * empty-image box is the one caller — copy that is never allowed to be markup.
+ * @param {string} str
+ * @returns {string}
+ */
 export function escapeHtml(str) {
     const div = document.createElement('div');
     div.textContent = str;
@@ -423,12 +501,14 @@ function withUniqueIds(sections, usedIds) {
     return clone;
 }
 
+/** Walk a cloned subtree giving every node an id not already in `usedIds`. */
 function assignUniqueIds(node, usedIds) {
     node.id = nextFreeId(node.id || node.type || 'node', usedIds);
     usedIds.add(node.id);
     (node.children || []).forEach(child => assignUniqueIds(child, usedIds));
 }
 
+/** `base`, or `base_2`, `base_3`… — the first one not already taken. */
 function nextFreeId(base, usedIds) {
     if (!usedIds.has(base)) return base;
 
@@ -437,6 +517,11 @@ function nextFreeId(base, usedIds) {
     return `${base}_${n}`;
 }
 
+/**
+ * The "Blank canvas" placeholder. Chrome, not content: it carries no node id,
+ * so nothing that walks the canvas for content ever sees it.
+ * @returns {HTMLElement}
+ */
 export function buildCanvasEmptyState() {
     const wrap = document.createElement('div');
     wrap.className = 'canvas-frame__empty';
